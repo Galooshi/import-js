@@ -1,7 +1,15 @@
+require 'yaml'
+
 module ImportJS
   class Importer
     def initialize
       @buffer = VIM::Buffer.current
+      config_file = '.importjs'
+      if File.exist? config_file
+        @config = YAML.load_file(config_file)
+      else
+        @config = { 'lookup_paths' => ['.'] }
+      end
     end
 
     def import
@@ -60,7 +68,12 @@ module ImportJS
 
     def find_path_to_file(variable_name)
       snake_case_variable = camelcase_to_snakecase(variable_name)
-      matched_file_paths = Dir.glob("**/#{snake_case_variable}*.js*")
+      matched_file_paths = []
+      @config['lookup_paths'].each do |lookup_path|
+        Dir.chdir(lookup_path) do
+          matched_file_paths.concat(Dir.glob("**/#{snake_case_variable}*.js*"))
+        end
+      end
 
       # TODO: do something about arrays larger than one
       return if matched_file_paths.empty?
