@@ -2,6 +2,11 @@ module ImportJS
   class Importer
     def import
       variable_name = VIM.evaluate("expand('<cword>')")
+      if variable_name.empty?
+        VIM.message('No variable to import. Place your cursor on a variable, then try again')
+        return
+      end
+
       path_to_file = find_path_to_file(variable_name)
       if path_to_file
         require_statement = "var #{variable_name} = require('#{path_to_file}');"
