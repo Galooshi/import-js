@@ -8,7 +8,7 @@ module ImportJS
       variable_name = VIM.evaluate("expand('<cword>')")
       if variable_name.empty?
         VIM.message(<<-EOS.strip)
-          No variable to import. Place your cursor on a variable, then try again.
+          [import-js]: No variable to import. Place your cursor on a variable, then try again.
         EOS
         return
       end
@@ -17,7 +17,7 @@ module ImportJS
       if path_to_file
         write_imports(variable_name, path_to_file)
       else
-        VIM.message("No js file to import for variable `#{variable_name}`")
+        VIM.message("[import-js]: No js file to import for variable `#{variable_name}`")
       end
     end
 
@@ -35,7 +35,7 @@ module ImportJS
       current_imports.reverse.each do |import_line|
         @buffer.append(0, import_line)
       end
-      VIM.message("Imported `#{path_to_file}`")
+      VIM.message("[import-js] Imported `#{path_to_file}`")
     end
 
     def find_current_imports
