@@ -1,25 +1,52 @@
 module ImportJS
   class Importer
+    def initialize
+      @buffer = VIM::Buffer.current
+    end
+
     def import
       variable_name = VIM.evaluate("expand('<cword>')")
       if variable_name.empty?
-        VIM.message(<<-EOS)
-          No variable to import. Place your cursor on a variable,
-          then try again.
+        VIM.message(<<-EOS.strip)
+          No variable to import. Place your cursor on a variable, then try again.
         EOS
         return
       end
 
       path_to_file = find_path_to_file(variable_name)
       if path_to_file
-        require_statement = "var #{variable_name} = require('#{path_to_file}');"
-        VIM::Buffer.current.append(0, require_statement)
+        write_imports(variable_name, path_to_file)
       else
-        VIM.message("No file found for #{variable_name}")
+        VIM.message("No js file to import for variable `#{variable_name}`")
       end
     end
 
     private
+
+    def write_imports(variable_name, path_to_file)
+      current_imports = find_current_imports
+      current_imports.length.times do
+        @buffer.delete(1)
+      end
+
+      current_imports << "var #{variable_name} = require('#{path_to_file}');"
+      current_imports.sort!.uniq!
+
+      current_imports.reverse.each do |import_line|
+        @buffer.append(0, import_line)
+      end
+      VIM.message("Imported `#{path_to_file}`")
+    end
+
+    def find_current_imports
+      lines = []
+      @buffer.count.times do |n|
+        line = @buffer[n + 1]
+        break unless line.match(/^var\s+.+=\s+require\(.*\);\s*$/)
+        lines << line
+      end
+      lines
+    end
 
     def camelcase_to_snakecase(string)
       # Grabbed from
