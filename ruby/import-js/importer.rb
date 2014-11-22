@@ -3,7 +3,10 @@ module ImportJS
     def import
       variable_name = VIM.evaluate("expand('<cword>')")
       if variable_name.empty?
-        VIM.message('No variable to import. Place your cursor on a variable, then try again')
+        VIM.message(<<-EOS)
+          No variable to import. Place your cursor on a variable,
+          then try again.
+        EOS
         return
       end
 
