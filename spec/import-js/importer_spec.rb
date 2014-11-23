@@ -68,6 +68,10 @@ describe 'Importer' do
   context 'with no word under the cursor' do
     let(:word) { '' }
 
+    it 'leaves the buffer unchanged' do
+      expect(subject).to eq(text)
+    end
+
     it 'displays a message' do
       subject
       expect(VIM.last_message).to eq(
