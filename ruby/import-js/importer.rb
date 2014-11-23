@@ -43,6 +43,12 @@ module ImportJS
       current_imports.reverse.each do |import_line|
         @buffer.append(0, import_line)
       end
+
+      unless @buffer[current_imports.length + 1].strip.empty?
+        # Add a newline after imports
+        @buffer.append(current_imports.length, '')
+      end
+
       VIM.message("[import-js] Imported `#{path_to_file}`")
     end
 

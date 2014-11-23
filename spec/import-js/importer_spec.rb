@@ -85,6 +85,7 @@ describe 'Importer' do
     it 'adds an import to the top of the buffer' do
       expect(subject).to eq(<<-EOS.strip)
 var foo = require('bar/foo');
+
 foo
       EOS
     end
@@ -92,6 +93,7 @@ foo
     context 'when that variable is already imported' do
       let(:text) { <<-EOS.strip }
 var foo = require('bar/foo');
+
 foo
       EOS
 
@@ -104,6 +106,7 @@ foo
       let(:text) { <<-EOS.strip }
 var zoo = require('foo/zoo');
 var bar = require('foo/bar');
+
 foo
       EOS
 
@@ -112,6 +115,7 @@ foo
 var bar = require('foo/bar');
 var foo = require('bar/foo');
 var zoo = require('foo/zoo');
+
 foo
       EOS
       end
@@ -153,6 +157,7 @@ foo
         # you get to pick one file?
         expect(subject).to eq(<<-EOS.strip)
 var foo = require('zoo/foo');
+
 foo
       EOS
       end
