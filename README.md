@@ -48,9 +48,9 @@ lookup to see where in the file system that button component was located.
 
 ## Configuration
 
-Drop a file called `.importjs` in the root folder of your project to configure
-import-js. This file is a YAML file, and has the following configuration
-options.
+Create a file called `.importjs` in the root folder of your project to
+configure import-js. The format of this file is YAML. It has the following
+configuration options.
 
 ### `lookup_paths`
 
