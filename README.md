@@ -36,13 +36,15 @@ var Button = require('components/button');
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
 
-There, you just saved yourself having to type ~40 characters!
+There, you just saved yourself having to type ~40 characters and doing a manual
+lookup to see where in the file system that button component was located.
 
 ## Things to note
 
 - Only files ending in .js\* are considered when importing
 - All imports are expressed on one line each, starting with `var`
 - As part of resolving an import, all imports will be sorted
+- The plugin is written in Ruby. You need a Vim with Ruby support.
 
 ## Configuration
 
