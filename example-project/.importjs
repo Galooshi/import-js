@@ -1,0 +1,4 @@
+# YAML file with configuration for import-js
+lookup_paths:
+  - 'app'
+  - 'vendor/foo'
