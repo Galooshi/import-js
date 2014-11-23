@@ -21,7 +21,8 @@ Let's say that you have a project with the following setup:
 |     |-- index.js
 ```
 
-Now, you open pages/index.js to edit in Vim. It currently looks like this:
+And let's pretend that you're editing `pages/index.js` in Vim. It currently
+looks like this:
 
 ```js
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
@@ -59,5 +60,18 @@ lookup_paths:
   - 'app/assets/javascripts'
   - 'vendor/bower_components'
 ```
+
+## Dependencies
+
+import-js is written in Ruby, so in order to make it work in your Vim you need
+Ruby support. You can test for Ruby support by typing `:ruby 1` from within
+your Vim. If your Vim doesn't have Ruby support, you'll see something like
+this:
+
+```
+ E319: Sorry, the command is not available in this version
+```
+
+(from https://github.com/wincent/command-t/blob/master/README.txt)
 
 Happy hacking!
