@@ -76,4 +76,10 @@ this:
 
 (from https://github.com/wincent/command-t/blob/master/README.txt)
 
+## Contributing
+
+See the
+[CONTRIBUTING.md](https://github.com/trotzig/import-js/blob/master/CONTRIBUTING.md)
+file for tips on how to run, test and develop import-js locally.
+
 Happy hacking!
