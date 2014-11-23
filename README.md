@@ -63,6 +63,17 @@ lookup_paths:
   - 'vendor/bower_components'
 ```
 
+### `aliases`
+
+Some variable names might not easily map to a file in the filesystem. For
+those, you can add them to the `aliases` configuration.
+
+```yaml
+aliases:
+  '$' => 'third-party-libs/jquery'
+  '_' => 'third-party-libs/underscore'
+```
+
 ## Dependencies
 
 import-js is written in Ruby, so in order to make it work in your Vim you need

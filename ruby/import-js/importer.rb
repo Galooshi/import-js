@@ -4,11 +4,10 @@ module ImportJS
   class Importer
     def initialize
       @buffer = VIM::Buffer.current
+      @config = { 'lookup_paths' => ['.'], 'aliases' => {} }
       config_file = '.importjs'
       if File.exist? config_file
-        @config = YAML.load_file(config_file)
-      else
-        @config = { 'lookup_paths' => ['.'] }
+        @config = @config.merge(YAML.load_file(config_file))
       end
     end
 
@@ -73,6 +72,9 @@ module ImportJS
     end
 
     def find_path_to_file(variable_name)
+      if alias_path = @config['aliases'][variable_name]
+        return alias_path
+      end
       snake_case_variable = camelcase_to_snakecase(variable_name)
       matched_file_paths = []
       @config['lookup_paths'].each do |lookup_path|

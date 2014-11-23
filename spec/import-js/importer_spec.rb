@@ -163,4 +163,29 @@ foo
       end
     end
   end
+
+  context 'configuration' do
+    before do
+      allow(File).to receive(:exist?).with('.importjs').and_return(true)
+      allow(YAML).to receive(:load_file).and_return(configuration)
+    end
+
+    context 'with aliases' do
+      let(:configuration) do
+        {
+          'aliases' => { '$' => 'jquery' }
+        }
+      end
+      let(:text) { '$' }
+      let(:word) { '$' }
+
+      it 'resolves aliased imports to the aliases' do
+        expect(subject).to eq(<<-EOS.strip)
+var $ = require('jquery');
+
+$
+      EOS
+      end
+    end
+  end
 end

@@ -2,3 +2,6 @@
 lookup_paths:
   - 'app'
   - 'vendor/foo'
+aliases:
+  '$': 'jquery'
+  '_': 'underscore'
