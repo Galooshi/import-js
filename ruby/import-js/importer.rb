@@ -3,7 +3,6 @@ require 'yaml'
 module ImportJS
   class Importer
     def initialize
-      @buffer = VIM::Buffer.current
       @config = { 'lookup_paths' => ['.'], 'aliases' => {} }
       config_file = '.importjs'
       if File.exist? config_file
@@ -30,22 +29,26 @@ module ImportJS
 
     private
 
+    def buffer
+      VIM::Buffer.current
+    end
+
     def write_imports(variable_name, path_to_file)
       current_imports = find_current_imports
       current_imports.length.times do
-        @buffer.delete(1)
+        buffer.delete(1)
       end
 
       current_imports << "var #{variable_name} = require('#{path_to_file}');"
       current_imports.sort!.uniq!
 
       current_imports.reverse.each do |import_line|
-        @buffer.append(0, import_line)
+        buffer.append(0, import_line)
       end
 
-      unless @buffer[current_imports.length + 1].strip.empty?
+      unless buffer[current_imports.length + 1].strip.empty?
         # Add a newline after imports
-        @buffer.append(current_imports.length, '')
+        buffer.append(current_imports.length, '')
       end
 
       VIM.message("[import-js] Imported `#{path_to_file}`")
@@ -53,8 +56,8 @@ module ImportJS
 
     def find_current_imports
       lines = []
-      @buffer.count.times do |n|
-        line = @buffer[n + 1]
+      buffer.count.times do |n|
+        line = buffer[n + 1]
         break unless line.match(/^var\s+.+=\s+require\(.*\);\s*$/)
         lines << line
       end
