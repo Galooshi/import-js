@@ -165,7 +165,7 @@ foo
       end
 
       context 'and the user selects the first file' do
-        let(:selection) { 0 }
+        let(:selection) { 1 }
 
         it 'picks the first one' do
           expect(subject).to eq(<<-eos.strip)
@@ -177,7 +177,7 @@ foo
       end
 
       context 'and the user selects the second file' do
-        let(:selection) { 1 }
+        let(:selection) { 2 }
 
         it 'picks the second one' do
           expect(subject).to eq(<<-EOS.strip)
@@ -188,9 +188,30 @@ foo
         end
       end
 
-      context 'and the user selects a non-index' do
+      context 'and the user selects index 0 (which is the heading)' do
+        let(:selection) { 0 }
+
+        it 'picks nothing' do
+          expect(subject).to eq(<<-EOS.strip)
+foo
+          EOS
+        end
+      end
+
+      context 'and the user selects an index larger than the list' do
         # Apparently, this can happen when you use `inputlist`
         let(:selection) { 5 }
+
+        it 'picks nothing' do
+          expect(subject).to eq(<<-EOS.strip)
+  foo
+          EOS
+        end
+      end
+
+      context 'and the user selects an index < 0' do
+        # Apparently, this can happen when you use `inputlist`
+        let(:selection) { -1 }
 
         it 'picks nothing' do
           expect(subject).to eq(<<-EOS.strip)

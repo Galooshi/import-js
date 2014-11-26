@@ -87,14 +87,15 @@ module ImportJS
         return files.first
       end
 
-      escaped_list = files.each_with_index.map do |file, i|
-        "\"#{i}: #{file}\""
+      escaped_list = ["\"[import-js] Pick file to import for '#{variable_name}':\""]
+      escaped_list << files.each_with_index.map do |file, i|
+        "\"#{i + 1}: #{file}\""
       end
       escaped_list_string = '[' + escaped_list.join(',') + ']'
 
-      VIM.message("[import-js] Pick file to import for '#{variable_name}':")
       selected_index = VIM.evaluate("inputlist(#{escaped_list_string})")
-      files[selected_index]
+      return if selected_index < 1
+      files[selected_index - 1]
     end
 
     def camelcase_to_snakecase(string)
