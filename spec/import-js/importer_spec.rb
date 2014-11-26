@@ -29,11 +29,19 @@ describe 'Importer' do
       end
 
       def self.evaluate(expression)
-        @current_word
+        if expression =~ /<cword>/
+          @current_word
+        elsif expression =~ /inputlist/
+          @current_selection || 0
+        end
       end
 
       def self.current_word=(word)
         @current_word = word
+      end
+
+      def self.current_selection=(index)
+        @current_selection = index
       end
     end
   end
@@ -152,14 +160,43 @@ foo
         ]
       end
 
-      it 'picks the first one' do
-        # TODO: We should handle this case better. Perhaps bring up a list where
-        # you get to pick one file?
-        expect(subject).to eq(<<-EOS.strip)
+      before do
+        VIM.current_selection = selection
+      end
+
+      context 'and the user selects the first file' do
+        let(:selection) { 0 }
+
+        it 'picks the first one' do
+          expect(subject).to eq(<<-eos.strip)
 var foo = require('zoo/foo');
 
 foo
-      EOS
+          eos
+        end
+      end
+
+      context 'and the user selects the second file' do
+        let(:selection) { 1 }
+
+        it 'picks the second one' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
+          EOS
+        end
+      end
+
+      context 'and the user selects a non-index' do
+        # Apparently, this can happen when you use `inputlist`
+        let(:selection) { 5 }
+
+        it 'picks nothing' do
+          expect(subject).to eq(<<-EOS.strip)
+  foo
+          EOS
+        end
       end
     end
   end

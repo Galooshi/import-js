@@ -19,12 +19,16 @@ module ImportJS
         return
       end
 
-      path_to_file = find_path_to_file(variable_name)
-      if path_to_file
-        write_imports(variable_name, path_to_file)
-      else
+      files = find_files(variable_name)
+      if files.empty?
         VIM.message("[import-js]: No js file to import for variable `#{variable_name}`")
+        return
       end
+
+      resolved_file = resolve_one_file(files, variable_name)
+      return unless resolved_file
+
+      write_imports(variable_name, resolved_file.gsub(/\..*$/, ''))
     end
 
     private
@@ -50,8 +54,6 @@ module ImportJS
         # Add a newline after imports
         buffer.append(current_imports.length, '')
       end
-
-      VIM.message("[import-js] Imported `#{path_to_file}`")
     end
 
     def find_current_imports
@@ -64,22 +66,35 @@ module ImportJS
       lines
     end
 
-    def find_path_to_file(variable_name)
+    def find_files(variable_name)
       if alias_path = @config['aliases'][variable_name]
-        return alias_path
+        return [alias_path]
       end
       snake_case_variable = camelcase_to_snakecase(variable_name)
-      matched_file_paths = []
+      matched_files = []
       @config['lookup_paths'].each do |lookup_path|
         Dir.chdir(lookup_path) do
-          matched_file_paths.concat(Dir.glob("**/#{snake_case_variable}.js*"))
+          matched_files.concat(Dir.glob("**/#{snake_case_variable}.js*"))
         end
       end
 
-      # TODO: do something about arrays larger than one
-      return if matched_file_paths.empty?
-      matched_file = matched_file_paths.first
-      matched_file.gsub(/\..*$/, '')
+      matched_files
+    end
+
+    def resolve_one_file(files, variable_name)
+      if files.length == 1
+        VIM.message("[import-js] Imported `#{files.first}`")
+        return files.first
+      end
+
+      escaped_list = files.each_with_index.map do |file, i|
+        "\"#{i}: #{file}\""
+      end
+      escaped_list_string = '[' + escaped_list.join(',') + ']'
+
+      VIM.message("[import-js] Pick file to import for '#{variable_name}':")
+      selected_index = VIM.evaluate("inputlist(#{escaped_list_string})")
+      files[selected_index]
     end
 
     def camelcase_to_snakecase(string)
