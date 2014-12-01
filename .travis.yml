@@ -5,3 +5,4 @@ rvm:
   - "2.1.2"
 
 script: rspec
+install: gem install rspec
