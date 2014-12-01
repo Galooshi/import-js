@@ -76,16 +76,36 @@ aliases:
 
 ## Dependencies
 
-import-js is written in Ruby, so in order to make it work in your Vim you need
-Ruby support. You can test for Ruby support by typing `:ruby 1` from within
-your Vim. If your Vim doesn't have Ruby support, you'll see something like
-this:
+import-js requires Ruby 1.9, so in order to make it work in your Vim you need
+support for this or a later version of Ruby. You can test for Ruby support by
+typing `:echo has('ruby')` from within your Vim. If it shows `1` then you can
+type the command `:ruby puts RUBY_VERSION` to see which version of Ruby Vim is
+using.
 
-```
- E319: Sorry, the command is not available in this version
-```
+(from http://junegunn.kr/2013/09/installing-vim-with-ruby-support/)
 
-(from https://github.com/wincent/command-t/blob/master/README.txt)
+On Mac OSX the default installation of Vim will use Ruby 1.8.7. If you are using
+a version earlier than 1.9, then you will see this type of error:
+
+> Error detected while processing /Users/paradasia/.vim/bundle/import-js/autoload/importjs.vim:
+> line 20:
+> SyntaxError: (eval):1:in require': /Users/paradasia/.vim/bundle/import-js/ruby/import-js/importer.rb:71: syntax error, unexpected '.', expecting kEND Error detected while processing function importjs#ImportJSImport: line 1: NoMethodError: undefined methodimport' for nil:NilClass
+> Press ENTER or type command to continue
+
+To use a later version of Ruby, you must first set up and enable the correct
+version of Ruby. [RVM][rvm] or [rbenv][rbenv] are two tools that can help with
+managing the installation of different versions of Ruby.
+
+[rvm]: http://rvm.io/
+[rbenv]: https://github.com/sstephenson/rbenv
+
+Uninstall Vim, and then re-install it while the correct version of Ruby is
+enabled.
+
+["Installing Vim with Ruby Support"][vim-with-ruby-post] has more detailed
+instructions.
+
+[vim-with-ruby-post]: http://junegunn.kr/2013/09/installing-vim-with-ruby-support/
 
 ## Contributing
 
