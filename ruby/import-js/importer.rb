@@ -18,6 +18,7 @@ module ImportJS
         EOS
         return
       end
+      current_row, current_col = window.cursor
 
       files = find_files(variable_name)
       if files.empty?
@@ -28,7 +29,9 @@ module ImportJS
       resolved_file = resolve_one_file(files, variable_name)
       return unless resolved_file
 
-      write_imports(variable_name, resolved_file.gsub(/\..*$/, ''))
+      lines_changed = write_imports(variable_name, resolved_file.gsub(/\..*$/, ''))
+      window.cursor = [current_row + lines_changed, current_col]
+
     end
 
     private
@@ -37,8 +40,14 @@ module ImportJS
       VIM::Buffer.current
     end
 
+    def window
+      VIM::Window.current
+    end
+
+    # @return [number] the number of lines changed
     def write_imports(variable_name, path_to_file)
       current_imports = find_current_imports
+      before_length = current_imports.length
       current_imports.length.times do
         buffer.delete(1)
       end
@@ -50,10 +59,13 @@ module ImportJS
         buffer.append(0, import_line)
       end
 
+      after_length = current_imports.length
       unless buffer[current_imports.length + 1].strip.empty?
         # Add a newline after imports
         buffer.append(current_imports.length, '')
+        after_length += 1
       end
+      after_length - before_length
     end
 
     def find_current_imports
