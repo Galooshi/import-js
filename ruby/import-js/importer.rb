@@ -60,7 +60,7 @@ module ImportJS
       lines = []
       buffer.count.times do |n|
         line = buffer[n + 1]
-        break unless line.match(/^var\s+.+=\s+require\(.*\);\s*$/)
+        break unless line.match(/^var\s+.+=\s+require\(.*\).*;\s*$/)
         lines << line
       end
       lines

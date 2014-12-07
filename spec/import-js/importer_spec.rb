@@ -129,6 +129,25 @@ foo
       end
     end
 
+    context 'when there is an unconventional import' do
+      let(:text) { <<-EOS.strip }
+var zoo = require('foo/zoo');
+var tsar = require('foo/bar').tsar;
+
+foo
+      EOS
+
+      it 'adds the import and sorts the entire list' do
+        expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+var tsar = require('foo/bar').tsar;
+var zoo = require('foo/zoo');
+
+foo
+      EOS
+      end
+    end
+
     context 'when there is a blank line amongst current imports' do
       let(:text) { <<-EOS.strip }
 var zoo = require('foo/zoo');
