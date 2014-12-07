@@ -5,6 +5,8 @@ automatically resolving variables in a `require` statement. Use it by placing
 the cursor on a variable, then hit `<leader>j` to import it at the top of the
 file.
 
+![Demo of import-js in action](https://raw.github.com/trotzig/import-js/master/import-js-demo.gif)
+
 ## Example
 
 Let's say that you have a project with the following setup:
