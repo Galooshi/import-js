@@ -363,5 +363,34 @@ var a = foo + bar;
         )
       end
     end
+
+    context 'when the list of undefined variables has duplicates' do
+      # We're cheating a bit with always returning this thing
+      let(:resolved_files) { ['bar/foo.js.jsx'] }
+      let(:text) { 'var a = foo + bar;' }
+
+      let(:jshint_result) do
+        "stdin: line 3, col 11, 'foo' is not defined.\n" +
+        "stdin: line 3, col 11, 'foo' is not defined.\n" +
+        "stdin: line 3, col 11, 'foo' is not defined.\n" +
+        "stdin: line 3, col 11, 'bar' is not defined."
+      end
+
+      it 'imports all variables' do
+        expect(subject).to eq(<<-EOS.strip)
+var bar = require('bar/foo');
+var foo = require('bar/foo');
+
+var a = foo + bar;
+        EOS
+      end
+
+      it 'displays a message' do
+        subject
+        expect(VIM.last_message).to eq(
+          '[import-js]: Imported these variables: ["foo", "bar"]'
+        )
+      end
+    end
   end
 end

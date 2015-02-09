@@ -31,17 +31,12 @@ module ImportJS
 
     # Finds variables that haven't yet been imported
     def import_all
-      content = "/* jshint undef: true, strict: true */\n" +
-                VIM.evaluate('join(getline(1, "$"), "\n")')
-
-      out, _ = Open3.capture3("#{@config['jshint_cmd']} -", stdin_data: content)
+      unused_variables = find_unused_variables
       imported_variables = []
 
-      out.split("\n").each do |line|
-        /.*'([^']+)' is not defined/.match(line) do |match_data|
-          if import_one_variable(match_data[1])
-            imported_variables << match_data[1]
-          end
+      unused_variables.each do |variable|
+        if import_one_variable(variable)
+          imported_variables << variable
         end
       end
 
@@ -57,6 +52,20 @@ module ImportJS
     end
 
     private
+
+    def find_unused_variables
+      content = "/* jshint undef: true, strict: true */\n" +
+                VIM.evaluate('join(getline(1, "$"), "\n")')
+
+      out, _ = Open3.capture3("#{@config['jshint_cmd']} -", stdin_data: content)
+      result = []
+      out.split("\n").each do |line|
+        /.*'([^']+)' is not defined/.match(line) do |match_data|
+          result << match_data[1]
+        end
+      end
+      result.uniq
+    end
 
     # @return the number of lines changed, or nil if no file was found for the
     #   variable.
