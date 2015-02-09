@@ -4,7 +4,11 @@ require 'open3'
 module ImportJS
   class Importer
     def initialize
-      @config = { 'lookup_paths' => ['.'], 'aliases' => {} }
+      @config = {
+        'lookup_paths' => ['.'],
+        'aliases' => {},
+        'jshint_cmd' => 'jshint'
+      }
       config_file = '.importjs'
       if File.exist? config_file
         @config = @config.merge(YAML.load_file(config_file))
@@ -30,7 +34,7 @@ module ImportJS
       content = "/* jshint undef: true, strict: true */\n" +
                 VIM.evaluate('join(getline(1, "$"), "\n")')
 
-      out, _ = Open3.capture3('jsxhint -', stdin_data: content)
+      out, _ = Open3.capture3("#{@config['jshint_cmd']} -", stdin_data: content)
       imported_variables = []
 
       out.split("\n").each do |line|
