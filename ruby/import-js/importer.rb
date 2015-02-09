@@ -20,6 +20,15 @@ module ImportJS
       end
       current_row, current_col = window.cursor
 
+      return unless lines_changed = import_one_variable(variable_name)
+      window.cursor = [current_row + lines_changed, current_col]
+    end
+
+    private
+
+    # @return the number of lines changed, or nil if no file was found for the
+    #   variable.
+    def import_one_variable(variable_name)
       files = find_files(variable_name)
       if files.empty?
         VIM.message("[import-js]: No js file to import for variable `#{variable_name}`")
@@ -29,12 +38,8 @@ module ImportJS
       resolved_file = resolve_one_file(files, variable_name)
       return unless resolved_file
 
-      lines_changed = write_imports(variable_name, resolved_file.gsub(/\..*$/, ''))
-      window.cursor = [current_row + lines_changed, current_col]
-
+      write_imports(variable_name, resolved_file.gsub(/\..*$/, ''))
     end
-
-    private
 
     def buffer
       VIM::Buffer.current
