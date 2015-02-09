@@ -7,7 +7,7 @@ file.
 
 ![Demo of import-js in action](https://raw.github.com/trotzig/import-js/master/import-js-demo.gif)
 
-## Example
+## Importing: Example
 
 Let's say that you have a project with the following setup:
 
@@ -31,7 +31,8 @@ document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
 
 At this point, `Button` is undefined, we need to import it. You begin by
-placing your cursor on "Button". Then hit `<leader>j`. The Vim buffer changes to the following:
+placing your cursor on "Button". Then hit `<leader>j` (or enter
+`:ImportJSImport`). The Vim buffer changes to the following:
 
 ```js
 var Button = require('components/button');
@@ -40,6 +41,15 @@ document.createElement(new Button({ text: 'Save' }).toDOMElement());
 
 There, you just saved yourself having to type ~40 characters and doing a manual
 lookup to see where in the file system that button component was located.
+
+## Import all undefined variables
+
+If you use [jshint](http://jshint.com/) or
+[jsxhint](https://github.com/STRML/JSXHint/) import-js can be used to
+automatically import all undefined variables. Just type `:ImportJSImportAll`,
+and all your variables will be resolved. By default, import-js expects a global
+`jshint` command to be available. You can override that through the
+`jshint_cmd` configuration option.
 
 ## Things to note
 
@@ -74,6 +84,14 @@ those, you can add them to the `aliases` configuration.
 aliases:
   '$' => 'third-party-libs/jquery'
   '_' => 'third-party-libs/underscore'
+```
+
+### `jshint_cmd`
+
+Configure a path to a `jshint` compatible command, e.g. `jsxhint`.
+
+```yaml
+jshint_cmd: jsxhint
 ```
 
 ## Dependencies
