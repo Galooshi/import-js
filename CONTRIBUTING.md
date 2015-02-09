@@ -21,8 +21,8 @@ project to run all tests.
 
 ```bash
 ⨠ rspec
-.........
+......................
 
-Finished in 0.01528 seconds (files took 0.22625 seconds to load)
-9 examples, 0 failures
+Finished in 0.02133 seconds (files took 0.19664 seconds to load)
+22 examples, 0 failures
 ```
