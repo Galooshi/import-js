@@ -1,4 +1,5 @@
 require 'yaml'
+require 'open3'
 
 module ImportJS
   class Importer
@@ -22,6 +23,33 @@ module ImportJS
 
       return unless lines_changed = import_one_variable(variable_name)
       window.cursor = [current_row + lines_changed, current_col]
+    end
+
+    # Finds variables that haven't yet been imported
+    def import_all
+      content = "/* jshint undef: true, strict: true */\n" +
+                VIM.evaluate('join(getline(1, "$"), "\n")')
+
+      out, _ = Open3.capture3('jsxhint -', stdin_data: content)
+      imported_variables = []
+
+      out.split("\n").each do |line|
+        /.*'([^']+)' is not defined/.match(line) do |match_data|
+          if import_one_variable(match_data[1])
+            imported_variables << match_data[1]
+          end
+        end
+      end
+
+      if imported_variables.empty?
+        VIM.message(<<-EOS.strip)
+          [import-js]: No variables to import
+        EOS
+      else
+        VIM.message(<<-EOS.strip)
+          [import-js]: Imported these variables: #{imported_variables}
+        EOS
+      end
     end
 
     private

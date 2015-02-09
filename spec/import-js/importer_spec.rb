@@ -39,6 +39,8 @@ describe 'Importer' do
           @current_word
         elsif expression =~ /inputlist/
           @current_selection || 0
+        elsif expression =~ /getline/
+          @buffer.to_s
         end
       end
 
@@ -62,212 +64,303 @@ describe 'Importer' do
     allow(Dir).to receive(:glob).and_return(resolved_files)
   end
 
-  subject do
-    ImportJS::Importer.new.import
-    VIM::Buffer.current_buffer.to_s
-  end
-
-  context 'with a variable name that will not resolve' do
-    it 'leaves the buffer unchanged' do
-      expect(subject).to eq(text)
+  describe '#import' do
+    subject do
+      ImportJS::Importer.new.import
+      VIM::Buffer.current_buffer.to_s
     end
 
-    it 'displays a message' do
-      subject
-      expect(VIM.last_message).to eq(
-        "[import-js]: No js file to import for variable `#{word}`")
-    end
-  end
+    context 'with a variable name that will not resolve' do
+      it 'leaves the buffer unchanged' do
+        expect(subject).to eq(text)
+      end
 
-  context 'with no word under the cursor' do
-    let(:word) { '' }
-
-    it 'leaves the buffer unchanged' do
-      expect(subject).to eq(text)
+      it 'displays a message' do
+        subject
+        expect(VIM.last_message).to eq(
+          "[import-js]: No js file to import for variable `#{word}`")
+      end
     end
 
-    it 'displays a message' do
-      subject
-      expect(VIM.last_message).to eq(
-        '[import-js]: No variable to import. Place your cursor on a variable, then try again.')
-    end
-  end
-
-  context 'with a variable name that will resolve' do
-    let(:resolved_files) { ['bar/foo.js.jsx'] }
-
-    it 'adds an import to the top of the buffer' do
-      expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
-
-foo
-      EOS
-    end
-
-    context 'when that variable is already imported' do
-      let(:text) { <<-EOS.strip }
-var foo = require('bar/foo');
-
-foo
-      EOS
+    context 'with no word under the cursor' do
+      let(:word) { '' }
 
       it 'leaves the buffer unchanged' do
         expect(subject).to eq(text)
       end
+
+      it 'displays a message' do
+        subject
+        expect(VIM.last_message).to eq(
+          '[import-js]: No variable to import. Place your cursor on a variable, then try again.')
+      end
     end
 
-    context 'when other imports exist' do
-      let(:text) { <<-EOS.strip }
+    context 'with a variable name that will resolve' do
+      let(:resolved_files) { ['bar/foo.js.jsx'] }
+
+      it 'adds an import to the top of the buffer' do
+        expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
+        EOS
+      end
+
+      context 'when that variable is already imported' do
+        let(:text) { <<-EOS.strip }
+var foo = require('bar/foo');
+
+foo
+        EOS
+
+        it 'leaves the buffer unchanged' do
+          expect(subject).to eq(text)
+        end
+      end
+
+      context 'when other imports exist' do
+        let(:text) { <<-EOS.strip }
 var zoo = require('foo/zoo');
 var bar = require('foo/bar');
 
 foo
-      EOS
+        EOS
 
-      it 'adds the import and sorts the entire list' do
-        expect(subject).to eq(<<-EOS.strip)
+        it 'adds the import and sorts the entire list' do
+          expect(subject).to eq(<<-EOS.strip)
 var bar = require('foo/bar');
 var foo = require('bar/foo');
 var zoo = require('foo/zoo');
 
 foo
-      EOS
+        EOS
+        end
       end
-    end
 
-    context 'when there is an unconventional import' do
-      let(:text) { <<-EOS.strip }
+      context 'when there is an unconventional import' do
+        let(:text) { <<-EOS.strip }
 var zoo = require('foo/zoo');
 var tsar = require('foo/bar').tsar;
 
 foo
-      EOS
+        EOS
 
-      it 'adds the import and sorts the entire list' do
-        expect(subject).to eq(<<-EOS.strip)
+        it 'adds the import and sorts the entire list' do
+          expect(subject).to eq(<<-EOS.strip)
 var foo = require('bar/foo');
 var tsar = require('foo/bar').tsar;
 var zoo = require('foo/zoo');
 
 foo
-      EOS
+        EOS
+        end
       end
-    end
 
-    context 'when there is a blank line amongst current imports' do
-      let(:text) { <<-EOS.strip }
+      context 'when there is a blank line amongst current imports' do
+        let(:text) { <<-EOS.strip }
 var zoo = require('foo/zoo');
 
 var bar = require('foo/bar');
 foo
-      EOS
+        EOS
 
-      it 'adds the import and sorts the entire list' do
-        # TODO: We currently search for current imports until we encounter
-        # something that's not an import (like a blank line). We might want to
-        # do better here and ignore that whitespace. But for now, this is the
-        # behavior:
-        expect(subject).to eq(<<-EOS.strip)
+        it 'adds the import and sorts the entire list' do
+          # TODO: We currently search for current imports until we encounter
+          # something that's not an import (like a blank line). We might want to
+          # do better here and ignore that whitespace. But for now, this is the
+          # behavior:
+          expect(subject).to eq(<<-EOS.strip)
 var foo = require('bar/foo');
 var zoo = require('foo/zoo');
 
 var bar = require('foo/bar');
 foo
-      EOS
-      end
-    end
-
-    context 'when multiple files resolve the variable' do
-      let(:resolved_files) do
-        [
-          'zoo/foo.js',
-          'bar/foo.js.jsx'
-        ]
+        EOS
+        end
       end
 
-      before do
-        VIM.current_selection = selection
-      end
+      context 'when multiple files resolve the variable' do
+        let(:resolved_files) do
+          [
+            'zoo/foo.js',
+            'bar/foo.js.jsx'
+          ]
+        end
 
-      context 'and the user selects the first file' do
-        let(:selection) { 1 }
+        before do
+          VIM.current_selection = selection
+        end
 
-        it 'picks the first one' do
-          expect(subject).to eq(<<-eos.strip)
+        context 'and the user selects the first file' do
+          let(:selection) { 1 }
+
+          it 'picks the first one' do
+            expect(subject).to eq(<<-eos.strip)
 var foo = require('zoo/foo');
 
 foo
-          eos
+            eos
+          end
         end
-      end
 
-      context 'and the user selects the second file' do
-        let(:selection) { 2 }
+        context 'and the user selects the second file' do
+          let(:selection) { 2 }
 
-        it 'picks the second one' do
-          expect(subject).to eq(<<-EOS.strip)
+          it 'picks the second one' do
+            expect(subject).to eq(<<-EOS.strip)
 var foo = require('bar/foo');
 
 foo
-          EOS
+            EOS
+          end
         end
-      end
 
-      context 'and the user selects index 0 (which is the heading)' do
-        let(:selection) { 0 }
+        context 'and the user selects index 0 (which is the heading)' do
+          let(:selection) { 0 }
 
-        it 'picks nothing' do
-          expect(subject).to eq(<<-EOS.strip)
+          it 'picks nothing' do
+            expect(subject).to eq(<<-EOS.strip)
 foo
-          EOS
+            EOS
+          end
+        end
+
+        context 'and the user selects an index larger than the list' do
+          # Apparently, this can happen when you use `inputlist`
+          let(:selection) { 5 }
+
+          it 'picks nothing' do
+            expect(subject).to eq(<<-EOS.strip)
+foo
+            EOS
+          end
+        end
+
+        context 'and the user selects an index < 0' do
+          # Apparently, this can happen when you use `inputlist`
+          let(:selection) { -1 }
+
+          it 'picks nothing' do
+            expect(subject).to eq(<<-EOS.strip)
+foo
+            EOS
+          end
         end
       end
+    end
 
-      context 'and the user selects an index larger than the list' do
-        # Apparently, this can happen when you use `inputlist`
-        let(:selection) { 5 }
-
-        it 'picks nothing' do
-          expect(subject).to eq(<<-EOS.strip)
-  foo
-          EOS
-        end
+    context 'configuration' do
+      before do
+        allow(File).to receive(:exist?).with('.importjs').and_return(true)
+        allow(YAML).to receive(:load_file).and_return(configuration)
       end
 
-      context 'and the user selects an index < 0' do
-        # Apparently, this can happen when you use `inputlist`
-        let(:selection) { -1 }
+      context 'with aliases' do
+        let(:configuration) do
+          {
+            'aliases' => { '$' => 'jquery' }
+          }
+        end
+        let(:text) { '$' }
+        let(:word) { '$' }
 
-        it 'picks nothing' do
+        it 'resolves aliased imports to the aliases' do
           expect(subject).to eq(<<-EOS.strip)
-  foo
-          EOS
+var $ = require('jquery');
+
+$
+        EOS
         end
       end
     end
   end
 
-  context 'configuration' do
+  describe '#import_all' do
+    let(:jshint_result) { '' }
     before do
-      allow(File).to receive(:exist?).with('.importjs').and_return(true)
-      allow(YAML).to receive(:load_file).and_return(configuration)
+      allow(Open3).to receive(:capture3).and_return([jshint_result, nil])
     end
 
-    context 'with aliases' do
-      let(:configuration) do
-        {
-          'aliases' => { '$' => 'jquery' }
-        }
+    subject do
+      ImportJS::Importer.new.import_all
+      VIM::Buffer.current_buffer.to_s
+    end
+
+    context 'when no undefined variables exist' do
+      it 'leaves the buffer unchanged' do
+        expect(subject).to eq(text)
       end
-      let(:text) { '$' }
-      let(:word) { '$' }
 
-      it 'resolves aliased imports to the aliases' do
+      it 'displays a message' do
+        subject
+        expect(VIM.last_message).to eq(
+          '[import-js]: No variables to import'
+        )
+      end
+    end
+
+    context 'when one undefined variable exists' do
+      let(:resolved_files) { ['bar/foo.js.jsx'] }
+      let(:jshint_result) do
+        "stdin: line 3, col 11, 'foo' is not defined."
+      end
+
+      it 'imports that variable' do
         expect(subject).to eq(<<-EOS.strip)
-var $ = require('jquery');
+var foo = require('bar/foo');
 
-$
-      EOS
+foo
+        EOS
+      end
+
+      it 'displays a message' do
+        subject
+        expect(VIM.last_message).to eq(
+          '[import-js]: Imported these variables: ["foo"]'
+        )
+      end
+
+      context 'when jshint returns other issues' do
+        let(:jshint_result) do
+          "stdin: line 1, col 1, Use the function form of \"use strict\".\n"
+          "stdin: line 3, col 11, 'foo' is not defined."
+        end
+
+        it 'still imports the variable' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
+          EOS
+        end
+      end
+    end
+
+    context 'when multiple undefined variables exist' do
+      # We're cheating a bit with always returning this thing
+      let(:resolved_files) { ['bar/foo.js.jsx'] }
+      let(:text) { 'var a = foo + bar;' }
+
+      let(:jshint_result) do
+        "stdin: line 3, col 11, 'foo' is not defined.\n" +
+        "stdin: line 3, col 11, 'bar' is not defined."
+      end
+
+      it 'imports all variables' do
+        expect(subject).to eq(<<-EOS.strip)
+var bar = require('bar/foo');
+var foo = require('bar/foo');
+
+var a = foo + bar;
+        EOS
+      end
+
+      it 'displays a message' do
+        subject
+        expect(VIM.last_message).to eq(
+          '[import-js]: Imported these variables: ["foo", "bar"]'
+        )
       end
     end
   end

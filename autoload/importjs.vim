@@ -1,6 +1,9 @@
 function importjs#ImportJSImport()
   ruby $import_js.import
 endfunction
+function importjs#ImportJSImportAll()
+  ruby $import_js.import_all
+endfunction
 
 ruby << EOF
   begin
