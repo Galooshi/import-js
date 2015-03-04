@@ -86,6 +86,16 @@ aliases:
   '_' => 'third-party-libs/underscore'
 ```
 
+### `declaration_keyword`
+
+If you are using ES6 (ES 2015), you have access to `let` and `const` in addition
+to `var` as ways to declare variables. To use one of these, set the
+`declaration_keyword` configuration.
+
+```yaml:
+declaration_keyword: const
+```
+
 ### `jshint_cmd`
 
 Configure a path to a `jshint` compatible command, e.g. `jsxhint`.

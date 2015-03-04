@@ -98,7 +98,8 @@ module ImportJS
         buffer.delete(1)
       end
 
-      current_imports << "var #{variable_name} = require('#{path_to_file}');"
+      declaration_keyword = @config['declaration_keyword'] || 'var'
+      current_imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
       current_imports.sort!.uniq!
 
       current_imports.reverse.each do |import_line|

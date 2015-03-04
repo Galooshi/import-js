@@ -273,6 +273,31 @@ $
         EOS
         end
       end
+
+      context 'with declaration_keyword' do
+        subject do
+          ImportJS::Importer.new.import
+          VIM::Buffer.current_buffer.to_s
+        end
+
+        let(:configuration) do
+          {
+            'declaration_keyword' => 'const'
+          }
+        end
+
+        context 'with a variable name that will resolve' do
+          let(:resolved_files) { ['bar/foo.js.jsx'] }
+
+          it 'adds an import to the top of the buffer using the declaration_keyword' do
+            expect(subject).to eq(<<-EOS.strip)
+const foo = require('bar/foo');
+
+foo
+            EOS
+          end
+        end
+      end
     end
   end
 
