@@ -296,6 +296,41 @@ const foo = require('bar/foo');
 foo
             EOS
           end
+
+          context 'when that variable is already imported using `var`' do
+            let(:text) { <<-EOS.strip }
+var foo = require('bar/foo');
+
+foo
+            EOS
+
+            it 'changes the `var` to declaration_keyword' do
+              expect(subject).to eq(<<-EOS.strip)
+const foo = require('bar/foo');
+
+foo
+              EOS
+            end
+          end
+
+          context 'when other imports exist' do
+            let(:text) { <<-EOS.strip }
+var zoo = require('foo/zoo');
+let bar = require('foo/bar');
+
+foo
+            EOS
+
+            it 'adds the import and sorts the entire list' do
+              expect(subject).to eq(<<-EOS.strip)
+const foo = require('bar/foo');
+let bar = require('foo/bar');
+var zoo = require('foo/zoo');
+
+foo
+            EOS
+            end
+          end
         end
       end
     end

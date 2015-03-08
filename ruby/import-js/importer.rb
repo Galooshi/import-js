@@ -110,7 +110,12 @@ module ImportJS
 
       declaration_keyword = @config['declaration_keyword']
       current_imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
-      current_imports.sort!.uniq!
+
+      current_imports.sort!.uniq! do |import|
+        # Determine uniqueness by discarding the declaration keyword (`const`,
+        # `let`, or `var`).
+        import.sub(/\A(const|let|var)\s+/, '')
+      end
 
       current_imports.reverse.each do |import_line|
         buffer.append(0, import_line)
@@ -130,7 +135,7 @@ module ImportJS
       lines = []
       buffer.count.times do |n|
         line = buffer[n + 1]
-        break unless line.match(/^var\s+.+=\s+require\(.*\).*;\s*$/)
+        break unless line.match(/^(const|let|var)\s+.+=\s+require\(.*\).*;\s*$/)
         lines << line
       end
       lines
