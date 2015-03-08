@@ -16,6 +16,8 @@ module ImportJS
       end
     end
 
+    # Finds variable under the cursor to import. By default, this is bound to
+    # `<Leader>j`.
     def import
       variable_name = VIM.evaluate("expand('<cword>')")
       if variable_name.empty?
@@ -30,7 +32,7 @@ module ImportJS
       window.cursor = [current_row + lines_changed, current_col]
     end
 
-    # Finds variables that haven't yet been imported
+    # Finds all variables that haven't yet been imported.
     def import_all
       unused_variables = find_unused_variables
       imported_variables = []
@@ -54,6 +56,7 @@ module ImportJS
 
     private
 
+    # @return [Array]
     def find_unused_variables
       content = "/* jshint undef: true, strict: true */\n" +
                 VIM.evaluate('join(getline(1, "$"), "\n")')
@@ -68,6 +71,7 @@ module ImportJS
       result.uniq
     end
 
+    # @param variable_name [String]
     # @return the number of lines changed, or nil if no file was found for the
     #   variable.
     def import_one_variable(variable_name)
@@ -91,6 +95,8 @@ module ImportJS
       VIM::Window.current
     end
 
+    # @param variable_name [String]
+    # @param path_to_file [String]
     # @return [number] the number of lines changed
     def write_imports(variable_name, path_to_file)
       current_imports = find_current_imports
@@ -116,6 +122,7 @@ module ImportJS
       after_length - before_length
     end
 
+    # @return [Array]
     def find_current_imports
       lines = []
       buffer.count.times do |n|
@@ -126,6 +133,8 @@ module ImportJS
       lines
     end
 
+    # @param variable_name [String]
+    # @return [Array]
     def find_files(variable_name)
       if alias_path = @config['aliases'][variable_name]
         return [alias_path]
@@ -141,6 +150,9 @@ module ImportJS
       matched_files
     end
 
+    # @param files [Array]
+    # @param variable_name [String]
+    # @return [String]
     def resolve_one_file(files, variable_name)
       if files.length == 1
         VIM.message("[import-js] Imported `#{files.first}`")
@@ -158,6 +170,8 @@ module ImportJS
       files[selected_index - 1]
     end
 
+    # @param string [String]
+    # @return [String]
     def camelcase_to_snakecase(string)
       # Grabbed from
       # http://stackoverflow.com/questions/1509915/converting-camel-case-to-underscore-case-in-ruby
