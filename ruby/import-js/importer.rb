@@ -5,9 +5,10 @@ module ImportJS
   class Importer
     def initialize
       @config = {
-        'lookup_paths' => ['.'],
         'aliases' => {},
-        'jshint_cmd' => 'jshint'
+        'declaration_keyword' => 'var',
+        'jshint_cmd' => 'jshint',
+        'lookup_paths' => ['.'],
       }
       config_file = '.importjs'
       if File.exist? config_file
@@ -98,7 +99,7 @@ module ImportJS
         buffer.delete(1)
       end
 
-      declaration_keyword = @config['declaration_keyword'] || 'var'
+      declaration_keyword = @config['declaration_keyword']
       current_imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
       current_imports.sort!.uniq!
 
