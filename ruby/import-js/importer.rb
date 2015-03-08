@@ -21,8 +21,9 @@ module ImportJS
     def import
       variable_name = VIM.evaluate("expand('<cword>')")
       if variable_name.empty?
-        VIM.message(<<-EOS.strip)
-          [import-js]: No variable to import. Place your cursor on a variable, then try again.
+        VIM.message(<<-EOS.split.join(' '))
+          [import-js]: No variable to import. Place your cursor on a variable,
+          then try again.
         EOS
         return
       end
@@ -44,11 +45,11 @@ module ImportJS
       end
 
       if imported_variables.empty?
-        VIM.message(<<-EOS.strip)
+        VIM.message(<<-EOS.split.join(' '))
           [import-js]: No variables to import
         EOS
       else
-        VIM.message(<<-EOS.strip)
+        VIM.message(<<-EOS.split.join(' '))
           [import-js]: Imported these variables: #{imported_variables}
         EOS
       end
@@ -77,7 +78,9 @@ module ImportJS
     def import_one_variable(variable_name)
       files = find_files(variable_name)
       if files.empty?
-        VIM.message("[import-js]: No js file to import for variable `#{variable_name}`")
+        VIM.message(<<-EOS.split.join(' '))
+          [import-js]: No js file to import for variable `#{variable_name}`
+        EOS
         return
       end
 
