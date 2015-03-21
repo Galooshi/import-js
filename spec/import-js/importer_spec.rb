@@ -157,6 +157,27 @@ foo
         end
       end
 
+      context 'when there is an import with line-breaks' do
+        let(:text) { <<-EOS.strip }
+var zoo =
+  require('foo/zoo');
+var tsar = require('foo/bar').tsar;
+
+var foo = { require: b }
+        EOS
+
+        it 'adds the import, sorts the entire list and keeps the line-break' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+var tsar = require('foo/bar').tsar;
+var zoo =
+  require('foo/zoo');
+
+var foo = { require: b }
+        EOS
+        end
+      end
+
       context 'when there is a blank line amongst current imports' do
         let(:text) { <<-EOS.strip }
 var zoo = require('foo/zoo');
@@ -305,6 +326,23 @@ foo
             EOS
 
             it 'changes the `var` to declaration_keyword' do
+              expect(subject).to eq(<<-EOS.strip)
+const foo = require('bar/foo');
+
+foo
+              EOS
+            end
+          end
+
+          context 'when the import contains a line-break' do
+            let(:text) { <<-EOS.strip }
+var foo =
+  require('bar/foo');
+
+foo
+            EOS
+
+            it 'changes the `var` to declaration_keyword and removes the whitespace' do
               expect(subject).to eq(<<-EOS.strip)
 const foo = require('bar/foo');
 

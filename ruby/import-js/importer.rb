@@ -103,42 +103,55 @@ module ImportJS
     # @return [number] the number of lines changed
     def write_imports(variable_name, path_to_file)
       current_imports = find_current_imports
-      before_length = current_imports.length
-      current_imports.length.times do
+
+      unless buffer[current_imports[:newline_count] + 1].strip.empty?
+        # Add a newline after imports
+        buffer.append(current_imports[:newline_count], '')
+      end
+
+      # delete current imports
+      current_imports[:newline_count].times do
         buffer.delete(1)
       end
 
-      declaration_keyword = @config['declaration_keyword']
-      current_imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
+      imports = current_imports[:imports]
+      before_length = imports.length
 
-      current_imports.sort!.uniq! do |import|
+      declaration_keyword = @config['declaration_keyword']
+      imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
+
+      imports.sort!.uniq! do |import|
         # Determine uniqueness by discarding the declaration keyword (`const`,
-        # `let`, or `var`).
-        import.sub(/\A(const|let|var)\s+/, '')
+        # `let`, or `var`) and normalizing multiple whitespace chars to single
+        # spaces.
+        import.sub(/\A(const|let|var)\s+/, '').sub(/\s\s+/s, ' ')
       end
 
-      current_imports.reverse.each do |import_line|
+      # add imports back in
+      imports.reverse.each do |import_line|
         buffer.append(0, import_line)
       end
 
-      after_length = current_imports.length
-      unless buffer[current_imports.length + 1].strip.empty?
-        # Add a newline after imports
-        buffer.append(current_imports.length, '')
-        after_length += 1
-      end
-      after_length - before_length
+      imports.length - before_length # truthy if the import was new
     end
 
     # @return [Array]
     def find_current_imports
-      lines = []
+      imports_blob = ''
       buffer.count.times do |n|
         line = buffer[n + 1]
-        break unless line.match(/^(const|let|var)\s+.+=\s+require\(.*\).*;\s*$/)
-        lines << line
+        break if line.strip.empty?
+        imports_blob << "\n#{line}"
       end
-      lines
+
+      imports = imports_blob.scan(/(?:const|let|var)\s+.+=\s+require\(.*\).*;/)
+      newline_count = imports.length + imports.reduce(0) do |sum, import|
+        sum + import.scan(/\n/).length
+      end
+      {
+        imports: imports,
+        newline_count: newline_count
+      }
     end
 
     # @param variable_name [String]
