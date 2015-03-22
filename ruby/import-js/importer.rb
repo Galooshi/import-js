@@ -124,14 +124,16 @@ module ImportJS
 
       # Delete old imports, then add the modified list back in.
       current_imports[:newline_count].times { buffer.delete(1) }
-      imports.reverse.each { |import| buffer.append(0, import) }
+      imports.reverse_each do |import|
+        import.split("\n").reverse_each { |line| buffer.append(0, line) }
+      end
 
       # Consumers of this method rely on knowing how many lines of code
       # changed, so we return that.
       imports.length - before_length
     end
 
-    # @return [Array]
+    # @return [Hash]
     def find_current_imports
       imports_blob = ''
       buffer.count.times do |n|
