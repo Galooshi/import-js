@@ -104,14 +104,9 @@ module ImportJS
     def write_imports(variable_name, path_to_file)
       current_imports = find_current_imports
 
+      # Add a newline after imports
       unless buffer[current_imports[:newline_count] + 1].strip.empty?
-        # Add a newline after imports
         buffer.append(current_imports[:newline_count], '')
-      end
-
-      # delete current imports
-      current_imports[:newline_count].times do
-        buffer.delete(1)
       end
 
       imports = current_imports[:imports]
@@ -127,12 +122,13 @@ module ImportJS
         import.sub(/\A(const|let|var)\s+/, '').sub(/\s\s+/s, ' ')
       end
 
-      # add imports back in
-      imports.reverse.each do |import_line|
-        buffer.append(0, import_line)
-      end
+      # Delete old imports, then add the modified list back in.
+      current_imports[:newline_count].times { buffer.delete(1) }
+      imports.reverse.each { |import| buffer.append(0, import) }
 
-      imports.length - before_length # truthy if the import was new
+      # Consumers of this method rely on knowing how many lines of code
+      # changed, so we return that.
+      imports.length - before_length
     end
 
     # @return [Array]
