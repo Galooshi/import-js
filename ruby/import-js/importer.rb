@@ -30,7 +30,9 @@ module ImportJS
       end
       current_row, current_col = window.cursor
 
-      return unless lines_changed = import_one_variable(variable_name)
+      old_buffer_lines = buffer.count
+      import_one_variable variable_name
+      return unless lines_changed = buffer.count - old_buffer_lines
       window.cursor = [current_row + lines_changed, current_col]
     end
 
@@ -74,8 +76,7 @@ module ImportJS
     end
 
     # @param variable_name [String]
-    # @return the number of lines changed, or nil if no file was found for the
-    #   variable.
+    # @return [Boolean] true if a variable was imported, false if not
     def import_one_variable(variable_name)
       files = find_files(variable_name)
       if files.empty?
@@ -101,7 +102,7 @@ module ImportJS
 
     # @param variable_name [String]
     # @param path_to_file [String]
-    # @return [number] the number of lines changed
+    # @return [Boolean] true if a variable was imported, false if not
     def write_imports(variable_name, path_to_file)
       old_imports = find_current_imports
 
@@ -132,9 +133,7 @@ module ImportJS
         import.split("\n").reverse_each { |line| buffer.append(0, line) }
       end
 
-      # Consumers of this method rely on knowing how many lines of code
-      # changed, so we return that.
-      modified_imports.length - previous_length
+      previous_length < modified_imports.length
     end
 
     # @return [Hash]
