@@ -104,6 +104,14 @@ Configure a path to a `jshint` compatible command, e.g. `jsxhint`.
 jshint_cmd: jsxhint
 ```
 
+### `text_width`
+
+Configure the maximum line length before wrapping occurs. Defaults to `80`.
+
+```yaml
+text_width: 80
+```
+
 ## Dependencies
 
 import-js is written in Ruby, so in order to make it work in your Vim you need

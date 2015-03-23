@@ -9,6 +9,7 @@ module ImportJS
         'declaration_keyword' => 'var',
         'jshint_cmd' => 'jshint',
         'lookup_paths' => ['.'],
+        'text_width' => 80,
       }
       config_file = '.importjs'
       if File.exist? config_file
@@ -29,7 +30,9 @@ module ImportJS
       end
       current_row, current_col = window.cursor
 
-      return unless lines_changed = import_one_variable(variable_name)
+      old_buffer_lines = buffer.count
+      import_one_variable variable_name
+      return unless lines_changed = buffer.count - old_buffer_lines
       window.cursor = [current_row + lines_changed, current_col]
     end
 
@@ -73,8 +76,7 @@ module ImportJS
     end
 
     # @param variable_name [String]
-    # @return the number of lines changed, or nil if no file was found for the
-    #   variable.
+    # @return [Boolean] true if a variable was imported, false if not
     def import_one_variable(variable_name)
       files = find_files(variable_name)
       if files.empty?
@@ -100,22 +102,23 @@ module ImportJS
 
     # @param variable_name [String]
     # @param path_to_file [String]
-    # @return [number] the number of lines changed
+    # @return [Boolean] true if a variable was imported, false if not
     def write_imports(variable_name, path_to_file)
-      current_imports = find_current_imports
+      old_imports = find_current_imports
 
-      # Add a newline after imports
-      unless buffer[current_imports[:newline_count] + 1].strip.empty?
-        buffer.append(current_imports[:newline_count], '')
+      # Ensure that there is a blank line after the block of all imports
+      unless buffer[old_imports[:newline_count] + 1].strip.empty?
+        buffer.append(old_imports[:newline_count], '')
       end
 
-      imports = current_imports[:imports]
-      before_length = imports.length
+      modified_imports = old_imports[:imports] # Array
+      previous_length = modified_imports.length
 
-      declaration_keyword = @config['declaration_keyword']
-      imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
+      # Add new import to the block of imports, wrapping at text_width
+      modified_imports << generate_import(variable_name, path_to_file)
 
-      imports.sort!.uniq! do |import|
+      # Sort the block of imports
+      modified_imports.sort!.uniq! do |import|
         # Determine uniqueness by discarding the declaration keyword (`const`,
         # `let`, or `var`) and normalizing multiple whitespace chars to single
         # spaces.
@@ -123,14 +126,14 @@ module ImportJS
       end
 
       # Delete old imports, then add the modified list back in.
-      current_imports[:newline_count].times { buffer.delete(1) }
-      imports.reverse_each do |import|
+      old_imports[:newline_count].times { buffer.delete(1) }
+      modified_imports.reverse_each do |import|
+        # We need to add each line individually because the Vim buffer will
+        # convert newline characters to `~@`.
         import.split("\n").reverse_each { |line| buffer.append(0, line) }
       end
 
-      # Consumers of this method rely on knowing how many lines of code
-      # changed, so we return that.
-      imports.length - before_length
+      previous_length < modified_imports.length
     end
 
     # @return [Hash]
@@ -150,6 +153,23 @@ module ImportJS
         imports: imports,
         newline_count: newline_count
       }
+    end
+
+    # @param variable_name [String]
+    # @param path_to_file [String]
+    # @return [String] the import string to be added to the imports block
+    def generate_import(variable_name, path_to_file)
+      declaration_keyword = @config['declaration_keyword']
+      text_width = @config['text_width']
+      declaration = "#{declaration_keyword} #{variable_name} ="
+      value = "require('#{path_to_file}');"
+
+      if "#{declaration} #{value}".length > text_width
+        # TODO: configurable indentation
+        "#{declaration}\n  #{value}"
+      else
+        "#{declaration} #{value}"
+      end
     end
 
     # @param variable_name [String]
