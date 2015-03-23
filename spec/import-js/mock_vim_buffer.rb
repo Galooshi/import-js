@@ -8,7 +8,9 @@ class MockVimBuffer
   end
 
   def append(index, string)
-    @buffer_lines.insert(index, string)
+    # We replace newlines with "^@" because that's what a real vim buffer will
+    # output if you append such a string.
+    @buffer_lines.insert(index, string.gsub("\n", '^@'))
   end
 
   def count
