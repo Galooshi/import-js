@@ -9,6 +9,7 @@ module ImportJS
         'declaration_keyword' => 'var',
         'jshint_cmd' => 'jshint',
         'lookup_paths' => ['.'],
+        'text_width' => 80,
       }
       config_file = '.importjs'
       if File.exist? config_file
@@ -112,9 +113,19 @@ module ImportJS
       modified_imports = old_imports[:imports] # Array
       previous_length = modified_imports.length
 
-      # Add new import to the block of imports
+      # Add new import to the block of imports, wrapping at text_width
       declaration_keyword = @config['declaration_keyword']
-      modified_imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
+      text_width = @config['text_width']
+      declaration = "#{declaration_keyword} #{variable_name} ="
+      value = "require('#{path_to_file}');"
+
+      new_import = if "#{declaration} #{value}".length > text_width
+                     # TODO: configurable indentation
+                     "#{declaration}\n  #{value}"
+                   else
+                     "#{declaration} #{value}"
+                   end
+      modified_imports << new_import
 
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|

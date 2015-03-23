@@ -371,6 +371,44 @@ foo
           end
         end
       end
+
+      describe 'text_width' do
+        subject do
+          ImportJS::Importer.new.import
+          VIM::Buffer.current_buffer.to_s
+        end
+
+        let(:configuration) do
+          {
+            'text_width' => 40
+          }
+        end
+
+        context 'when lines exceed the limit' do
+          let(:resolved_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
+
+          it 'wraps them' do
+            expect(subject).to eq(<<-EOS.strip)
+var foo =
+  require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+
+foo
+            EOS
+          end
+        end
+
+        context 'when lines do not exceed the limit' do
+          let(:resolved_files) { ['bar/foo.js.jsx'] }
+
+          it 'does not wrap them' do
+            expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
+            EOS
+          end
+        end
+      end
     end
   end
 
