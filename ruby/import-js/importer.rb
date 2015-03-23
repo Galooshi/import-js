@@ -137,8 +137,10 @@ module ImportJS
 
       # Delete old imports, then add the modified list back in.
       old_imports[:newline_count].times { buffer.delete(1) }
-      modified_imports.each_with_index do |import, line_number|
-        buffer.append(line_number, import)
+      modified_imports.reverse_each do |import|
+        # We need to add each line individually because the Vim buffer will
+        # convert newline characters to `~@`.
+        import.split("\n").reverse_each { |line| buffer.append(0, line) }
       end
 
       # Consumers of this method rely on knowing how many lines of code
