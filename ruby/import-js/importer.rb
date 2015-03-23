@@ -114,18 +114,7 @@ module ImportJS
       previous_length = modified_imports.length
 
       # Add new import to the block of imports, wrapping at text_width
-      declaration_keyword = @config['declaration_keyword']
-      text_width = @config['text_width']
-      declaration = "#{declaration_keyword} #{variable_name} ="
-      value = "require('#{path_to_file}');"
-
-      new_import = if "#{declaration} #{value}".length > text_width
-                     # TODO: configurable indentation
-                     "#{declaration}\n  #{value}"
-                   else
-                     "#{declaration} #{value}"
-                   end
-      modified_imports << new_import
+      modified_imports << generate_import(variable_name, path_to_file)
 
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|
@@ -165,6 +154,23 @@ module ImportJS
         imports: imports,
         newline_count: newline_count
       }
+    end
+
+    # @param variable_name [String]
+    # @param path_to_file [String]
+    # @return [String] the import string to be added to the imports block
+    def generate_import(variable_name, path_to_file)
+      declaration_keyword = @config['declaration_keyword']
+      text_width = @config['text_width']
+      declaration = "#{declaration_keyword} #{variable_name} ="
+      value = "require('#{path_to_file}');"
+
+      if "#{declaration} #{value}".length > text_width
+        # TODO: configurable indentation
+        "#{declaration}\n  #{value}"
+      else
+        "#{declaration} #{value}"
+      end
     end
 
     # @param variable_name [String]
