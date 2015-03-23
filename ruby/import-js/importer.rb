@@ -102,20 +102,22 @@ module ImportJS
     # @param path_to_file [String]
     # @return [number] the number of lines changed
     def write_imports(variable_name, path_to_file)
-      current_imports = find_current_imports
+      old_imports = find_current_imports
 
-      # Add a newline after imports
-      unless buffer[current_imports[:newline_count] + 1].strip.empty?
-        buffer.append(current_imports[:newline_count], '')
+      # Ensure that there is a blank line after the block of all imports
+      unless buffer[old_imports[:newline_count] + 1].strip.empty?
+        buffer.append(old_imports[:newline_count], '')
       end
 
-      imports = current_imports[:imports]
-      before_length = imports.length
+      modified_imports = old_imports[:imports] # Array
+      previous_length = modified_imports.length
 
+      # Add new import to the block of imports
       declaration_keyword = @config['declaration_keyword']
-      imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
+      modified_imports << "#{declaration_keyword} #{variable_name} = require('#{path_to_file}');"
 
-      imports.sort!.uniq! do |import|
+      # Sort the block of imports
+      modified_imports.sort!.uniq! do |import|
         # Determine uniqueness by discarding the declaration keyword (`const`,
         # `let`, or `var`) and normalizing multiple whitespace chars to single
         # spaces.
@@ -123,14 +125,14 @@ module ImportJS
       end
 
       # Delete old imports, then add the modified list back in.
-      current_imports[:newline_count].times { buffer.delete(1) }
-      imports.reverse_each do |import|
-        import.split("\n").reverse_each { |line| buffer.append(0, line) }
+      old_imports[:newline_count].times { buffer.delete(1) }
+      modified_imports.each_with_index do |import, line_number|
+        buffer.append(line_number, import)
       end
 
       # Consumers of this method rely on knowing how many lines of code
       # changed, so we return that.
-      imports.length - before_length
+      modified_imports.length - previous_length
     end
 
     # @return [Hash]
