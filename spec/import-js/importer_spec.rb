@@ -286,13 +286,55 @@ foo
 
         let(:resolved_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
 
-        it 'wraps them' do
-          expect(subject).to eq(<<-EOS.strip)
+        context 'when expandtab is not set' do
+          before(:each) do
+            allow(importer).to receive(:expand_tab?).and_return(false)
+          end
+
+          it 'wraps them and indents with a tab' do
+            expect(subject).to eq(<<-EOS.strip)
+var foo =
+	require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+
+foo
+            EOS
+          end
+        end
+
+        context 'when expandtab is set' do
+          before(:each) do
+            allow(importer).to receive(:expand_tab?).and_return(true)
+          end
+
+          context 'when shiftwidth is set' do
+            before(:each) do
+              allow(importer).to receive(:shift_width).and_return(3)
+            end
+
+            it 'wraps them and indents with shiftwidth spaces' do
+              expect(subject).to eq(<<-EOS.strip)
+var foo =
+   require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+
+foo
+              EOS
+            end
+          end
+
+          context 'when shiftwidth is not set' do
+            before(:each) do
+              allow(importer).to receive(:shift_width).and_return(nil)
+            end
+
+            it 'wraps them and indents with 2 spaces' do
+              expect(subject).to eq(<<-EOS.strip)
 var foo =
   require('fiz/bar/biz/baz/fiz/buz/boz/foo');
 
 foo
-          EOS
+              EOS
+            end
+          end
         end
       end
 

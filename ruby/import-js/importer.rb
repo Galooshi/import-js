@@ -117,9 +117,32 @@ module ImportJS
       exists?(name) ? VIM.evaluate("#{name}").to_i : nil
     end
 
+    # @param name [String]
+    # @return [Boolean?]
+    def get_bool(name)
+      exists?(name) ? VIM.evaluate("#{name}").to_i != 0 : nil
+    end
+
     # @return [Number?]
     def text_width
       get_number('&textwidth')
+    end
+
+    # @return [Boolean?]
+    def expand_tab?
+      get_bool('&expandtab')
+    end
+
+    # @return [Number?]
+    def shift_width
+      get_number('&shiftwidth')
+    end
+
+    # @return [String] shiftwidth number of spaces if expandtab is not set,
+    #   otherwise `\t`
+    def tab
+      return "\t" unless expand_tab?
+      ' ' * (shift_width || 2)
     end
 
     # @param variable_name [String]
@@ -186,8 +209,7 @@ module ImportJS
       value = "require('#{path_to_file}');"
 
       if text_width && "#{declaration} #{value}".length > text_width
-        # TODO: configurable indentation
-        "#{declaration}\n  #{value}"
+        "#{declaration}\n#{tab}#{value}"
       else
         "#{declaration} #{value}"
       end
