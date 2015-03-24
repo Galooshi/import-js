@@ -271,6 +271,48 @@ foo
       end
     end
 
+    describe 'line wrapping' do
+      let(:importer) { ImportJS::Importer.new }
+
+      subject do
+        importer.import
+        VIM::Buffer.current_buffer.to_s
+      end
+
+      context "when lines exceed Vim's textwidth" do
+        before(:each) do
+          allow(importer).to receive(:text_width).and_return(40)
+        end
+
+        let(:resolved_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
+
+        it 'wraps them' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo =
+  require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+
+foo
+          EOS
+        end
+      end
+
+      context "when lines do not exceed Vim's textwidth" do
+        before(:each) do
+          allow(importer).to receive(:text_width).and_return(80)
+        end
+
+        let(:resolved_files) { ['bar/foo.js.jsx'] }
+
+        it 'does not wrap them' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
+          EOS
+        end
+      end
+    end
+
     context 'configuration' do
       before do
         allow(File).to receive(:exist?).with('.importjs').and_return(true)
@@ -368,44 +410,6 @@ var zoo = require('foo/zoo');
 foo
             EOS
             end
-          end
-        end
-      end
-
-      describe 'text_width' do
-        subject do
-          ImportJS::Importer.new.import
-          VIM::Buffer.current_buffer.to_s
-        end
-
-        let(:configuration) do
-          {
-            'text_width' => 40
-          }
-        end
-
-        context 'when lines exceed the limit' do
-          let(:resolved_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
-
-          it 'wraps them' do
-            expect(subject).to eq(<<-EOS.strip)
-var foo =
-  require('fiz/bar/biz/baz/fiz/buz/boz/foo');
-
-foo
-            EOS
-          end
-        end
-
-        context 'when lines do not exceed the limit' do
-          let(:resolved_files) { ['bar/foo.js.jsx'] }
-
-          it 'does not wrap them' do
-            expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
-
-foo
-            EOS
           end
         end
       end
