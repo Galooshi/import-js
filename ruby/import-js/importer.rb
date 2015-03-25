@@ -9,7 +9,6 @@ module ImportJS
         'declaration_keyword' => 'var',
         'jshint_cmd' => 'jshint',
         'lookup_paths' => ['.'],
-        'text_width' => 80,
       }
       config_file = '.importjs'
       if File.exist? config_file
@@ -100,6 +99,52 @@ module ImportJS
       VIM::Window.current
     end
 
+    # Check for the presence of a setting such as:
+    #
+    #   - g:CommandTSmartCase (plug-in setting)
+    #   - &wildignore         (Vim setting)
+    #   - +cursorcolumn       (Vim setting, that works)
+    #
+    # @param str [String]
+    # @return [Boolean]
+    def exists?(str)
+      VIM.evaluate(%{exists("#{str}")}).to_i != 0
+    end
+
+    # @param name [String]
+    # @return [Number?]
+    def get_number(name)
+      exists?(name) ? VIM.evaluate("#{name}").to_i : nil
+    end
+
+    # @param name [String]
+    # @return [Boolean?]
+    def get_bool(name)
+      exists?(name) ? VIM.evaluate("#{name}").to_i != 0 : nil
+    end
+
+    # @return [Number?]
+    def text_width
+      get_number('&textwidth')
+    end
+
+    # @return [Boolean?]
+    def expand_tab?
+      get_bool('&expandtab')
+    end
+
+    # @return [Number?]
+    def shift_width
+      get_number('&shiftwidth')
+    end
+
+    # @return [String] shiftwidth number of spaces if expandtab is not set,
+    #   otherwise `\t`
+    def tab
+      return "\t" unless expand_tab?
+      ' ' * (shift_width || 2)
+    end
+
     # @param variable_name [String]
     # @param path_to_file [String]
     # @return [Boolean] true if a variable was imported, false if not
@@ -160,13 +205,11 @@ module ImportJS
     # @return [String] the import string to be added to the imports block
     def generate_import(variable_name, path_to_file)
       declaration_keyword = @config['declaration_keyword']
-      text_width = @config['text_width']
       declaration = "#{declaration_keyword} #{variable_name} ="
       value = "require('#{path_to_file}');"
 
-      if "#{declaration} #{value}".length > text_width
-        # TODO: configurable indentation
-        "#{declaration}\n  #{value}"
+      if text_width && "#{declaration} #{value}".length > text_width
+        "#{declaration}\n#{tab}#{value}"
       else
         "#{declaration} #{value}"
       end

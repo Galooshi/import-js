@@ -271,6 +271,90 @@ foo
       end
     end
 
+    describe 'line wrapping' do
+      let(:importer) { ImportJS::Importer.new }
+
+      subject do
+        importer.import
+        VIM::Buffer.current_buffer.to_s
+      end
+
+      context "when lines exceed Vim's textwidth" do
+        before(:each) do
+          allow(importer).to receive(:text_width).and_return(40)
+        end
+
+        let(:resolved_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
+
+        context 'when expandtab is not set' do
+          before(:each) do
+            allow(importer).to receive(:expand_tab?).and_return(false)
+          end
+
+          it 'wraps them and indents with a tab' do
+            expect(subject).to eq(<<-EOS.strip)
+var foo =
+	require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+
+foo
+            EOS
+          end
+        end
+
+        context 'when expandtab is set' do
+          before(:each) do
+            allow(importer).to receive(:expand_tab?).and_return(true)
+          end
+
+          context 'when shiftwidth is set' do
+            before(:each) do
+              allow(importer).to receive(:shift_width).and_return(3)
+            end
+
+            it 'wraps them and indents with shiftwidth spaces' do
+              expect(subject).to eq(<<-EOS.strip)
+var foo =
+   require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+
+foo
+              EOS
+            end
+          end
+
+          context 'when shiftwidth is not set' do
+            before(:each) do
+              allow(importer).to receive(:shift_width).and_return(nil)
+            end
+
+            it 'wraps them and indents with 2 spaces' do
+              expect(subject).to eq(<<-EOS.strip)
+var foo =
+  require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+
+foo
+              EOS
+            end
+          end
+        end
+      end
+
+      context "when lines do not exceed Vim's textwidth" do
+        before(:each) do
+          allow(importer).to receive(:text_width).and_return(80)
+        end
+
+        let(:resolved_files) { ['bar/foo.js.jsx'] }
+
+        it 'does not wrap them' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
+          EOS
+        end
+      end
+    end
+
     context 'configuration' do
       before do
         allow(File).to receive(:exist?).with('.importjs').and_return(true)
@@ -368,44 +452,6 @@ var zoo = require('foo/zoo');
 foo
             EOS
             end
-          end
-        end
-      end
-
-      describe 'text_width' do
-        subject do
-          ImportJS::Importer.new.import
-          VIM::Buffer.current_buffer.to_s
-        end
-
-        let(:configuration) do
-          {
-            'text_width' => 40
-          }
-        end
-
-        context 'when lines exceed the limit' do
-          let(:resolved_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
-
-          it 'wraps them' do
-            expect(subject).to eq(<<-EOS.strip)
-var foo =
-  require('fiz/bar/biz/baz/fiz/buz/boz/foo');
-
-foo
-            EOS
-          end
-        end
-
-        context 'when lines do not exceed the limit' do
-          let(:resolved_files) { ['bar/foo.js.jsx'] }
-
-          it 'does not wrap them' do
-            expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
-
-foo
-            EOS
           end
         end
       end
