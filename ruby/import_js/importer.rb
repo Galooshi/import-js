@@ -1,20 +1,8 @@
-require 'yaml'
-require 'open3'
-
 module ImportJS
   class Importer
     def initialize
-      @config = {
-        'aliases' => {},
-        'declaration_keyword' => 'var',
-        'jshint_cmd' => 'jshint',
-        'lookup_paths' => ['.'],
-      }
-      config_file = '.importjs'
-      if File.exist? config_file
-        @config = @config.merge(YAML.load_file(config_file))
-      end
-    end
+      @config = ImportJS::Configuration.new
+     end
 
     # Finds variable under the cursor to import. By default, this is bound to
     # `<Leader>j`.
@@ -64,7 +52,7 @@ module ImportJS
       content = "/* jshint undef: true, strict: true */\n" +
                 VIM.evaluate('join(getline(1, "$"), "\n")')
 
-      out, _ = Open3.capture3("#{@config['jshint_cmd']} -", stdin_data: content)
+      out, _ = Open3.capture3("#{@config.get('jshint_cmd')} -", stdin_data: content)
       result = []
       out.split("\n").each do |line|
         /.*'([^']+)' is not defined/.match(line) do |match_data|
@@ -97,52 +85,6 @@ module ImportJS
 
     def window
       VIM::Window.current
-    end
-
-    # Check for the presence of a setting such as:
-    #
-    #   - g:CommandTSmartCase (plug-in setting)
-    #   - &wildignore         (Vim setting)
-    #   - +cursorcolumn       (Vim setting, that works)
-    #
-    # @param str [String]
-    # @return [Boolean]
-    def exists?(str)
-      VIM.evaluate(%{exists("#{str}")}).to_i != 0
-    end
-
-    # @param name [String]
-    # @return [Number?]
-    def get_number(name)
-      exists?(name) ? VIM.evaluate("#{name}").to_i : nil
-    end
-
-    # @param name [String]
-    # @return [Boolean?]
-    def get_bool(name)
-      exists?(name) ? VIM.evaluate("#{name}").to_i != 0 : nil
-    end
-
-    # @return [Number?]
-    def text_width
-      get_number('&textwidth')
-    end
-
-    # @return [Boolean?]
-    def expand_tab?
-      get_bool('&expandtab')
-    end
-
-    # @return [Number?]
-    def shift_width
-      get_number('&shiftwidth')
-    end
-
-    # @return [String] shiftwidth number of spaces if expandtab is not set,
-    #   otherwise `\t`
-    def tab
-      return "\t" unless expand_tab?
-      ' ' * (shift_width || 2)
     end
 
     # @param variable_name [String]
@@ -204,12 +146,12 @@ module ImportJS
     # @param path_to_file [String]
     # @return [String] the import string to be added to the imports block
     def generate_import(variable_name, path_to_file)
-      declaration_keyword = @config['declaration_keyword']
+      declaration_keyword = @config.get('declaration_keyword')
       declaration = "#{declaration_keyword} #{variable_name} ="
       value = "require('#{path_to_file}');"
 
-      if text_width && "#{declaration} #{value}".length > text_width
-        "#{declaration}\n#{tab}#{value}"
+      if @config.text_width && "#{declaration} #{value}".length > @config.text_width
+        "#{declaration}\n#{@config.tab}#{value}"
       else
         "#{declaration} #{value}"
       end
@@ -218,12 +160,12 @@ module ImportJS
     # @param variable_name [String]
     # @return [Array]
     def find_files(variable_name)
-      if alias_path = @config['aliases'][variable_name]
+      if alias_path = @config.get('aliases')[variable_name]
         return [alias_path]
       end
       snake_case_variable = camelcase_to_snakecase(variable_name)
       matched_files = []
-      @config['lookup_paths'].each do |lookup_path|
+      @config.get('lookup_paths').each do |lookup_path|
         Dir.chdir(lookup_path) do
           matched_files.concat(Dir.glob("**/#{snake_case_variable}.js*"))
         end

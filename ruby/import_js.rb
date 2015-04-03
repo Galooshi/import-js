@@ -5,3 +5,4 @@ module ImportJS
 end
 
 require_relative 'import_js/importer'
+require_relative 'import_js/configuration'
