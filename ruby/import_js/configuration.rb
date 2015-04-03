@@ -1,8 +1,8 @@
-require 'yaml'
+require 'json'
 require 'open3'
 
 module ImportJS
-  CONFIG_FILE = '.importjs'
+  CONFIG_FILE = '.importjs.json'
 
   DEFAULT_CONFIG = {
     'aliases' => {},
@@ -38,7 +38,7 @@ module ImportJS
 
     # @return [Hash]
     def load_config
-      File.exist?(CONFIG_FILE) ? YAML.load_file(CONFIG_FILE) : {}
+      File.exist?(CONFIG_FILE) ? JSON.parse(File.read(CONFIG_FILE)) : {}
     end
 
     # Check for the presence of a setting such as:

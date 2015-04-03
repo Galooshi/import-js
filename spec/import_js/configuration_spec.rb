@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'yaml'
+require 'json'
 
 describe 'Configuration' do
   let(:key) { 'aliases' }
@@ -13,18 +13,19 @@ describe 'Configuration' do
     end
 
     before do
-      allow(File).to receive(:exist?).with('.importjs').and_return(true)
-      allow(YAML).to receive(:load_file).and_return(configuration)
+      allow(File).to receive(:exist?).with('.importjs.json').and_return(true)
+      allow(File).to receive(:read).and_return nil
+      allow(JSON).to receive(:parse).and_return(configuration)
     end
 
     it 'returns the configured value for the key' do
-      expect(subject).to eq({ 'foo' => 'bar' })
+      expect(subject).to eq('foo' => 'bar')
     end
   end
 
   describe 'without a configuration file' do
     before do
-      allow(File).to receive(:exist?).with('.importjs').and_return(false)
+      allow(File).to receive(:exist?).with('.importjs.json').and_return(false)
     end
 
     it 'returns the default value for the key' do
