@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'import-js/importer'
-require 'import-js/mock_vim_buffer'
-require 'import-js/mock_vim_window'
 
 describe 'Importer' do
   before do
