@@ -60,19 +60,19 @@ and all your variables will be resolved. By default, import-js expects a global
 
 ## Configuration
 
-Create a file called `.importjs` in the root folder of your project to
-configure import-js. The format of this file is YAML. It has the following
-configuration options.
+Create a file called `.importjs.json` in the root folder of your project to
+configure import-js. The following configuration options can be used.
 
 ### `lookup_paths`
 
 Configure where import-js should look to resolve imports. If you are using
 Webpack, these should match the `modulesDirectories` configuration. Example:
 
-```yaml
-lookup_paths:
-  - 'app/assets/javascripts'
-  - 'vendor/bower_components'
+```json
+"lookup_paths": [
+  "app/assets/javascripts",
+  "vendor/bower_components"
+]
 ```
 
 ### `aliases`
@@ -80,10 +80,11 @@ lookup_paths:
 Some variable names might not easily map to a file in the filesystem. For
 those, you can add them to the `aliases` configuration.
 
-```yaml
-aliases:
-  '$' => 'third-party-libs/jquery'
-  '_' => 'third-party-libs/underscore'
+```json
+"aliases": {
+  "$": "third-party-libs/jquery",
+  "_": "third-party-libs/underscore"
+}
 ```
 
 ### `declaration_keyword`
@@ -92,16 +93,16 @@ If you are using ES6 (ES 2015), you have access to `let` and `const` in addition
 to `var` as ways to declare variables. To use one of these, set the
 `declaration_keyword` configuration.
 
-```yaml:
-declaration_keyword: const
+```json
+"declaration_keyword": "const"
 ```
 
 ### `jshint_cmd`
 
 Configure a path to a `jshint` compatible command, e.g. `jsxhint`.
 
-```yaml
-jshint_cmd: jsxhint
+```json
+"jshint_cmd": "jsxhint"
 ```
 
 ## Dependencies

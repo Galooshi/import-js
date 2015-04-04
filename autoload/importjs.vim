@@ -7,7 +7,7 @@ endfunction
 
 ruby << EOF
   begin
-    require 'import-js/importer'
+    require 'import_js'
     $import_js = ImportJS::Importer.new
   rescue LoadError
     load_path_modified = false

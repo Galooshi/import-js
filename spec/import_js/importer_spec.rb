@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'import-js/importer'
-require 'import-js/mock_vim_buffer'
-require 'import-js/mock_vim_window'
 
 describe 'Importer' do
   before do
@@ -281,14 +278,18 @@ foo
 
       context "when lines exceed Vim's textwidth" do
         before(:each) do
-          allow(importer).to receive(:text_width).and_return(40)
+          allow_any_instance_of(ImportJS::Configuration)
+            .to receive(:text_width)
+            .and_return(40)
         end
 
         let(:resolved_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
 
         context 'when expandtab is not set' do
           before(:each) do
-            allow(importer).to receive(:expand_tab?).and_return(false)
+            allow_any_instance_of(ImportJS::Configuration)
+              .to receive(:expand_tab?)
+              .and_return(false)
           end
 
           it 'wraps them and indents with a tab' do
@@ -303,12 +304,16 @@ foo
 
         context 'when expandtab is set' do
           before(:each) do
-            allow(importer).to receive(:expand_tab?).and_return(true)
+            allow_any_instance_of(ImportJS::Configuration)
+              .to receive(:expand_tab?)
+              .and_return(true)
           end
 
           context 'when shiftwidth is set' do
             before(:each) do
-              allow(importer).to receive(:shift_width).and_return(3)
+              allow_any_instance_of(ImportJS::Configuration)
+                .to receive(:shift_width)
+                .and_return(3)
             end
 
             it 'wraps them and indents with shiftwidth spaces' do
@@ -323,7 +328,9 @@ foo
 
           context 'when shiftwidth is not set' do
             before(:each) do
-              allow(importer).to receive(:shift_width).and_return(nil)
+              allow_any_instance_of(ImportJS::Configuration)
+                .to receive(:shift_width)
+                .and_return(nil)
             end
 
             it 'wraps them and indents with 2 spaces' do
@@ -357,8 +364,9 @@ foo
 
     context 'configuration' do
       before do
-        allow(File).to receive(:exist?).with('.importjs').and_return(true)
-        allow(YAML).to receive(:load_file).and_return(configuration)
+        allow_any_instance_of(ImportJS::Configuration)
+          .to(receive(:load_config))
+          .and_return(configuration)
       end
 
       context 'with aliases' do
