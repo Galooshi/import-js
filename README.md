@@ -99,7 +99,7 @@ to `var` as ways to declare variables. To use one of these, set the
 
 ### `jshint_cmd`
 
-Configure a path to a `jshint` compatible command, e.g. `jsxhint`.
+Configure a path to a `jshint` compatible command, e.g. `jsxhint` or `eslint`.
 
 ```json
 "jshint_cmd": "jsxhint"
