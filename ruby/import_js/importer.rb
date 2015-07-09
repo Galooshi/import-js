@@ -149,7 +149,7 @@ module ImportJS
     def generate_import(variable_name, path_to_file)
       declaration_keyword = @config.get('declaration_keyword')
       declaration = "#{declaration_keyword} #{variable_name} ="
-      value = "require('#{path_to_file}');"
+      value = "require('#{path_to_file.sub(/\/index$/, '')}');"
 
       if @config.text_width && "#{declaration} #{value}".length > @config.text_width
         "#{declaration}\n#{@config.tab}#{value}"
@@ -169,12 +169,15 @@ module ImportJS
       @config.get('lookup_paths').each do |lookup_path|
         Dir.chdir(lookup_path) do
           matched_files.
-            concat(Dir.glob("**/#{regex_variable}.js*", File::FNM_CASEFOLD).
-            select { |element| element.match(/#{regex_variable.gsub('*', '.?')}/i) })
+            # Look for files named similar to the variable
+            concat(Dir.glob("**/#{regex_variable}.js*", File::FNM_CASEFOLD)).
+            # Look for modules following the node.js convention of
+            # module_name/index.js
+            concat(Dir.glob("**/#{regex_variable}/index.js*", File::FNM_CASEFOLD))
         end
       end
 
-      matched_files
+      matched_files.select { |element| element.match(/#{regex_variable.gsub('*', '.?')}/i) }
     end
 
     # @param files [Array]
