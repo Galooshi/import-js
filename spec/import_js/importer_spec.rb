@@ -53,12 +53,15 @@ describe 'Importer' do
 
   let(:word) { 'foo' }
   let(:text) { 'foo' } # start with a simple buffer
-  let(:resolved_files) { [] } # start with a simple buffer
+  let(:existing_files) { [] } # start with a simple buffer
 
   before do
     VIM.current_word = word
     VIM::Buffer.current_buffer = text
-    allow(Dir).to receive(:glob).and_return(resolved_files)
+    glob_mock = allow(Dir).to receive(:glob)
+    existing_files.each do |file|
+      glob_mock.and_yield(file)
+    end
   end
 
   describe '#import' do
@@ -94,7 +97,7 @@ describe 'Importer' do
     end
 
     context 'with a variable name that will resolve' do
-      let(:resolved_files) { ['bar/foo.js.jsx'] }
+      let(:existing_files) { ['bar/foo.js.jsx'] }
 
       it 'adds an import to the top of the buffer' do
         expect(subject).to eq(<<-EOS.strip)
@@ -114,6 +117,19 @@ foo
         it 'leaves the buffer unchanged' do
           expect(subject).to eq(text)
         end
+      end
+
+      context 'when the variable resolves to a node.js conventional module' do
+        let(:existing_files) { ['Foo/index.js.jsx'] }
+
+        it 'adds an import to the top of the buffer' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('Foo');
+
+foo
+          EOS
+        end
+
       end
 
       context 'when other imports exist' do
@@ -199,7 +215,7 @@ foo
       end
 
       context 'when multiple files resolve the variable' do
-        let(:resolved_files) do
+        let(:existing_files) do
           [
             'zoo/foo.js',
             'bar/foo.js.jsx'
@@ -283,7 +299,7 @@ foo
             .and_return(40)
         end
 
-        let(:resolved_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
+        let(:existing_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
 
         context 'when expandtab is not set' do
           before(:each) do
@@ -350,7 +366,7 @@ foo
           allow(importer).to receive(:text_width).and_return(80)
         end
 
-        let(:resolved_files) { ['bar/foo.js.jsx'] }
+        let(:existing_files) { ['bar/foo.js.jsx'] }
 
         it 'does not wrap them' do
           expect(subject).to eq(<<-EOS.strip)
@@ -400,7 +416,7 @@ $
         end
 
         context 'with a variable name that will resolve' do
-          let(:resolved_files) { ['bar/foo.js.jsx'] }
+          let(:existing_files) { ['bar/foo.js.jsx'] }
 
           it 'adds an import to the top of the buffer using the declaration_keyword' do
             expect(subject).to eq(<<-EOS.strip)
@@ -491,7 +507,7 @@ foo
     end
 
     context 'when one undefined variable exists' do
-      let(:resolved_files) { ['bar/foo.js.jsx'] }
+      let(:existing_files) { ['bar/foo.js.jsx'] }
       let(:jshint_result) do
         "stdin: line 3, col 11, 'foo' is not defined."
       end
@@ -513,7 +529,7 @@ foo
 
       context 'when jshint returns other issues' do
         let(:jshint_result) do
-          "stdin: line 1, col 1, Use the function form of \"use strict\".\n"
+          "stdin: line 1, col 1, Use the function form of \"use strict\".\n" \
           "stdin: line 3, col 11, 'foo' is not defined."
         end
 
@@ -528,18 +544,17 @@ foo
     end
 
     context 'when multiple undefined variables exist' do
-      # We're cheating a bit with always returning this thing
-      let(:resolved_files) { ['bar/foo.js.jsx'] }
+      let(:existing_files) { ['bar/foo.js.jsx', 'bar.js'] }
       let(:text) { 'var a = foo + bar;' }
 
       let(:jshint_result) do
-        "stdin: line 3, col 11, 'foo' is not defined.\n" +
+        "stdin: line 3, col 11, 'foo' is not defined.\n" \
         "stdin: line 3, col 11, 'bar' is not defined."
       end
 
       it 'imports all variables' do
         expect(subject).to eq(<<-EOS.strip)
-var bar = require('bar/foo');
+var bar = require('bar');
 var foo = require('bar/foo');
 
 var a = foo + bar;
@@ -555,8 +570,7 @@ var a = foo + bar;
     end
 
     context 'when the list of undefined variables has duplicates' do
-      # We're cheating a bit with always returning this thing
-      let(:resolved_files) { ['bar/foo.js.jsx'] }
+      let(:existing_files) { ['bar/foo.js.jsx', 'bar.js'] }
       let(:text) { 'var a = foo + bar;' }
 
       let(:jshint_result) do
@@ -568,7 +582,7 @@ var a = foo + bar;
 
       it 'imports all variables' do
         expect(subject).to eq(<<-EOS.strip)
-var bar = require('bar/foo');
+var bar = require('bar');
 var foo = require('bar/foo');
 
 var a = foo + bar;

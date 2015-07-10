@@ -168,16 +168,14 @@ module ImportJS
       matched_files = []
       @config.get('lookup_paths').each do |lookup_path|
         Dir.chdir(lookup_path) do
-          matched_files.
-            # Look for files named similar to the variable
-            concat(Dir.glob("**/#{regex_variable}.js*", File::FNM_CASEFOLD)).
-            # Look for modules following the node.js convention of
-            # module_name/index.js
-            concat(Dir.glob("**/#{regex_variable}/index.js*", File::FNM_CASEFOLD))
+          Dir.glob('**/*.js*') do |filename|
+            if filename.match(%r{(/|^)#{regex_variable}(/index)?\.js.*}i)
+              matched_files << filename
+            end
+          end
         end
       end
-
-      matched_files.select { |element| element.match(/#{regex_variable.gsub('*', '.?')}/i) }
+      matched_files
     end
 
     # @param files [Array]
@@ -214,9 +212,8 @@ module ImportJS
       # Based on
       # http://stackoverflow.com/questions/1509915/converting-camel-case-to-underscore-case-in-ruby
       string.
-        gsub(/::/, '/'). # converts '::' to '/'
-        gsub(/([a-z\d])([A-Z])/, '\1*\2'). # separates camelCase words with '*'
-        tr('-_', '*'). # replaces underscores or dashes with '*'
+        gsub(/([a-z\d])([A-Z])/, '\1.?\2'). # separates camelCase words with '.?'
+        tr('-_', '.'). # replaces underscores or dashes with '.'
         downcase # converts all upper to lower case
     end
   end
