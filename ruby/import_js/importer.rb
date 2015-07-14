@@ -67,10 +67,12 @@ module ImportJS
     # @param variable_name [String]
     # @return [Boolean] true if a variable was imported, false if not
     def import_one_variable(variable_name)
+      @timing = { start: Time.now }
       files = find_files(variable_name)
+      @timing[:end] = Time.now
       if files.empty?
         VIM.message(<<-EOS.split.join(' '))
-          [import-js]: No js file to import for variable `#{variable_name}`
+          [import-js]: No js file to import for variable `#{variable_name}` #{timing}
         EOS
         return
       end
@@ -210,11 +212,11 @@ module ImportJS
     # @return [String]
     def resolve_one_file(files, variable_name)
       if files.length == 1
-        VIM.message("[import-js] Imported `#{files.first}`")
+        VIM.message("[import-js] Imported `#{files.first}` #{timing}")
         return files.first
       end
 
-      escaped_list = ["\"[import-js] Pick file to import for '#{variable_name}':\""]
+      escaped_list = ["\"[import-js] Pick file to import for '#{variable_name}': #{timing}\""]
       escaped_list << files.each_with_index.map do |file, i|
         "\"#{i + 1}: #{file}\""
       end
@@ -242,6 +244,11 @@ module ImportJS
         gsub(/([a-z\d])([A-Z])/, '\1.?\2'). # separates camelCase words with '.?'
         tr('-_', '.'). # replaces underscores or dashes with '.'
         downcase # converts all upper to lower case
+    end
+
+    # @return [String]
+    def timing
+      "(#{(@timing[:end] - @timing[:start]).round(2)}s)"
     end
   end
 end
