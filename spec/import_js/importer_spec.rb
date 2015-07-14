@@ -74,7 +74,7 @@ describe 'Importer' do
 
       it 'displays a message' do
         subject
-        expect(VIM.last_message).to eq(
+        expect(VIM.last_message).to start_with(
           "[import-js]: No js file to import for variable `#{word}`")
       end
     end
