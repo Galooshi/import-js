@@ -58,10 +58,7 @@ describe 'Importer' do
   before do
     VIM.current_word = word
     VIM::Buffer.current_buffer = text
-    glob_mock = allow(Dir).to receive(:glob)
-    existing_files.each do |file|
-      glob_mock.and_yield(file)
-    end
+    allow(Dir).to receive(:glob).and_return(existing_files)
   end
 
   describe '#import' do

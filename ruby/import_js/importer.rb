@@ -2,6 +2,7 @@ module ImportJS
   class Importer
     def initialize
       @config = ImportJS::Configuration.new
+      @cache = {}
      end
 
     # Finds variable under the cursor to import. By default, this is bound to
@@ -167,15 +168,41 @@ module ImportJS
       regex_variable = formatted_to_regex(variable_name)
       matched_files = []
       @config.get('lookup_paths').each do |lookup_path|
-        Dir.chdir(lookup_path) do
-          Dir.glob('**/*.js*') do |filename|
-            if filename.match(%r{(/|^)#{regex_variable}(/index)?\.js.*}i)
-              matched_files << filename
-            end
+        find_js_files_for_path(lookup_path).each do |filename|
+          if filename.match(%r{(/|^)#{regex_variable}(/index)?\.js.*}i)
+            matched_files << filename
           end
         end
       end
       matched_files
+    end
+
+    # @param path [String]
+    # @return [Array]
+    def find_js_files_for_path(path)
+      cached_files = @cache[path]
+      if cached_files && !path_modified_since?(path, cached_files[:timestamp])
+        return cached_files[:files]
+      end
+
+      Dir.chdir(path) do
+        cached_files = {
+          files: Dir.glob('**/*.js*'),
+          timestamp: Time.now
+        }
+      end
+      @cache[path] = cached_files
+      cached_files[:files]
+    end
+
+    # @param path [String]
+    # @param time [Time]
+    # @return [Boolean]
+    def path_modified_since?(path, time)
+      seconds_since_time = Time.now.to_i - time.to_i
+      Open3.popen3('find', path, '-type', 'd', '-mtime', "-#{seconds_since_time}s") do |_, out|
+        !out.read.empty?
+      end
     end
 
     # @param files [Array]
