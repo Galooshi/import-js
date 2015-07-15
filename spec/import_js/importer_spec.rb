@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'tmpdir'
+require 'pathname'
 
 describe 'Importer' do
   before do
@@ -58,7 +60,22 @@ describe 'Importer' do
   before do
     VIM.current_word = word
     VIM::Buffer.current_buffer = text
-    allow(Dir).to receive(:glob).and_return(existing_files)
+
+    @tmp_dir = Dir.mktmpdir
+    allow_any_instance_of(ImportJS::Configuration)
+      .to receive(:get).and_call_original
+    allow_any_instance_of(ImportJS::Configuration)
+      .to receive(:get).with('lookup_paths').and_return([@tmp_dir])
+
+    existing_files.each do |file|
+      full_path = File.join(@tmp_dir, file)
+      FileUtils.mkdir_p(Pathname.new(full_path).dirname)
+      FileUtils.touch(full_path)
+    end
+  end
+
+  after do
+    FileUtils.remove_entry_secure @tmp_dir
   end
 
   describe '#import' do
@@ -214,8 +231,8 @@ foo
       context 'when multiple files resolve the variable' do
         let(:existing_files) do
           [
-            'zoo/foo.js',
-            'bar/foo.js.jsx'
+            'bar/foo.js.jsx',
+            'zoo/foo.js'
           ]
         end
 
@@ -228,7 +245,7 @@ foo
 
           it 'picks the first one' do
             expect(subject).to eq(<<-eos.strip)
-var foo = require('zoo/foo');
+var foo = require('bar/foo');
 
 foo
             eos
@@ -240,7 +257,7 @@ foo
 
           it 'picks the second one' do
             expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
+var foo = require('zoo/foo');
 
 foo
             EOS
@@ -482,7 +499,9 @@ foo
   describe '#import_all' do
     let(:jshint_result) { '' }
     before do
-      allow(Open3).to receive(:capture3).and_return([jshint_result, nil])
+      allow(Open3).to receive(:capture3).and_call_original
+      allow(Open3).to receive(:capture3).with(/jshint/, anything)
+        .and_return([jshint_result, nil])
     end
 
     subject do
