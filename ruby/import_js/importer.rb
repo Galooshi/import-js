@@ -1,3 +1,6 @@
+require 'json'
+require 'open3'
+
 module ImportJS
   class Importer
     def initialize
@@ -178,7 +181,9 @@ module ImportJS
         matched_files.concat(
           out.split("\n").map do |f|
             if f.end_with? 'package.json'
-              next unless JSON.parse(File.read(f))['main']
+              main_file = JSON.parse(File.read(f))['main']
+              next unless main_file
+              next if main_file == 'index.js'
             end
             f.sub("#{lookup_path}\/", '') # remove path prefix
           end.compact

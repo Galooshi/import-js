@@ -299,6 +299,7 @@ foo
 
     context 'importing a module with a package.json file' do
       let(:existing_files) { ['Foo/package.json', 'Foo/build/main.js'] }
+
       before do
         File.open(File.join(@tmp_dir, 'Foo/package.json'), 'w') do |f|
           f.write(package_json_content.to_json)
@@ -309,6 +310,24 @@ foo
         let(:package_json_content) do
           {
             main: 'build/main.js'
+          }
+        end
+
+        it 'adds an import to the top of the buffer' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('Foo');
+
+foo
+          EOS
+        end
+      end
+
+      context 'when `main` points to index.js in the same folder' do
+        let(:existing_files) { ['Foo/package.json', 'Foo/index.js'] }
+
+        let(:package_json_content) do
+          {
+            main: 'index.js'
           }
         end
 
