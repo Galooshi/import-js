@@ -165,6 +165,21 @@ foo
           expect(VIM.last_message).to start_with(
             '[import-js] Imported `Foo (main: index.js.jsx)`')
         end
+
+        context 'when that module has a dot in its name' do
+          let(:existing_files) { ['Foo.io/index.js.jsx'] }
+          let(:word) { 'FooIO' }
+          let(:text) { 'FooIO' }
+
+          it 'imports that module with the dot' do
+            expect(subject).to eq(<<-EOS.strip)
+var FooIO = require('Foo.io');
+
+FooIO
+            EOS
+          end
+
+        end
       end
 
       context 'when other imports exist' do

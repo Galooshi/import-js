@@ -29,7 +29,7 @@ module ImportJS
 
     def import_path
       @relative_file_path.sub("#{@lookup_path}\/", '') # remove path prefix
-                         .gsub(/\..*$/, '') # remove file ending
+                         .gsub(/\.js.*$/, '') # remove file ending
     end
   end
 end
