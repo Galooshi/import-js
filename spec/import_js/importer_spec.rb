@@ -33,10 +33,15 @@ describe 'Importer' do
         @last_message
       end
 
+      def self.last_inputlist
+        @last_inputlist
+      end
+
       def self.evaluate(expression)
         if expression =~ /<cword>/
           @current_word
         elsif expression =~ /inputlist/
+          @last_inputlist = expression
           @current_selection || 0
         elsif expression =~ /getline/
           @buffer.to_s
@@ -56,6 +61,7 @@ describe 'Importer' do
   let(:word) { 'foo' }
   let(:text) { 'foo' } # start with a simple buffer
   let(:existing_files) { [] } # start with a simple buffer
+  let(:package_json_content) { nil }
 
   before do
     VIM.current_word = word
@@ -71,6 +77,12 @@ describe 'Importer' do
       full_path = File.join(@tmp_dir, file)
       FileUtils.mkdir_p(Pathname.new(full_path).dirname)
       FileUtils.touch(full_path)
+    end
+
+    if (package_json_content)
+      File.open(File.join(@tmp_dir, 'Foo/package.json'), 'w') do |f|
+        f.write(package_json_content.to_json)
+      end
     end
   end
 
@@ -121,6 +133,11 @@ foo
         EOS
       end
 
+      it 'displays a message about the imported module' do
+        expect(VIM.last_message).to start_with(
+          '[import-js] Imported `bar/foo.js.jsx`')
+      end
+
       context 'when that variable is already imported' do
         let(:text) { <<-EOS.strip }
 var foo = require('bar/foo');
@@ -142,6 +159,11 @@ var foo = require('Foo');
 
 foo
           EOS
+        end
+
+        it 'displays a message about the imported module' do
+          expect(VIM.last_message).to start_with(
+            '[import-js] Imported `Foo/index.js.jsx`')
         end
       end
 
@@ -231,80 +253,119 @@ foo
         let(:existing_files) do
           [
             'bar/foo.js.jsx',
+            'zoo/foo.js',
+            'zoo/goo/Foo/index.js'
+          ]
+        end
+
+        it 'displays a message about selecting a module' do
+          subject
+          expect(VIM.last_inputlist).to include(
+            "[import-js] Pick file to import for 'foo'")
+        end
+
+        it 'list all possible imports' do
+          subject
+          expect(VIM.last_inputlist).to include(
+            '1: bar/foo.js.jsx')
+          expect(VIM.last_inputlist).to include(
+            '2: zoo/foo.js')
+          expect(VIM.last_inputlist).to include(
+            '3: zoo/goo/Foo/index.js')
+        end
+
+        context 'and the user selects' do
+          before do
+            VIM.current_selection = selection
+          end
+
+          context 'the first file' do
+            let(:selection) { 1 }
+
+            it 'picks the first one' do
+              expect(subject).to eq(<<-eos.strip)
+var foo = require('bar/foo');
+
+foo
+              eos
+            end
+          end
+
+          context 'the second file' do
+            let(:selection) { 2 }
+
+            it 'picks the second one' do
+              expect(subject).to eq(<<-EOS.strip)
+var foo = require('zoo/foo');
+
+foo
+              EOS
+            end
+          end
+
+          context 'index 0 (which is the heading)' do
+            let(:selection) { 0 }
+
+            it 'picks nothing' do
+              expect(subject).to eq(<<-EOS.strip)
+foo
+              EOS
+            end
+          end
+
+          context 'an index larger than the list' do
+            # Apparently, this can happen when you use `inputlist`
+            let(:selection) { 5 }
+
+            it 'picks nothing' do
+              expect(subject).to eq(<<-EOS.strip)
+foo
+              EOS
+            end
+          end
+
+          context 'an index < 0' do
+            # Apparently, this can happen when you use `inputlist`
+            let(:selection) { -1 }
+
+            it 'picks nothing' do
+              expect(subject).to eq(<<-EOS.strip)
+foo
+              EOS
+            end
+          end
+        end
+      end
+
+      context 'when the same logical file is matched twice' do
+        let(:existing_files) do
+          [
+            'Foo/lib/foo.jsx',
+            'Foo/package.json',
             'zoo/foo.js'
           ]
         end
 
-        before do
-          VIM.current_selection = selection
+        let(:package_json_content) do
+          {
+            main: 'lib/foo.jsx'
+          }
         end
 
-        context 'and the user selects the first file' do
-          let(:selection) { 1 }
-
-          it 'picks the first one' do
-            expect(subject).to eq(<<-eos.strip)
-var foo = require('bar/foo');
-
-foo
-            eos
-          end
-        end
-
-        context 'and the user selects the second file' do
-          let(:selection) { 2 }
-
-          it 'picks the second one' do
-            expect(subject).to eq(<<-EOS.strip)
-var foo = require('zoo/foo');
-
-foo
-            EOS
-          end
-        end
-
-        context 'and the user selects index 0 (which is the heading)' do
-          let(:selection) { 0 }
-
-          it 'picks nothing' do
-            expect(subject).to eq(<<-EOS.strip)
-foo
-            EOS
-          end
-        end
-
-        context 'and the user selects an index larger than the list' do
-          # Apparently, this can happen when you use `inputlist`
-          let(:selection) { 5 }
-
-          it 'picks nothing' do
-            expect(subject).to eq(<<-EOS.strip)
-foo
-            EOS
-          end
-        end
-
-        context 'and the user selects an index < 0' do
-          # Apparently, this can happen when you use `inputlist`
-          let(:selection) { -1 }
-
-          it 'picks nothing' do
-            expect(subject).to eq(<<-EOS.strip)
-foo
-            EOS
-          end
+        it 'list all possible imports' do
+          subject
+          expect(VIM.last_inputlist).to include(
+            '1: Foo/lib/foo.jsx')
+          expect(VIM.last_inputlist).to include(
+            '2: Foo/package.json')
+          expect(VIM.last_inputlist).to include(
+            '3: zoo/foo.js')
         end
       end
     end
 
     context 'importing a module with a package.json file' do
       let(:existing_files) { ['Foo/package.json', 'Foo/build/main.js'] }
-
-      before do
-        File.open(File.join(@tmp_dir, 'Foo/package.json'), 'w') do |f|
-          f.write(package_json_content.to_json)
-        end
-      end
 
       context 'when `main` points to a js file' do
         let(:package_json_content) do
