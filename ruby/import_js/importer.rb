@@ -70,21 +70,19 @@ module ImportJS
     # @return [Boolean] true if a variable was imported, false if not
     def import_one_variable(variable_name)
       @timing = { start: Time.now }
-      files = find_files(variable_name)
+      js_modules = find_js_modules(variable_name)
       @timing[:end] = Time.now
-      if files.empty?
+      if js_modules.empty?
         VIM.message(<<-EOS.split.join(' '))
-          [import-js]: No js file to import for variable `#{variable_name}` #{timing}
+          [import-js]: No js module to import for variable `#{variable_name}` #{timing}
         EOS
         return
       end
 
-      resolved_file = resolve_one_file(files, variable_name)
-      return unless resolved_file
+      resolved_js_module = resolve_one_js_module(js_modules, variable_name)
+      return unless resolved_js_module
 
-      write_imports(variable_name, resolved_file.gsub(/\/index\.js.*$/, '')
-                                                .gsub(/\/package.json$/, '')
-                                                .gsub(/\..*$/, ''))
+      write_imports(variable_name, resolved_js_module)
     end
 
     def buffer
@@ -96,9 +94,9 @@ module ImportJS
     end
 
     # @param variable_name [String]
-    # @param path_to_file [String]
+    # @param js_module [ImportJS::JSModule]
     # @return [Boolean] true if a variable was imported, false if not
-    def write_imports(variable_name, path_to_file)
+    def write_imports(variable_name, js_module)
       old_imports = find_current_imports
 
       # Ensure that there is a blank line after the block of all imports
@@ -110,7 +108,7 @@ module ImportJS
       previous_length = modified_imports.length
 
       # Add new import to the block of imports, wrapping at text_width
-      modified_imports << generate_import(variable_name, path_to_file)
+      modified_imports << generate_import(variable_name, js_module)
 
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|
@@ -151,12 +149,12 @@ module ImportJS
     end
 
     # @param variable_name [String]
-    # @param path_to_file [String]
+    # @param js_module [ImportJS::JSModule]
     # @return [String] the import string to be added to the imports block
-    def generate_import(variable_name, path_to_file)
+    def generate_import(variable_name, js_module)
       declaration_keyword = @config.get('declaration_keyword')
       declaration = "#{declaration_keyword} #{variable_name} ="
-      value = "require('#{path_to_file}');"
+      value = "require('#{js_module.import_path}');"
 
       if @config.text_width && "#{declaration} #{value}".length > @config.text_width
         "#{declaration}\n#{@config.tab}#{value}"
@@ -167,49 +165,48 @@ module ImportJS
 
     # @param variable_name [String]
     # @return [Array]
-    def find_files(variable_name)
+    def find_js_modules(variable_name)
       if alias_path = @config.get('aliases')[variable_name]
-        return [alias_path]
+        return [ImportJS::JSModule.new(nil, alias_path)]
       end
 
       egrep_command =
         "egrep -i \"(/|^)#{formatted_to_regex(variable_name)}(/index)?(/package)?\.js.*\""
-      matched_files = []
+      matched_modules = []
       @config.get('lookup_paths').each do |lookup_path|
         find_command = "find #{lookup_path} -name \"**.js*\""
         out, _ = Open3.capture3("#{find_command} | #{egrep_command}")
-        matched_files.concat(
+        matched_modules.concat(
           out.split("\n").map do |f|
-            if f.end_with? 'package.json'
-              main_file = JSON.parse(File.read(f))['main']
-              next unless main_file
-              next if main_file == 'index.js'
-            end
-            f.sub("#{lookup_path}\/", '') # remove path prefix
+            js_module = ImportJS::JSModule.new(lookup_path, f)
+            next if js_module.skip
+            js_module
           end.compact
         )
       end
-      matched_files.sort
+      matched_modules.uniq { |m| m.import_path }.sort do |a, b|
+        a.display_name <=> b.display_name
+      end
     end
 
-    # @param files [Array]
+    # @param js_modules [Array]
     # @param variable_name [String]
     # @return [String]
-    def resolve_one_file(files, variable_name)
-      if files.length == 1
-        VIM.message("[import-js] Imported `#{files.first}` #{timing}")
-        return files.first
+    def resolve_one_js_module(js_modules, variable_name)
+      if js_modules.length == 1
+        VIM.message("[import-js] Imported `#{js_modules.first.display_name}` #{timing}")
+        return js_modules.first
       end
 
-      escaped_list = ["\"[import-js] Pick file to import for '#{variable_name}': #{timing}\""]
-      escaped_list << files.each_with_index.map do |file, i|
-        "\"#{i + 1}: #{file}\""
+      escaped_list = ["\"[import-js] Pick js module to import for '#{variable_name}': #{timing}\""]
+      escaped_list << js_modules.each_with_index.map do |js_module, i|
+        "\"#{i + 1}: #{js_module.display_name}\""
       end
       escaped_list_string = '[' + escaped_list.join(',') + ']'
 
       selected_index = VIM.evaluate("inputlist(#{escaped_list_string})")
       return if selected_index < 1
-      files[selected_index - 1]
+      js_modules[selected_index - 1]
     end
 
     # Takes a string in any of the following four formats:
