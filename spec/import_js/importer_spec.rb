@@ -104,7 +104,7 @@ describe 'Importer' do
       it 'displays a message' do
         subject
         expect(VIM.last_message).to start_with(
-          "[import-js]: No js file to import for variable `#{word}`")
+          "[import-js]: No js module to import for variable `#{word}`")
       end
     end
 
@@ -135,7 +135,7 @@ foo
 
       it 'displays a message about the imported module' do
         expect(VIM.last_message).to start_with(
-          '[import-js] Imported `bar/foo.js.jsx`')
+          '[import-js] Imported `bar/foo`')
       end
 
       context 'when that variable is already imported' do
@@ -163,7 +163,7 @@ foo
 
         it 'displays a message about the imported module' do
           expect(VIM.last_message).to start_with(
-            '[import-js] Imported `Foo/index.js.jsx`')
+            '[import-js] Imported `Foo (main: index.js.jsx)`')
         end
       end
 
@@ -261,17 +261,17 @@ foo
         it 'displays a message about selecting a module' do
           subject
           expect(VIM.last_inputlist).to include(
-            "[import-js] Pick file to import for 'foo'")
+            "[import-js] Pick js module to import for 'foo'")
         end
 
         it 'list all possible imports' do
           subject
           expect(VIM.last_inputlist).to include(
-            '1: bar/foo.js.jsx')
+            '1: bar/foo')
           expect(VIM.last_inputlist).to include(
-            '2: zoo/foo.js')
+            '2: zoo/foo')
           expect(VIM.last_inputlist).to include(
-            '3: zoo/goo/Foo/index.js')
+            '3: zoo/goo/Foo (main: index.js)')
         end
 
         context 'and the user selects' do
@@ -352,14 +352,16 @@ foo
           }
         end
 
-        it 'list all possible imports' do
+        it 'lists the version of the file resolved through package.json' do
           subject
           expect(VIM.last_inputlist).to include(
-            '1: Foo/lib/foo.jsx')
-          expect(VIM.last_inputlist).to include(
-            '2: Foo/package.json')
-          expect(VIM.last_inputlist).to include(
-            '3: zoo/foo.js')
+            '1: Foo (main: lib/foo.jsx)')
+        end
+
+        it 'does not list the file also resolved through package.json' do
+          subject
+          expect(VIM.last_inputlist).to_not include(
+            'Foo/lib/foo.jsx')
         end
       end
     end
