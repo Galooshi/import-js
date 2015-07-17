@@ -1,3 +1,6 @@
+require 'json'
+require 'open3'
+
 module ImportJS
   class Importer
     def initialize
@@ -79,7 +82,9 @@ module ImportJS
       resolved_file = resolve_one_file(files, variable_name)
       return unless resolved_file
 
-      write_imports(variable_name, resolved_file.gsub(/\..*$/, ''))
+      write_imports(variable_name, resolved_file.gsub(/\/index\.js.*$/, '')
+                                                .gsub(/\/package.json$/, '')
+                                                .gsub(/\..*$/, ''))
     end
 
     def buffer
@@ -151,7 +156,7 @@ module ImportJS
     def generate_import(variable_name, path_to_file)
       declaration_keyword = @config.get('declaration_keyword')
       declaration = "#{declaration_keyword} #{variable_name} ="
-      value = "require('#{path_to_file.sub(/\/index$/, '')}');"
+      value = "require('#{path_to_file}');"
 
       if @config.text_width && "#{declaration} #{value}".length > @config.text_width
         "#{declaration}\n#{@config.tab}#{value}"
@@ -168,15 +173,20 @@ module ImportJS
       end
 
       egrep_command =
-        "egrep -i \"(/|^)#{formatted_to_regex(variable_name)}(/index)?\.js.*\""
+        "egrep -i \"(/|^)#{formatted_to_regex(variable_name)}(/index)?(/package)?\.js.*\""
       matched_files = []
       @config.get('lookup_paths').each do |lookup_path|
         find_command = "find #{lookup_path} -name \"**.js*\""
         out, _ = Open3.capture3("#{find_command} | #{egrep_command}")
         matched_files.concat(
           out.split("\n").map do |f|
+            if f.end_with? 'package.json'
+              main_file = JSON.parse(File.read(f))['main']
+              next unless main_file
+              next if main_file == 'index.js'
+            end
             f.sub("#{lookup_path}\/", '') # remove path prefix
-          end
+          end.compact
         )
       end
       matched_files.sort
