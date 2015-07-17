@@ -178,6 +178,9 @@ module ImportJS
         out, _ = Open3.capture3("#{find_command} | #{egrep_command}")
         matched_modules.concat(
           out.split("\n").map do |f|
+            next if @config.get('excludes').any? do |glob_pattern|
+              File.fnmatch(glob_pattern, f)
+            end
             js_module = ImportJS::JSModule.new(lookup_path, f)
             next if js_module.skip
             js_module

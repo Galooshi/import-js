@@ -75,6 +75,18 @@ Webpack, these should match the `modulesDirectories` configuration. Example:
 ]
 ```
 
+### `excludes`
+
+Define a list of glob patterns that match files and directories that you don't
+want to include for importing. This could be e.g. nested dependencies to any
+direct dependency you have.
+
+```json
+"excludes": [
+  "node_modules/**/node_modules/**"
+]
+```
+
 ### `aliases`
 
 Some variable names might not easily map to a file in the filesystem. For

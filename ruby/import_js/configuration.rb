@@ -7,6 +7,7 @@ module ImportJS
   DEFAULT_CONFIG = {
     'aliases' => {},
     'declaration_keyword' => 'var',
+    'excludes' => [],
     'jshint_cmd' => 'jshint',
     'lookup_paths' => ['.'],
   }

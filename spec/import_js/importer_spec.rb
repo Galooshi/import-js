@@ -550,6 +550,27 @@ $
         end
       end
 
+      context 'with excludes' do
+        let(:existing_files) { ['bar/foo/foo.js'] }
+        let(:configuration) do
+          {
+            'excludes' => ['**/foo/**']
+          }
+        end
+
+        it 'does not add an import' do
+          expect(subject).to eq(<<-EOS.strip)
+foo
+          EOS
+        end
+
+        it 'displays a message' do
+          subject
+          expect(VIM.last_message).to start_with(
+            "[import-js]: No js module to import for variable `#{word}`")
+        end
+      end
+
       context 'with declaration_keyword' do
         subject do
           ImportJS::Importer.new.import
