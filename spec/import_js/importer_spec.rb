@@ -570,6 +570,23 @@ $
         end
       end
 
+      context 'when keep_file_extensions is true' do
+        let(:existing_files) { ['bar/foo.js'] }
+        let(:configuration) do
+          {
+            'keep_file_extensions' => true
+          }
+        end
+
+        it 'keeps the file ending in the import' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo.js');
+
+foo
+          EOS
+        end
+      end
+
       context 'with excludes' do
         let(:existing_files) { ['bar/foo/foo.js'] }
         let(:configuration) do
