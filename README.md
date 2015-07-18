@@ -117,6 +117,15 @@ Configure a path to a `jshint` compatible command, e.g. `jsxhint` or `eslint`.
 "jshint_cmd": "jsxhint"
 ```
 
+### `keep_file_extensions`
+
+Set to true to make Import-JS keep the file extension of the imported js file.
+E.g. `const Foo = require('foo.js')`.
+
+```json
+"keep_file_extensions": true
+```
+
 ## Dependencies
 
 import-js is written in Ruby, so in order to make it work in your Vim you need

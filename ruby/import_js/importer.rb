@@ -167,7 +167,7 @@ module ImportJS
     # @return [Array]
     def find_js_modules(variable_name)
       if alias_path = @config.get('aliases')[variable_name]
-        return [ImportJS::JSModule.new(nil, alias_path)]
+        return [ImportJS::JSModule.new(nil, alias_path, @config)]
       end
 
       egrep_command =
@@ -181,7 +181,7 @@ module ImportJS
             next if @config.get('excludes').any? do |glob_pattern|
               File.fnmatch(glob_pattern, f)
             end
-            js_module = ImportJS::JSModule.new(lookup_path, f)
+            js_module = ImportJS::JSModule.new(lookup_path, f, @config)
             next if js_module.skip
             js_module
           end.compact
