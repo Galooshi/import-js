@@ -418,6 +418,26 @@ foo
         end
       end
 
+      context 'when the module is named something.js' do
+        let(:existing_files) { ['Foo.js/package.json', 'Foo.js/main.js'] }
+        let(:text) { 'FooJS' }
+        let(:word) { 'FooJS' }
+
+        before do
+          File.open(File.join(@tmp_dir, 'Foo.js/package.json'), 'w') do |f|
+            f.write({ main: 'main.js' }.to_json)
+          end
+        end
+
+        it 'keeps the .js in the import' do
+          expect(subject).to eq(<<-EOS.strip)
+var FooJS = require('Foo.js');
+
+FooJS
+          EOS
+        end
+      end
+
       context 'when `main` is missing' do
         let(:package_json_content) { {} }
 
