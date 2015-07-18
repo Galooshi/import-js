@@ -5,6 +5,9 @@ module ImportJS
     attr_reader :main_file
     attr_reader :skip
 
+    # @param lookup_path [String] the lookup path in which this module was found
+    # @param relative_file_path [String] a full path to the file, relative to
+    #   the project root.
     def initialize(lookup_path, relative_file_path)
       @lookup_path = lookup_path
       if relative_file_path.end_with? '/package.json'
@@ -21,15 +24,17 @@ module ImportJS
       end
     end
 
+    # @return [String] a readable description of the module
     def display_name
       parts = [import_path]
       parts << " (main: #{@main_file})" if @main_file
       parts.join('')
     end
 
+    # @return [String] a string that can be added to a `require` statement.
     def import_path
       @relative_file_path.sub("#{@lookup_path}\/", '') # remove path prefix
-                         .gsub(/\..*$/, '') # remove file ending
+                         .gsub(/\.js.*$/, '') # remove file ending
     end
   end
 end
