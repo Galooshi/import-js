@@ -568,6 +568,24 @@ var $ = require('jquery');
 $
         EOS
         end
+
+        context 'and an alias contains a slash' do
+          # https://github.com/trotzig/import-js/issues/39
+          let(:configuration) do
+            {
+              'aliases' => { '$' => 'jquery/jquery' }
+            }
+          end
+
+          it 'keeps the slash in the alias path' do
+            expect(subject).to eq(<<-EOS.strip)
+var $ = require('jquery/jquery');
+
+$
+          EOS
+          end
+
+        end
       end
 
       context 'when keep_file_extensions is true' do

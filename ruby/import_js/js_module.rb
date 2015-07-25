@@ -26,7 +26,10 @@ module ImportJS
           @import_path.sub!(/\.js.*$/, '')
         end
       end
-      @import_path = @import_path.sub("#{@lookup_path}\/", '') # remove path prefix
+
+      if lookup_path
+        @import_path = @import_path.sub("#{@lookup_path}\/", '') # remove path prefix
+      end
     end
 
     # @return [String] a readable description of the module
