@@ -803,13 +803,6 @@ foo
         EOS
       end
 
-      it 'displays a message' do
-        subject
-        expect(VIM.last_message).to eq(
-          '[import-js]: Imported these variables: ["foo"]'
-        )
-      end
-
       context 'when jshint returns other issues' do
         let(:jshint_result) do
           "stdin: line 1, col 1, Use the function form of \"use strict\".\n" \
@@ -843,13 +836,6 @@ var foo = require('bar/foo');
 var a = foo + bar;
         EOS
       end
-
-      it 'displays a message' do
-        subject
-        expect(VIM.last_message).to eq(
-          '[import-js]: Imported these variables: ["foo", "bar"]'
-        )
-      end
     end
 
     context 'when the list of undefined variables has duplicates' do
@@ -870,13 +856,6 @@ var foo = require('bar/foo');
 
 var a = foo + bar;
         EOS
-      end
-
-      it 'displays a message' do
-        subject
-        expect(VIM.last_message).to eq(
-          '[import-js]: Imported these variables: ["foo", "bar"]'
-        )
       end
     end
   end
