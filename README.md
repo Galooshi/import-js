@@ -99,6 +99,29 @@ those, you can add them to the `aliases` configuration.
 }
 ```
 
+If you have a library that expose a single object that has a bunch of objects
+on it that you want to use, you can list those in a `destructure` array inside
+the alias (which then has to be turned into an object):
+
+```json
+"aliases": {
+  "$": "third-party-libs/jquery",
+  "_": {
+    "path": "third-party-libs/underscore",
+    "destructure": ["memoize", "debounce"]
+  }
+}
+```
+
+Imports then use [ES6 Destructuring Assigment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment),
+e.g.
+
+```javascript
+const { memoize } = require('underscore');
+
+memoize(() => { foo() });
+```
+
 ### `declaration_keyword`
 
 If you are using ES6 (ES 2015), you have access to `let` and `const` in addition

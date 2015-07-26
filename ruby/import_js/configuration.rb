@@ -23,6 +23,28 @@ module ImportJS
       @config[key]
     end
 
+    def resolve_alias(variable_name)
+      path = @config['aliases'][variable_name]
+      return resolve_destructured_alias(variable_name) unless path
+
+      if path.is_a? Hash
+        path = path['path']
+      end
+      ImportJS::JSModule.new(nil, path, self)
+    end
+
+    def resolve_destructured_alias(variable_name)
+      @config['aliases'].each do |_, path|
+        next if path.is_a? String
+        if (path['destructure'] || []).include?(variable_name)
+          js_module = ImportJS::JSModule.new(nil, path['path'], self)
+          js_module.is_destructured = true
+          return js_module
+        end
+      end
+      nil
+    end
+
     # @return [Number?]
     def text_width
       get_number('&textwidth')
