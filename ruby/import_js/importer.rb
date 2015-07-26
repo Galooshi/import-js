@@ -29,22 +29,16 @@ module ImportJS
     # Finds all variables that haven't yet been imported.
     def import_all
       unused_variables = find_unused_variables
-      imported_variables = []
 
-      unused_variables.each do |variable|
-        if import_one_variable(variable)
-          imported_variables << variable
-        end
-      end
-
-      if imported_variables.empty?
+      if unused_variables.empty?
         VIM.message(<<-EOS.split.join(' '))
           [import-js]: No variables to import
         EOS
-      else
-        VIM.message(<<-EOS.split.join(' '))
-          [import-js]: Imported these variables: #{imported_variables}
-        EOS
+        return
+      end
+
+      unused_variables.each do |variable|
+        import_one_variable(variable)
       end
     end
 
@@ -67,7 +61,6 @@ module ImportJS
     end
 
     # @param variable_name [String]
-    # @return [Boolean] true if a variable was imported, false if not
     def import_one_variable(variable_name)
       @timing = { start: Time.now }
       js_modules = find_js_modules(variable_name)
@@ -95,7 +88,6 @@ module ImportJS
 
     # @param variable_name [String]
     # @param js_module [ImportJS::JSModule]
-    # @return [Boolean] true if a variable was imported, false if not
     def write_imports(variable_name, js_module)
       old_imports = find_current_imports
 
@@ -105,10 +97,12 @@ module ImportJS
       end
 
       modified_imports = old_imports[:imports] # Array
-      previous_length = modified_imports.length
 
       # Add new import to the block of imports, wrapping at text_width
-      modified_imports << generate_import(variable_name, js_module)
+      unless js_module.is_destructured && inject_destructured_variable(
+        variable_name, js_module, modified_imports)
+        modified_imports << generate_import(variable_name, js_module)
+      end
 
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|
@@ -125,8 +119,18 @@ module ImportJS
         # convert newline characters to `~@`.
         import.split("\n").reverse_each { |line| buffer.append(0, line) }
       end
+    end
 
-      previous_length < modified_imports.length
+    def inject_destructured_variable(variable_name, js_module, imports)
+      imports.each do |import|
+        match = import.match(%r{((const|let|var) \{ )(.*)( \} = require\('#{js_module.import_path}'\);)})
+        next unless match
+
+        variables = match[3].split(/,\s*/).concat([variable_name]).uniq.sort
+        import.sub!(/.*/, "#{match[1]}#{variables.join(', ')}#{match[4]}")
+        return true
+      end
+      false
     end
 
     # @return [Hash]

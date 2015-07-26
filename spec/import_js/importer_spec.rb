@@ -624,6 +624,57 @@ var { memoize } = require('underscore');
 memoize
             EOS
           end
+
+          context 'with other imports' do
+            let(:text) { <<-EOS.strip }
+let bar = require('foo/bar');
+var { xyz } = require('alphabet');
+
+memoize
+            EOS
+
+            it 'places the import at the right place' do
+              expect(subject).to eq(<<-EOS.strip)
+let bar = require('foo/bar');
+var { memoize } = require('underscore');
+var { xyz } = require('alphabet');
+
+memoize
+              EOS
+            end
+          end
+
+          context 'when other destructured imports exist for the same module' do
+            let(:text) { <<-EOS.strip }
+var { xyz, debounce } = require('underscore');
+
+memoize
+            EOS
+
+            it 'combines the destructured import and sorts items' do
+              expect(subject).to eq(<<-EOS.strip)
+var { debounce, memoize, xyz } = require('underscore');
+
+memoize
+              EOS
+            end
+
+            context 'when the module is already in the destructured object' do
+              let(:text) { <<-EOS.strip }
+var { debounce, memoize } = require('underscore');
+
+memoize
+              EOS
+
+              it 'does not add a duplicate' do
+                expect(subject).to eq(<<-EOS.strip)
+var { debounce, memoize } = require('underscore');
+
+memoize
+                EOS
+              end
+            end
+          end
         end
       end
 
@@ -784,13 +835,6 @@ foo
         EOS
       end
 
-      it 'displays a message' do
-        subject
-        expect(VIM.last_message).to eq(
-          '[import-js]: Imported these variables: ["foo"]'
-        )
-      end
-
       context 'when jshint returns other issues' do
         let(:jshint_result) do
           "stdin: line 1, col 1, Use the function form of \"use strict\".\n" \
@@ -824,13 +868,6 @@ var foo = require('bar/foo');
 var a = foo + bar;
         EOS
       end
-
-      it 'displays a message' do
-        subject
-        expect(VIM.last_message).to eq(
-          '[import-js]: Imported these variables: ["foo", "bar"]'
-        )
-      end
     end
 
     context 'when the list of undefined variables has duplicates' do
@@ -851,13 +888,6 @@ var foo = require('bar/foo');
 
 var a = foo + bar;
         EOS
-      end
-
-      it 'displays a message' do
-        subject
-        expect(VIM.last_message).to eq(
-          '[import-js]: Imported these variables: ["foo", "bar"]'
-        )
       end
     end
   end
