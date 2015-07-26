@@ -624,6 +624,25 @@ var { memoize } = require('underscore');
 memoize
             EOS
           end
+
+          context 'with other imports' do
+            let(:text) { <<-EOS.strip }
+let bar = require('foo/bar');
+var { xyz } = require('alphabet');
+
+memoize
+            EOS
+
+            it 'places the import at the right place' do
+              expect(subject).to eq(<<-EOS.strip)
+let bar = require('foo/bar');
+var { memoize } = require('underscore');
+var { xyz } = require('alphabet');
+
+memoize
+              EOS
+            end
+          end
         end
       end
 
