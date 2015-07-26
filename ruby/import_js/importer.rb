@@ -153,7 +153,11 @@ module ImportJS
     # @return [String] the import string to be added to the imports block
     def generate_import(variable_name, js_module)
       declaration_keyword = @config.get('declaration_keyword')
-      declaration = "#{declaration_keyword} #{variable_name} ="
+      if js_module.is_destructured
+        declaration = "#{declaration_keyword} { #{variable_name} } ="
+      else
+        declaration = "#{declaration_keyword} #{variable_name} ="
+      end
       value = "require('#{js_module.import_path}');"
 
       if @config.text_width && "#{declaration} #{value}".length > @config.text_width
@@ -166,8 +170,8 @@ module ImportJS
     # @param variable_name [String]
     # @return [Array]
     def find_js_modules(variable_name)
-      if alias_path = @config.get('aliases')[variable_name]
-        return [ImportJS::JSModule.new(nil, alias_path, @config)]
+      if alias_module = @config.resolve_alias(variable_name)
+        return [alias_module]
       end
 
       egrep_command =

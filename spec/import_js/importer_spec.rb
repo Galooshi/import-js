@@ -588,6 +588,45 @@ $
         end
       end
 
+      context 'alias with a destructure object' do
+        let(:configuration) do
+          {
+            'aliases' => {
+              '_' => {
+                'path' => 'underscore',
+                'destructure' => %w(
+                  memoize
+                  debounce
+                )
+              }
+            }
+          }
+        end
+        let(:text) { '_' }
+        let(:word) { '_' }
+
+        it 'resolves the main alias without destructuring' do
+          expect(subject).to eq(<<-EOS.strip)
+var _ = require('underscore');
+
+_
+        EOS
+        end
+
+        context 'when importing a destructured object' do
+          let(:text) { 'memoize' }
+          let(:word) { 'memoize' }
+
+          it 'resolves that import in a destructured way' do
+            expect(subject).to eq(<<-EOS.strip)
+var { memoize } = require('underscore');
+
+memoize
+            EOS
+          end
+        end
+      end
+
       context 'when keep_file_extensions is true' do
         let(:existing_files) { ['bar/foo.js'] }
         let(:configuration) do

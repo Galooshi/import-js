@@ -4,11 +4,12 @@ module ImportJS
     attr_reader :import_path
     attr_reader :main_file
     attr_reader :skip
+    attr_accessor :is_destructured
 
     # @param lookup_path [String] the lookup path in which this module was found
     # @param relative_file_path [String] a full path to the file, relative to
-    # @param configuration [ImportJS::Configuration]
     #   the project root.
+    # @param configuration [ImportJS::Configuration]
     def initialize(lookup_path, relative_file_path, configuration)
       @lookup_path = lookup_path
       if relative_file_path.end_with? '/package.json'
