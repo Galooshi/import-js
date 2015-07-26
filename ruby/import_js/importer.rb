@@ -99,7 +99,10 @@ module ImportJS
       modified_imports = old_imports[:imports] # Array
 
       # Add new import to the block of imports, wrapping at text_width
-      modified_imports << generate_import(variable_name, js_module)
+      unless js_module.is_destructured && inject_destructured_variable(
+        variable_name, js_module, modified_imports)
+        modified_imports << generate_import(variable_name, js_module)
+      end
 
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|
@@ -116,6 +119,18 @@ module ImportJS
         # convert newline characters to `~@`.
         import.split("\n").reverse_each { |line| buffer.append(0, line) }
       end
+    end
+
+    def inject_destructured_variable(variable_name, js_module, imports)
+      imports.each do |import|
+        match = import.match(%r{((const|let|var) \{ )(.*)( \} = require\('#{js_module.import_path}'\);)})
+        next unless match
+
+        variables = match[3].split(/,\s*/).concat([variable_name]).uniq.sort
+        import.sub!(/.*/, "#{match[1]}#{variables.join(', ')}#{match[4]}")
+        return true
+      end
+      false
     end
 
     # @return [Hash]

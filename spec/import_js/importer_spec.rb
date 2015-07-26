@@ -643,6 +643,38 @@ memoize
               EOS
             end
           end
+
+          context 'when other destructured imports exist for the same module' do
+            let(:text) { <<-EOS.strip }
+var { xyz, debounce } = require('underscore');
+
+memoize
+            EOS
+
+            it 'combines the destructured import and sorts items' do
+              expect(subject).to eq(<<-EOS.strip)
+var { debounce, memoize, xyz } = require('underscore');
+
+memoize
+              EOS
+            end
+
+            context 'when the module is already in the destructured object' do
+              let(:text) { <<-EOS.strip }
+var { debounce, memoize } = require('underscore');
+
+memoize
+              EOS
+
+              it 'does not add a duplicate' do
+                expect(subject).to eq(<<-EOS.strip)
+var { debounce, memoize } = require('underscore');
+
+memoize
+                EOS
+              end
+            end
+          end
         end
       end
 
