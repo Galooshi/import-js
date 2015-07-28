@@ -12,9 +12,14 @@ module ImportJS
     'lookup_paths' => ['.'],
   }
 
-  # Class that initializes configuration from a .importjs file
+  # Class that initializes configuration from a .importjs.json file
   class Configuration
     def initialize
+      @config = DEFAULT_CONFIG.merge(load_config)
+    end
+
+    def refresh
+      return if @config_time == config_file_last_modified
       @config = DEFAULT_CONFIG.merge(load_config)
     end
 
@@ -61,7 +66,13 @@ module ImportJS
 
     # @return [Hash]
     def load_config
+      @config_time = config_file_last_modified
       File.exist?(CONFIG_FILE) ? JSON.parse(File.read(CONFIG_FILE)) : {}
+    end
+
+    # @return [Time?]
+    def config_file_last_modified
+      File.exist?(CONFIG_FILE) ? File.mtime(CONFIG_FILE) : nil
     end
 
     # Check for the presence of a setting such as:

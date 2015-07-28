@@ -10,6 +10,7 @@ module ImportJS
     # Finds variable under the cursor to import. By default, this is bound to
     # `<Leader>j`.
     def import
+      @config.refresh
       variable_name = VIM.evaluate("expand('<cword>')")
       if variable_name.empty?
         VIM.message(<<-EOS.split.join(' '))
@@ -28,6 +29,7 @@ module ImportJS
 
     # Finds all variables that haven't yet been imported.
     def import_all
+      @config.refresh
       unused_variables = find_unused_variables
 
       if unused_variables.empty?
