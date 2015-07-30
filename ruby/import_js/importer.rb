@@ -137,14 +137,27 @@ module ImportJS
 
     # @return [Hash]
     def find_current_imports
-      imports_blob = ''
+      potential_import_lines = []
       buffer.count.times do |n|
         line = buffer[n + 1]
         break if line.strip.empty?
-        imports_blob << "\n#{line}"
+        potential_import_lines << line
       end
 
-      imports = imports_blob.scan(/(?:const|let|var)\s+.+=\s+require\(.*\).*;/)
+      # We need to put the potential imports back into a blob in order to scan
+      # for multiline imports
+      potential_imports_blob = potential_import_lines.join("\n")
+
+      imports = []
+
+      # Scan potential imports for everything ending in a semicolon, then
+      # iterate through those and stop at anything that's not an import.
+      potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
+        break unless potential_import.match(
+          /(?:const|let|var)\s+.+=\s+require\(.*\).*;/)
+        imports << potential_import
+      end
+
       newline_count = imports.length + imports.reduce(0) do |sum, import|
         sum + import.scan(/\n/).length
       end
