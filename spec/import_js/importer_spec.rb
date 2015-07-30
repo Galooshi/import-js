@@ -220,6 +220,36 @@ foo
         end
       end
 
+      context 'when there is a non-import inline with the imports' do
+        let(:text) { <<-EOS.strip }
+var bar = require('bar');
+var star =
+  require('star');
+var { STRAWBERRY, CHOCOLATE } = bar.scoops;
+var zoo = require('foo/zoo');
+
+foo
+        EOS
+
+        it 'breaks imports at that line' do
+          # A better solution would perhaps be to find the `var zoo` import and
+          # move it up there with the rest. But there's a lot of complexity
+          # involved in that, so cutting off at the non-import is a simpler
+          # solution.
+          expect(subject).to eq(<<-EOS.strip)
+var bar = require('bar');
+var foo = require('bar/foo');
+var star =
+  require('star');
+
+var { STRAWBERRY, CHOCOLATE } = bar.scoops;
+var zoo = require('foo/zoo');
+
+foo
+        EOS
+        end
+      end
+
       context 'when there is an import with line-breaks' do
         let(:text) { <<-EOS.strip }
 var zoo =
