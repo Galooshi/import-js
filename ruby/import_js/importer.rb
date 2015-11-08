@@ -49,13 +49,13 @@ module ImportJS
     # @return [Array]
     def find_unused_variables
       content = "/* jshint undef: true, strict: true */\n" +
-                "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }]\n" +
+                "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
                 VIM.evaluate('join(getline(1, "$"), "\n")')
 
       out, _ = Open3.capture3("#{@config.get('jshint_cmd')} -", stdin_data: content)
       result = []
       out.split("\n").each do |line|
-        /.*'([^']+)' is not defined/.match(line) do |match_data|
+        /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
           result << match_data[1]
         end
       end
