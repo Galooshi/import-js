@@ -46,10 +46,18 @@ lookup to see where in the file system that button component was located.
 
 If you use [jshint](http://jshint.com/) or
 [jsxhint](https://github.com/STRML/JSXHint/) import-js can be used to
-automatically import all undefined variables. Just type `:ImportJSImportAll`,
-and all your variables will be resolved. By default, import-js expects a global
-`jshint` command to be available. You can override that through the
-`jshint_cmd` configuration option.
+automatically import all undefined variables. Just type `:ImportJSImportAll`
+(or hit `<leader>i`), and all your variables will be resolved. By default,
+import-js expects a global `jshint` command to be available. You can override
+that through the `jshint_cmd` configuration option.
+
+## Experimental: Go to module
+
+Since Import-JS is pretty good at finding js modules, it makes sense that
+there's an option to open/go to a file rather than import it. This is similar
+to VIM's built in ["Open file under
+cursor"](http://vim.wikia.com/wiki/Open_file_under_cursor). Use it by placing
+the cursor on a variable and type `:ImportJSGoTo`, or hit `<leader>g`.
 
 ## Things to note
 

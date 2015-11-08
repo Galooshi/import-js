@@ -3,6 +3,7 @@ module ImportJS
   class JSModule
     attr_reader :import_path
     attr_reader :lookup_path
+    attr_reader :file_path
     attr_reader :main_file
     attr_reader :skip
     attr_accessor :is_destructured
@@ -13,6 +14,7 @@ module ImportJS
     # @param configuration [ImportJS::Configuration]
     def initialize(lookup_path, relative_file_path, configuration)
       @lookup_path = lookup_path
+      @file_path = relative_file_path
       if relative_file_path.end_with? '/package.json'
         @main_file = JSON.parse(File.read(relative_file_path))['main']
         match = relative_file_path.match(/(.*)\/package\.json/)
@@ -25,7 +27,7 @@ module ImportJS
       else
         @import_path = relative_file_path
         unless configuration.get('keep_file_extensions')
-          @import_path.sub!(/\.js.*$/, '')
+          @import_path = @import_path.sub(/\.js.*$/, '')
         end
       end
 
