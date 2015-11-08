@@ -9,3 +9,7 @@ command ImportJSImportAll call importjs#ImportJSImportAll()
 if !hasmapto(':ImportJSImport<CR>') && maparg('<Leader>j', 'n') == ''
   silent! nnoremap <unique> <silent> <Leader>j :ImportJSImport<CR>
 endif
+
+if !hasmapto(':ImportJSImportAll<CR>') && maparg('<Leader>i', 'n') == ''
+  silent! nnoremap <unique> <silent> <Leader>i :ImportJSImportAll<CR>
+endif
