@@ -2,6 +2,7 @@ module ImportJS
   # Class that represents a js module found in the file system
   class JSModule
     attr_reader :import_path
+    attr_reader :lookup_path
     attr_reader :main_file
     attr_reader :skip
     attr_accessor :is_destructured
