@@ -210,7 +210,15 @@ module ImportJS
           end.compact
         )
       end
-      matched_modules.uniq { |m| m.import_path }.sort do |a, b|
+
+      # If you have overlapping lookup paths, you might end up seeing the same
+      # module to import twice. In order to dedupe these, we remove the module
+      # with the longest path
+      matched_modules.sort do |a, b|
+        a.import_path.length <=> b.import_path.length
+      end.uniq do |m|
+        m.lookup_path + '/' + m.import_path
+      end.sort do |a, b|
         a.display_name <=> b.display_name
       end
     end
