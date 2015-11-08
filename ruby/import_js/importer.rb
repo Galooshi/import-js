@@ -27,6 +27,17 @@ module ImportJS
       window.cursor = [current_row + lines_changed, current_col]
     end
 
+    def goto
+      @config.refresh
+      @timing = { start: Time.now }
+      variable_name = VIM.evaluate("expand('<cword>')")
+      js_modules = find_js_modules(variable_name)
+      @timing[:end] = Time.now
+      return if js_modules.empty?
+      js_module = resolve_one_js_module(js_modules, variable_name)
+      VIM.command("e #{js_module.file_path}")
+    end
+
     # Finds all variables that haven't yet been imported.
     def import_all
       @config.refresh
