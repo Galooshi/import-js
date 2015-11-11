@@ -32,9 +32,7 @@ module ImportJS
       path = @config['aliases'][variable_name]
       return resolve_destructured_alias(variable_name) unless path
 
-      if path.is_a? Hash
-        path = path['path']
-      end
+      path = path['path'] if path.is_a? Hash
       ImportJS::JSModule.new(nil, path, self)
     end
 
@@ -48,6 +46,11 @@ module ImportJS
         end
       end
       nil
+    end
+
+    # @return [Number?]
+    def columns
+      get_number('&columns')
     end
 
     # @return [Number?]

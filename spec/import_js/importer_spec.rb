@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'spec_helper'
 require 'tmpdir'
 require 'pathname'
@@ -72,6 +73,8 @@ describe 'Importer' do
       .to receive(:get).and_call_original
     allow_any_instance_of(ImportJS::Configuration)
       .to receive(:get).with('lookup_paths').and_return([@tmp_dir])
+    allow_any_instance_of(ImportJS::Configuration)
+      .to receive(:columns).and_return(100)
 
     existing_files.each do |file|
       full_path = File.join(@tmp_dir, file)
@@ -119,6 +122,19 @@ describe 'Importer' do
         subject
         expect(VIM.last_message).to eq(
           '[import-js]: No variable to import. Place your cursor on a variable, then try again.')
+      end
+
+      context 'when Vim is narrower than the message' do
+        before do
+          allow_any_instance_of(ImportJS::Configuration)
+            .to receive(:columns).and_return(80)
+        end
+
+        it 'truncates the message' do
+          subject
+          expect(VIM.last_message).to eq(
+            '[import-js]: No variable to import. Place your cursor on a variable, then try a…')
+        end
       end
     end
 

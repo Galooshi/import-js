@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'json'
 require 'open3'
 
@@ -5,7 +6,7 @@ module ImportJS
   class Importer
     def initialize
       @config = ImportJS::Configuration.new
-     end
+    end
 
     # Finds variable under the cursor to import. By default, this is bound to
     # `<Leader>j`.
@@ -58,6 +59,7 @@ module ImportJS
     private
 
     def message(str)
+      str = str[0...(@config.columns - 1)] + '…' if str.length > @config.columns
       VIM.message(str)
     end
 
