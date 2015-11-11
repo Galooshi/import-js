@@ -58,8 +58,11 @@ module ImportJS
 
     def message(str)
       str = "[import-js] #{str}"
-      str = str[0...(@config.columns - 1)] + '…' if str.length > @config.columns
-      VIM.message(str)
+      if str.length > @config.columns - 1
+        str = str[0...(@config.columns - 2)] + '…'
+      end
+
+      VIM.command(":call importjs#WideMsg('#{str}')")
     end
 
     # @return [Array]
