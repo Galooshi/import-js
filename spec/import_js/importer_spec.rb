@@ -107,7 +107,7 @@ describe 'Importer' do
       it 'displays a message' do
         subject
         expect(VIM.last_message).to start_with(
-          "[import-js]: No js module to import for variable `#{word}`")
+          "[import-js] No js module to import for variable `#{word}`")
       end
     end
 
@@ -121,7 +121,7 @@ describe 'Importer' do
       it 'displays a message' do
         subject
         expect(VIM.last_message).to eq(
-          '[import-js]: No variable to import. Place your cursor on a variable, then try again.')
+          '[import-js] No variable to import. Place your cursor on a variable, then try again.')
       end
 
       context 'when Vim is narrower than the message' do
@@ -133,7 +133,7 @@ describe 'Importer' do
         it 'truncates the message' do
           subject
           expect(VIM.last_message).to eq(
-            '[import-js]: No variable to import. Place your cursor on a variable, then try a…')
+            '[import-js] No variable to import. Place your cursor on a variable, then try ag…')
         end
       end
     end
@@ -758,7 +758,7 @@ foo
         it 'displays a message' do
           subject
           expect(VIM.last_message).to start_with(
-            "[import-js]: No js module to import for variable `#{word}`")
+            "[import-js] No js module to import for variable `#{word}`")
         end
       end
 
@@ -862,7 +862,7 @@ foo
       it 'displays a message' do
         subject
         expect(VIM.last_message).to eq(
-          '[import-js]: No variables to import'
+          '[import-js] No variables to import'
         )
       end
     end

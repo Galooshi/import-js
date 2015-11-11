@@ -15,8 +15,8 @@ module ImportJS
       variable_name = VIM.evaluate("expand('<cword>')")
       if variable_name.empty?
         message(<<-EOS.split.join(' '))
-          [import-js]: No variable to import. Place your cursor on a variable,
-          then try again.
+          No variable to import. Place your cursor on a variable, then try
+          again.
         EOS
         return
       end
@@ -45,9 +45,7 @@ module ImportJS
       unused_variables = find_unused_variables
 
       if unused_variables.empty?
-        message(<<-EOS.split.join(' '))
-          [import-js]: No variables to import
-        EOS
+        message('No variables to import')
         return
       end
 
@@ -59,6 +57,7 @@ module ImportJS
     private
 
     def message(str)
+      str = "[import-js] #{str}"
       str = str[0...(@config.columns - 1)] + '…' if str.length > @config.columns
       VIM.message(str)
     end
@@ -86,7 +85,7 @@ module ImportJS
       @timing[:end] = Time.now
       if js_modules.empty?
         message(<<-EOS.split.join(' '))
-          [import-js]: No js module to import for variable `#{variable_name}` #{timing}
+          No js module to import for variable `#{variable_name}` #{timing}
         EOS
         return
       end
@@ -245,7 +244,7 @@ module ImportJS
     # @return [String]
     def resolve_one_js_module(js_modules, variable_name)
       if js_modules.length == 1
-        message("[import-js] Imported `#{js_modules.first.display_name}` #{timing}")
+        message("Imported `#{js_modules.first.display_name}` #{timing}")
         return js_modules.first
       end
 
