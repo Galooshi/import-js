@@ -8,6 +8,17 @@ function importjs#ImportJSGoTo()
   ruby $import_js.goto
 endfunction
 
+" WideMsg() prints [long] message up to (&columns-1) length
+" guaranteed without "Press Enter" prompt.
+" http://vim.wikia.com/wiki/How_to_print_full_screen_width_messages
+function! importjs#WideMsg(msg)
+  let x=&ruler | let y=&showcmd
+  set noruler noshowcmd
+  redraw
+  echo a:msg
+  let &ruler=x | let &showcmd=y
+endfun
+
 ruby << EOF
   begin
     require 'import_js'
