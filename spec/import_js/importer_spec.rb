@@ -86,7 +86,7 @@ describe 'Importer' do
       FileUtils.touch(full_path)
     end
 
-    if (package_json_content)
+    if package_json_content
       File.open(File.join(@tmp_dir, 'Foo/package.json'), 'w') do |f|
         f.write(package_json_content.to_json)
       end
@@ -198,7 +198,31 @@ var FooIO = require('Foo.io');
 FooIO
             EOS
           end
+        end
+      end
 
+      context 'when the variable resolves to a dependency from package.json' do
+        let(:existing_files) { [] }
+
+        before do
+          allow_any_instance_of(ImportJS::Configuration)
+            .to receive(:package_dependencies).and_return(['foo'])
+          allow(File).to receive(:read)
+            .with('node_modules/foo/package.json')
+            .and_return('{ "main": "bar.jsx" }')
+        end
+
+        it 'adds an import to the top of the buffer' do
+          expect(subject).to eq(<<-EOS.strip)
+var foo = require('foo');
+
+foo
+          EOS
+        end
+
+        it 'displays a message about the imported module' do
+          expect(VIM.last_command_message).to start_with(
+            '[import-js] Imported `foo (main: bar.jsx)`')
         end
       end
 
@@ -498,8 +522,6 @@ foo
         end
       end
     end
-
-
 
     describe 'line wrapping' do
       let(:importer) { ImportJS::Importer.new }

@@ -30,12 +30,13 @@ looks like this:
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
 
-At this point, `Button` is undefined, we need to import it. You begin by
+At this point, `Button` is undefined. We need to import it. You begin by
 placing your cursor on "Button". Then hit `<leader>j` (or enter
 `:ImportJSImport`). The Vim buffer changes to the following:
 
 ```js
 var Button = require('components/button');
+
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
 
@@ -62,7 +63,8 @@ the cursor on a variable and type `:ImportJSGoTo`, or hit `<leader>g`.
 ## Things to note
 
 - Only files ending in .js\* are considered when importing
-- All imports are expressed on one line each, starting with `var`
+- All imports are expressed on one line each, starting with `var`/`const`/`let`
+  (configurable)
 - As part of resolving an import, all imports will be sorted
 - The plugin is written in Ruby. You need a Vim with Ruby support.
 
@@ -79,19 +81,21 @@ Webpack, these should match the `modulesDirectories` configuration. Example:
 ```json
 "lookup_paths": [
   "app/assets/javascripts",
-  "vendor/bower_components"
+  "react-components"
 ]
 ```
+
+*Tip:* Don't put `node_modules` here. Import-JS will find your Node
+dependencies through your `package.json` file.
 
 ### `excludes`
 
 Define a list of glob patterns that match files and directories that you don't
-want to include for importing. This could be e.g. nested dependencies to any
-direct dependency you have.
+want to include for importing.
 
 ```json
 "excludes": [
-  "node_modules/**/node_modules/**"
+  "react-components/**/test/**"
 ]
 ```
 

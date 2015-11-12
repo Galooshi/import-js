@@ -230,6 +230,15 @@ module ImportJS
         )
       end
 
+      # Find imports from package.json
+      @config.package_dependencies.each do |dep|
+        next unless dep =~ /^#{formatted_to_regex(variable_name)}$/
+        js_module = ImportJS::JSModule.new(
+          'node_modules', "node_modules/#{dep}/package.json", @config)
+        next if js_module.skip
+        matched_modules << js_module
+      end
+
       # If you have overlapping lookup paths, you might end up seeing the same
       # module to import twice. In order to dedupe these, we remove the module
       # with the longest path
