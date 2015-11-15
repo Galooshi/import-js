@@ -64,4 +64,84 @@ describe 'Configuration' do
       end
     end
   end
+
+  describe '.package_dependencies' do
+    let(:package_json) { nil }
+
+    before do
+      allow(File).to receive(:exist?)
+        .with('.importjs.json').and_return(false)
+      allow(File).to receive(:exist?)
+        .with('package.json').and_return(package_json)
+      allow(File).to receive(:read).and_return nil
+      allow(JSON).to receive(:parse).and_return(package_json)
+    end
+
+    describe 'without a package.json' do
+      it 'returns an empty array' do
+        expect(subject.package_dependencies).to eq([])
+      end
+    end
+
+    describe 'with a package.json' do
+      context 'with only `dependencies`' do
+        let(:package_json) do
+          {
+            'dependencies' => {
+              'foo' => '1.0.0',
+              'bar' => '2.0.0'
+            }
+          }
+        end
+
+        it 'returns those dependencies' do
+          expect(subject.package_dependencies).to eq(['foo', 'bar'])
+        end
+      end
+
+      context 'with `dependencies` and `peerDependencies`' do
+        let(:package_json) do
+          {
+            'dependencies' => {
+              'foo' => '1.0.0',
+            },
+            'peerDependencies' => {
+              'bar' => '2.0.0'
+            }
+          }
+        end
+
+        it 'returns combined dependencies' do
+          expect(subject.package_dependencies).to eq(['foo', 'bar'])
+        end
+      end
+
+      context 'with `devDependencies`' do
+        let(:package_json) do
+          {
+            'dependencies' => {
+              'foo' => '1.0.0',
+            },
+            'devDependencies' => {
+              'bar' => '2.0.0'
+            }
+          }
+        end
+
+        it 'leaves out the devDependencies' do
+          expect(subject.package_dependencies).to eq(['foo'])
+        end
+      end
+    end
+
+    describe 'without a configuration file' do
+      before do
+        allow(File).to receive(:exist?).with('.importjs.json').and_return(false)
+      end
+
+      it 'returns the default value for the key' do
+        expect(subject.get(key)).to eq({})
+      end
+    end
+  end
 end

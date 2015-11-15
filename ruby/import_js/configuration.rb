@@ -65,6 +65,19 @@ module ImportJS
       ' ' * (shift_width || 2)
     end
 
+    # @return [Array<String>]
+    def package_dependencies
+      return [] unless File.exist?('package.json')
+
+      package = JSON.parse(File.read('package.json'))
+      dependencies = package['dependencies'] ?
+        package['dependencies'].keys : []
+      peer_dependencies = package['peerDependencies'] ?
+        package['peerDependencies'].keys : []
+
+      dependencies.concat(peer_dependencies)
+    end
+
     private
 
     # @return [Hash]
