@@ -6,6 +6,7 @@ end
 
 require_relative 'import_js/js_module'
 require_relative 'import_js/importer'
+require_relative 'import_js/vim_editor'
 require_relative 'import_js/configuration'
 
 # @deprecated we've moved to JSON configuration, so the old YAML file is no
