@@ -4,15 +4,16 @@ require 'open3'
 
 module ImportJS
   class Importer
-    def initialize
+    def initialize(editor = ImportJS::VIMEditor.new)
       @config = ImportJS::Configuration.new
+      @editor = editor
     end
 
     # Finds variable under the cursor to import. By default, this is bound to
     # `<Leader>j`.
     def import
       @config.refresh
-      variable_name = VIM.evaluate("expand('<cword>')")
+      variable_name = @editor.current_word
       if variable_name.empty?
         message(<<-EOS.split.join(' '))
           No variable to import. Place your cursor on a variable, then try
@@ -20,23 +21,23 @@ module ImportJS
         EOS
         return
       end
-      current_row, current_col = window.cursor
+      current_row, current_col = @editor.cursor
 
-      old_buffer_lines = buffer.count
+      old_buffer_lines = @editor.count_lines
       import_one_variable variable_name
-      return unless lines_changed = buffer.count - old_buffer_lines
-      window.cursor = [current_row + lines_changed, current_col]
+      return unless lines_changed = @editor.count_lines - old_buffer_lines
+      @editor.cursor = [current_row + lines_changed, current_col]
     end
 
     def goto
       @config.refresh
       @timing = { start: Time.now }
-      variable_name = VIM.evaluate("expand('<cword>')")
+      variable_name = @editor.current_word
       js_modules = find_js_modules(variable_name)
       @timing[:end] = Time.now
       return if js_modules.empty?
       js_module = resolve_one_js_module(js_modules, variable_name)
-      VIM.command("e #{js_module.file_path}")
+      @editor.open_file(js_module.file_path)
     end
 
     # Finds all variables that haven't yet been imported.
@@ -62,14 +63,14 @@ module ImportJS
         str = str[0...(@config.columns - 2)] + '…'
       end
 
-      VIM.command(":call importjs#WideMsg('#{str}')")
+      @editor.message(str)
     end
 
     # @return [Array]
     def find_unused_variables
       content = "/* jshint undef: true, strict: true */\n" +
                 "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
-                VIM.evaluate('join(getline(1, "$"), "\n")')
+                @editor.current_file_content
 
       out, _ = Open3.capture3("#{@config.get('jshint_cmd')} -", stdin_data: content)
       result = []
@@ -99,22 +100,14 @@ module ImportJS
       write_imports(variable_name, resolved_js_module)
     end
 
-    def buffer
-      VIM::Buffer.current
-    end
-
-    def window
-      VIM::Window.current
-    end
-
     # @param variable_name [String]
     # @param js_module [ImportJS::JSModule]
     def write_imports(variable_name, js_module)
       old_imports = find_current_imports
 
       # Ensure that there is a blank line after the block of all imports
-      unless buffer[old_imports[:newline_count] + 1].strip.empty?
-        buffer.append(old_imports[:newline_count], '')
+      unless @editor.read_line(old_imports[:newline_count] + 1).strip.empty?
+        @editor.append_line(old_imports[:newline_count], '')
       end
 
       modified_imports = old_imports[:imports] # Array
@@ -134,11 +127,11 @@ module ImportJS
       end
 
       # Delete old imports, then add the modified list back in.
-      old_imports[:newline_count].times { buffer.delete(1) }
+      old_imports[:newline_count].times { @editor.delete_line(1) }
       modified_imports.reverse_each do |import|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
-        import.split("\n").reverse_each { |line| buffer.append(0, line) }
+        import.split("\n").reverse_each { |line| @editor.append_line(0, line) }
       end
     end
 
@@ -157,8 +150,8 @@ module ImportJS
     # @return [Hash]
     def find_current_imports
       potential_import_lines = []
-      buffer.count.times do |n|
-        line = buffer[n + 1]
+      @editor.count_lines.times do |n|
+        line = @editor.read_line(n + 1)
         break if line.strip.empty?
         potential_import_lines << line
       end
@@ -260,15 +253,12 @@ module ImportJS
         return js_modules.first
       end
 
-      escaped_list = ["\"[import-js] Pick js module to import for '#{variable_name}': #{timing}\""]
-      escaped_list << js_modules.each_with_index.map do |js_module, i|
-        "\"#{i + 1}: #{js_module.display_name}\""
-      end
-      escaped_list_string = '[' + escaped_list.join(',') + ']'
-
-      selected_index = VIM.evaluate("inputlist(#{escaped_list_string})")
-      return if selected_index < 1
-      js_modules[selected_index - 1]
+      selected_index = @editor.ask_for_selection(
+        "\"[import-js] Pick js module to import for '#{variable_name}': #{timing}\"",
+        js_modules.map {|m| m.display_name}
+      )
+      return unless selected_index
+      js_modules[selected_index]
     end
 
     # Takes a string in any of the following four formats:
