@@ -26,7 +26,7 @@ ruby << EOF
   rescue LoadError
     load_path_modified = false
     ::VIM::evaluate('&runtimepath').to_s.split(',').each do |path|
-      lib = "#{path}/ruby"
+      lib = "#{path}/lib"
       if !$LOAD_PATH.include?(lib) and File.exist?(lib)
         $LOAD_PATH << lib
         load_path_modified = true

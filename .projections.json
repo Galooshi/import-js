@@ -1,10 +1,10 @@
 {
-  "ruby/import-js/*.rb": {
+  "lib/import-js/*.rb": {
     "alternate": "spec/import-js/{}_spec.rb",
     "type": "source"
   },
   "spec/import-js/*_spec.rb": {
-    "alternate": "ruby/import-js/{}.rb",
+    "alternate": "lib/import-js/{}.rb",
     "type": "test"
   }
 }
