@@ -24,7 +24,8 @@ module ImportJS
 
       old_buffer_lines = @editor.count_lines
       import_one_variable variable_name
-      return unless lines_changed = @editor.count_lines - old_buffer_lines
+      lines_changed = @editor.count_lines - old_buffer_lines
+      return unless lines_changed
       @editor.cursor = [current_row + lines_changed, current_col]
     end
 
@@ -82,10 +83,8 @@ module ImportJS
       js_modules = find_js_modules(variable_name)
       @timing[:end] = Time.now
       if js_modules.empty?
-        message(<<-EOS.split.join(' '))
-          No js module to import for variable `#{variable_name}` #{timing}
-        EOS
-        return
+        return message(
+          "No js module to import for variable `#{variable_name}` #{timing}")
       end
 
       resolved_js_module = resolve_one_js_module(js_modules, variable_name)
@@ -167,6 +166,7 @@ module ImportJS
       newline_count = imports.length + imports.reduce(0) do |sum, import|
         sum + import.scan(/\n/).length
       end
+
       {
         imports: imports,
         newline_count: newline_count
@@ -249,7 +249,7 @@ module ImportJS
 
       selected_index = @editor.ask_for_selection(
         "\"ImportJS: Pick js module to import for '#{variable_name}': #{timing}\"",
-        js_modules.map {|m| m.display_name}
+        js_modules.map(&:display_name)
       )
       return unless selected_index
       js_modules[selected_index]
