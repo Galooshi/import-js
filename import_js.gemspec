@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'import_js'
-  s.version     = '0.0.1'
+  s.version     = '0.0.2'
   s.date        = '2015-11-15'
   s.summary     = 'Import-JS'
   s.description = 'A tool to simplify importing javascript modules'
