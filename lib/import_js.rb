@@ -7,5 +7,6 @@ end
 require_relative 'import_js/js_module'
 require_relative 'import_js/importer'
 require_relative 'import_js/vim_editor'
+require_relative 'import_js/emacs_editor'
 require_relative 'import_js/command_line_editor'
 require_relative 'import_js/configuration'
