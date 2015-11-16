@@ -111,7 +111,7 @@ describe 'Importer' do
       it 'displays a message' do
         subject
         expect(VIM.last_command_message).to start_with(
-          "[import-js] No js module to import for variable `#{word}`")
+          "ImportJS: No js module to import for variable `#{word}`")
       end
     end
 
@@ -125,7 +125,7 @@ describe 'Importer' do
       it 'displays a message' do
         subject
         expect(VIM.last_command_message).to eq(
-          '[import-js] No variable to import. Place your cursor on a variable, then try again.')
+          'ImportJS: No variable to import. Place your cursor on a variable, then try again.')
       end
 
       context 'when Vim is narrower than the message' do
@@ -137,7 +137,7 @@ describe 'Importer' do
         it 'truncates the message' do
           subject
           expect(VIM.last_command_message).to eq(
-            '[import-js] No variable to import. Place your cursor on a variable, then try a…')
+            'ImportJS: No variable to import. Place your cursor on a variable, then try aga…')
         end
       end
     end
@@ -155,7 +155,7 @@ foo
 
       it 'displays a message about the imported module' do
         expect(VIM.last_command_message).to start_with(
-          '[import-js] Imported `bar/foo`')
+          'ImportJS: Imported `bar/foo`')
       end
 
       context 'when that variable is already imported' do
@@ -183,7 +183,7 @@ foo
 
         it 'displays a message about the imported module' do
           expect(VIM.last_command_message).to start_with(
-            '[import-js] Imported `Foo (main: index.js.jsx)`')
+            'ImportJS: Imported `Foo (main: index.js.jsx)`')
         end
 
         context 'when that module has a dot in its name' do
@@ -222,7 +222,7 @@ foo
 
         it 'displays a message about the imported module' do
           expect(VIM.last_command_message).to start_with(
-            '[import-js] Imported `foo (main: bar.jsx)`')
+            'ImportJS: Imported `foo (main: bar.jsx)`')
         end
       end
 
@@ -350,7 +350,7 @@ foo
         it 'displays a message about selecting a module' do
           subject
           expect(VIM.last_inputlist).to include(
-            "[import-js] Pick js module to import for 'foo'")
+            "ImportJS: Pick js module to import for 'foo'")
         end
 
         it 'list all possible imports' do
@@ -785,7 +785,7 @@ foo
         it 'displays a message' do
           subject
           expect(VIM.last_command_message).to start_with(
-            "[import-js] No js module to import for variable `#{word}`")
+            "ImportJS: No js module to import for variable `#{word}`")
         end
       end
 
@@ -889,7 +889,7 @@ foo
       it 'displays a message' do
         subject
         expect(VIM.last_command_message).to eq(
-          '[import-js] No variables to import'
+          'ImportJS: No variables to import'
         )
       end
     end
