@@ -57,7 +57,7 @@ module ImportJS
     private
 
     def message(str)
-      @editor.message("[import-js] #{str}")
+      @editor.message("ImportJS: #{str}")
     end
 
     # @return [Array]
@@ -248,7 +248,7 @@ module ImportJS
       end
 
       selected_index = @editor.ask_for_selection(
-        "\"[import-js] Pick js module to import for '#{variable_name}': #{timing}\"",
+        "\"ImportJS: Pick js module to import for '#{variable_name}': #{timing}\"",
         js_modules.map {|m| m.display_name}
       )
       return unless selected_index
