@@ -1,3 +1,4 @@
+# encoding: utf-8
 module ImportJS
   # This is the implementation of the VIM integration in Import-JS. It can be
   # used as a template for other editor integrations.
@@ -20,6 +21,11 @@ module ImportJS
     #
     # @param str [String]
     def message(str)
+      # To prevent having to press enter to dismiss, we ellipsize the message
+      if str.length > available_columns - 1
+        str = str[0...(available_columns - 2)] + '…'
+      end
+
       VIM.command(":call importjs#WideMsg('#{str}')")
     end
 
@@ -93,6 +99,60 @@ module ImportJS
       selected_index = VIM.evaluate("inputlist(#{escaped_list_string})")
       return if selected_index < 1
       selected_index - 1
+    end
+
+    # Get the preferred max length of a line
+    # @return [Number?]
+    def max_line_length
+      get_number('&textwidth')
+    end
+
+    # @return [String] shiftwidth number of spaces if expandtab is not set,
+    #   otherwise `\t`
+    def tab
+      return "\t" unless expand_tab?
+      ' ' * (shift_width || 2)
+    end
+
+    private
+
+    # Check for the presence of a setting such as:
+    #
+    #   - g:CommandTSmartCase (plug-in setting)
+    #   - &wildignore         (Vim setting)
+    #   - +cursorcolumn       (Vim setting, that works)
+    #
+    # @param str [String]
+    # @return [Boolean]
+    def exists?(str)
+      VIM.evaluate(%{exists("#{str}")}).to_i != 0
+    end
+
+    # @return [Number?]
+    def available_columns
+      get_number('&columns')
+    end
+
+    # @param name [String]
+    # @return [Number?]
+    def get_number(name)
+      exists?(name) ? VIM.evaluate("#{name}").to_i : nil
+    end
+
+    # @param name [String]
+    # @return [Boolean?]
+    def get_bool(name)
+      exists?(name) ? VIM.evaluate("#{name}").to_i != 0 : nil
+    end
+
+    # @return [Boolean?]
+    def expand_tab?
+      get_bool('&expandtab')
+    end
+
+    # @return [Number?]
+    def shift_width
+      get_number('&shiftwidth')
     end
   end
 end

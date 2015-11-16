@@ -77,8 +77,8 @@ describe 'Importer' do
       .to receive(:get).and_call_original
     allow_any_instance_of(ImportJS::Configuration)
       .to receive(:get).with('lookup_paths').and_return([@tmp_dir])
-    allow_any_instance_of(ImportJS::Configuration)
-      .to receive(:columns).and_return(100)
+    allow_any_instance_of(ImportJS::VIMEditor)
+      .to receive(:available_columns).and_return(100)
 
     existing_files.each do |file|
       full_path = File.join(@tmp_dir, file)
@@ -130,8 +130,8 @@ describe 'Importer' do
 
       context 'when Vim is narrower than the message' do
         before do
-          allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:columns).and_return(80)
+          allow_any_instance_of(ImportJS::VIMEditor)
+            .to receive(:available_columns).and_return(80)
         end
 
         it 'truncates the message' do
@@ -533,8 +533,8 @@ foo
 
       context "when lines exceed Vim's textwidth" do
         before(:each) do
-          allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:text_width)
+          allow_any_instance_of(ImportJS::VIMEditor)
+            .to receive(:max_line_length)
             .and_return(40)
         end
 
@@ -542,7 +542,7 @@ foo
 
         context 'when expandtab is not set' do
           before(:each) do
-            allow_any_instance_of(ImportJS::Configuration)
+            allow_any_instance_of(ImportJS::VIMEditor)
               .to receive(:expand_tab?)
               .and_return(false)
           end
@@ -559,14 +559,14 @@ foo
 
         context 'when expandtab is set' do
           before(:each) do
-            allow_any_instance_of(ImportJS::Configuration)
+            allow_any_instance_of(ImportJS::VIMEditor)
               .to receive(:expand_tab?)
               .and_return(true)
           end
 
           context 'when shiftwidth is set' do
             before(:each) do
-              allow_any_instance_of(ImportJS::Configuration)
+              allow_any_instance_of(ImportJS::VIMEditor)
                 .to receive(:shift_width)
                 .and_return(3)
             end
@@ -583,7 +583,7 @@ foo
 
           context 'when shiftwidth is not set' do
             before(:each) do
-              allow_any_instance_of(ImportJS::Configuration)
+              allow_any_instance_of(ImportJS::VIMEditor)
                 .to receive(:shift_width)
                 .and_return(nil)
             end
@@ -602,7 +602,8 @@ foo
 
       context "when lines do not exceed Vim's textwidth" do
         before(:each) do
-          allow(importer).to receive(:text_width).and_return(80)
+          allow_any_instance_of(ImportJS::VIMEditor)
+            .to receive(:max_line_length).and_return(80)
         end
 
         let(:existing_files) { ['bar/foo.js.jsx'] }

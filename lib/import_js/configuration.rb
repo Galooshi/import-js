@@ -48,23 +48,6 @@ module ImportJS
       nil
     end
 
-    # @return [Number?]
-    def columns
-      get_number('&columns')
-    end
-
-    # @return [Number?]
-    def text_width
-      get_number('&textwidth')
-    end
-
-    # @return [String] shiftwidth number of spaces if expandtab is not set,
-    #   otherwise `\t`
-    def tab
-      return "\t" unless expand_tab?
-      ' ' * (shift_width || 2)
-    end
-
     # @return [Array<String>]
     def package_dependencies
       return [] unless File.exist?('package.json')
@@ -89,40 +72,6 @@ module ImportJS
     # @return [Time?]
     def config_file_last_modified
       File.exist?(CONFIG_FILE) ? File.mtime(CONFIG_FILE) : nil
-    end
-
-    # Check for the presence of a setting such as:
-    #
-    #   - g:CommandTSmartCase (plug-in setting)
-    #   - &wildignore         (Vim setting)
-    #   - +cursorcolumn       (Vim setting, that works)
-    #
-    # @param str [String]
-    # @return [Boolean]
-    def exists?(str)
-      VIM.evaluate(%{exists("#{str}")}).to_i != 0
-    end
-
-    # @param name [String]
-    # @return [Number?]
-    def get_number(name)
-      exists?(name) ? VIM.evaluate("#{name}").to_i : nil
-    end
-
-    # @param name [String]
-    # @return [Boolean?]
-    def get_bool(name)
-      exists?(name) ? VIM.evaluate("#{name}").to_i != 0 : nil
-    end
-
-    # @return [Boolean?]
-    def expand_tab?
-      get_bool('&expandtab')
-    end
-
-    # @return [Number?]
-    def shift_width
-      get_number('&shiftwidth')
     end
   end
 end

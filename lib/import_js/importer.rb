@@ -1,4 +1,3 @@
-# encoding: utf-8
 require 'json'
 require 'open3'
 
@@ -58,12 +57,7 @@ module ImportJS
     private
 
     def message(str)
-      str = "[import-js] #{str}"
-      if str.length > @config.columns - 1
-        str = str[0...(@config.columns - 2)] + '…'
-      end
-
-      @editor.message(str)
+      @editor.message("[import-js] #{str}")
     end
 
     # @return [Array]
@@ -112,7 +106,7 @@ module ImportJS
 
       modified_imports = old_imports[:imports] # Array
 
-      # Add new import to the block of imports, wrapping at text_width
+      # Add new import to the block of imports, wrapping at the max line length
       unless js_module.is_destructured && inject_destructured_variable(
         variable_name, js_module, modified_imports)
         modified_imports << generate_import(variable_name, js_module)
@@ -191,8 +185,8 @@ module ImportJS
       end
       value = "require('#{js_module.import_path}');"
 
-      if @config.text_width && "#{declaration} #{value}".length > @config.text_width
-        "#{declaration}\n#{@config.tab}#{value}"
+      if @editor.max_line_length && "#{declaration} #{value}".length > @editor.max_line_length
+        "#{declaration}\n#{@editor.tab}#{value}"
       else
         "#{declaration} #{value}"
       end
