@@ -63,7 +63,7 @@ module ImportJS
     # @return [Array]
     def find_unused_variables
       content = "/* jshint undef: true, strict: true */\n" +
-                "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
+                %q{/* eslint no-unused-vars: [2, { "vars": "all", "args": "none" }] */\n} +
                 @editor.current_file_content
 
       out, _ = Open3.capture3("#{@config.get('jshint_cmd')} -", stdin_data: content)
