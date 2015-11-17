@@ -111,7 +111,7 @@ describe 'Importer' do
       it 'displays a message' do
         subject
         expect(VIM.last_command_message).to start_with(
-          "ImportJS: No js module to import for variable `#{word}`")
+          "ImportJS: No JS module to import for variable `#{word}`")
       end
     end
 
@@ -350,7 +350,7 @@ foo
         it 'displays a message about selecting a module' do
           subject
           expect(VIM.last_inputlist).to include(
-            "ImportJS: Pick js module to import for 'foo'")
+            "ImportJS: Pick JS module to import for 'foo'")
         end
 
         it 'list all possible imports' do
@@ -458,7 +458,7 @@ foo
     context 'importing a module with a package.json file' do
       let(:existing_files) { ['Foo/package.json', 'Foo/build/main.js'] }
 
-      context 'when `main` points to a js file' do
+      context 'when `main` points to a JS file' do
         let(:package_json_content) do
           {
             main: 'build/main.js'
@@ -785,7 +785,7 @@ foo
         it 'displays a message' do
           subject
           expect(VIM.last_command_message).to start_with(
-            "ImportJS: No js module to import for variable `#{word}`")
+            "ImportJS: No JS module to import for variable `#{word}`")
         end
       end
 

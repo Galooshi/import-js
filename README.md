@@ -54,7 +54,7 @@ that through the `jshint_cmd` configuration option.
 
 ## Experimental: Go to module
 
-Since Import-JS is pretty good at finding js modules, it makes sense that
+Since Import-JS is pretty good at finding JS modules, it makes sense that
 there's an option to open/go to a file rather than import it. This is similar
 to VIM's built in ["Open file under
 cursor"](http://vim.wikia.com/wiki/Open_file_under_cursor). Use it by placing
@@ -154,7 +154,7 @@ Configure a path to a `jshint` compatible command, e.g. `jsxhint` or `eslint`.
 
 ### `keep_file_extensions`
 
-Set to true to make Import-JS keep the file extension of the imported js file.
+Set to true to make Import-JS keep the file extension of the imported JS file.
 E.g. `const Foo = require('foo.js')`.
 
 ```json

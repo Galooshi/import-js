@@ -84,7 +84,7 @@ module ImportJS
       @timing[:end] = Time.now
       if js_modules.empty?
         return message(
-          "No js module to import for variable `#{variable_name}` #{timing}")
+          "No JS module to import for variable `#{variable_name}` #{timing}")
       end
 
       resolved_js_module = resolve_one_js_module(js_modules, variable_name)
@@ -248,7 +248,7 @@ module ImportJS
       end
 
       selected_index = @editor.ask_for_selection(
-        "\"ImportJS: Pick js module to import for '#{variable_name}': #{timing}\"",
+        "\"ImportJS: Pick JS module to import for '#{variable_name}': #{timing}\"",
         js_modules.map(&:display_name)
       )
       return unless selected_index
