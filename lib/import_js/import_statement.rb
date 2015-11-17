@@ -64,6 +64,15 @@ module ImportJS
       @original_import_string = nil # clear import string cache if there was one
     end
 
+    # Deletes a variable from an already existing set of destructured
+    #   variables.
+    # @param variable_name [String]
+    def delete_variable(variable_name)
+      variables.delete(variable_name)
+
+      @original_import_string = nil # clear import string cache if there was one
+    end
+
     # @return [Array] an array that can be used in `uniq!` to dedupe equal
     #   statements, e.g.
     #   `const foo = require('foo');`

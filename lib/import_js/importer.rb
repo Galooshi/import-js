@@ -43,16 +43,35 @@ module ImportJS
     # Finds all variables that haven't yet been imported.
     def import_all
       @config.refresh
-      unused_variables = find_unused_variables
+      undefined_variables = run_jshint_command.map do |line|
+        /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
+          match_data[1]
+        end
+      end.compact.uniq
 
-      if unused_variables.empty?
-        message('No variables to import')
-        return
-      end
+      return message('No variables to import') if undefined_variables.empty?
 
-      unused_variables.each do |variable|
+      undefined_variables.each do |variable|
         import_one_variable(variable)
       end
+    end
+
+    def remove_unused_imports
+      @config.refresh
+      unused_variables = run_jshint_command.map do |line|
+        /.*['"]([^'"]+)['"] is defined but never used/.match(line) do |match_data|
+          match_data[1]
+        end
+      end.compact.uniq
+
+      old_imports = find_current_imports
+      new_imports = old_imports[:imports].reject do |import_statement|
+        unused_variables.each do |unused_variable|
+          import_statement.delete_variable(unused_variable)
+        end
+        import_statement.variables.empty?
+      end
+      replace_imports(old_imports[:newline_count], new_imports)
     end
 
     private
@@ -61,8 +80,8 @@ module ImportJS
       @editor.message("ImportJS: #{str}")
     end
 
-    # @return [Array]
-    def find_unused_variables
+    # @return [Array<String>] the output from jshint/eslint, line by line
+    def run_jshint_command
       content = "/* jshint undef: true, strict: true */\n" +
                 "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
                 @editor.current_file_content
@@ -74,13 +93,7 @@ module ImportJS
         raise ImportJS::ParseError.new, out
       end
 
-      result = []
-      out.split("\n").each do |line|
-        /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
-          result << match_data[1]
-        end
-      end
-      result.uniq
+      out.split("\n")
     end
 
     # @param variable_name [String]
@@ -120,8 +133,14 @@ module ImportJS
       # Remove duplicate import statements
       modified_imports.uniq!(&:normalize)
 
+      replace_imports(old_imports[:newline_count], modified_imports)
+    end
+
+    # @param old_imports_lines [Number]
+    # @param new_imports [Array<ImportJS::ImportStatement>]
+    def replace_imports(old_imports_lines, new_imports)
       # Generate import strings
-      import_strings = modified_imports.map do |import|
+      import_strings = new_imports.map do |import|
         import.to_import_string(
           @config.get('declaration_keyword'),
           @editor.max_line_length,
@@ -129,7 +148,7 @@ module ImportJS
       end.sort
 
       # Delete old imports, then add the modified list back in.
-      old_imports[:newline_count].times { @editor.delete_line(1) }
+      old_imports_lines.times { @editor.delete_line(1) }
       import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.

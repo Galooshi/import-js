@@ -1199,4 +1199,128 @@ var a = foo + bar;
       end
     end
   end
+
+  describe '#remove_unused_imports' do
+    let(:jshint_result) { '' }
+    before do
+      allow(Open3).to receive(:capture3).and_call_original
+      allow(Open3).to receive(:capture3).with(/jshint/, anything)
+        .and_return([jshint_result, nil])
+    end
+
+    subject do
+      ImportJS::Importer.new.remove_unused_imports
+      VIM::Buffer.current_buffer.to_s
+    end
+
+    context 'when no unused variables exist' do
+      it 'leaves the buffer unchanged' do
+        expect(subject).to eq(text)
+      end
+    end
+
+    context 'when eslint can not parse' do
+      let(:jshint_result) do
+        'stdin: line 1, col 1, Error - Parsing error: Unexpected token ILLEGAL'
+      end
+
+      it 'throws an error' do
+        expect { subject }.to raise_error(ImportJS::ParseError)
+      end
+    end
+
+    context 'when jshint can not parse' do
+      let(:jshint_result) do
+        'stdin: line 103, col 8, Unrecoverable syntax error'
+      end
+
+      it 'throws an error' do
+        expect { subject }.to raise_error(ImportJS::ParseError)
+      end
+    end
+
+    context 'when one unused variable exists' do
+      let(:text) { <<-EOS.strip }
+var bar = require('foo/bar');
+var foo = require('bar/foo');
+
+bar
+      EOS
+      let(:jshint_result) do
+        "stdin: line 1, col 4, 'foo' is defined but never used"
+      end
+
+      it 'removes that import' do
+        expect(subject).to eq(<<-EOS.strip)
+var bar = require('foo/bar');
+
+bar
+        EOS
+      end
+    end
+
+    context 'when multiple unused imports exist' do
+      let(:text) { <<-EOS.strip }
+var bar = require('foo/bar');
+var baz = require('bar/baz');
+var foo = require('bar/foo');
+
+baz
+      EOS
+
+      let(:jshint_result) do
+        "stdin: line 3, col 11, 'foo' is defined but never used\n" \
+        "stdin: line 3, col 11, 'bar' is defined but never used"
+      end
+
+      it 'removes all unused imports' do
+        expect(subject).to eq(<<-EOS.strip)
+var baz = require('bar/baz');
+
+baz
+        EOS
+      end
+    end
+
+    context 'when a destructured import has an unused variable' do
+      let(:text) { <<-EOS.strip }
+var { bar, foo } = require('baz');
+
+bar
+      EOS
+
+      let(:jshint_result) do
+        "stdin: line 3, col 11, 'foo' is defined but never used\n" \
+      end
+
+      it 'removes that variable from the destructured list' do
+        expect(subject).to eq(<<-EOS.strip)
+var { bar } = require('baz');
+
+bar
+        EOS
+      end
+    end
+
+    context 'when the last variable is removed from a destructured import' do
+      let(:text) { <<-EOS.strip }
+var bar = require('bar');
+var { foo } = require('baz');
+
+bar
+      EOS
+
+      let(:jshint_result) do
+        "stdin: line 3, col 11, 'foo' is defined but never used\n" \
+      end
+
+      it 'removes the whole import' do
+        expect(subject).to eq(<<-EOS.strip)
+var bar = require('bar');
+
+bar
+        EOS
+      end
+    end
+  end
 end
