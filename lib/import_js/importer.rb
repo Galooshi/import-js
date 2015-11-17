@@ -24,7 +24,8 @@ module ImportJS
 
       old_buffer_lines = @editor.count_lines
       import_one_variable variable_name
-      return unless lines_changed = @editor.count_lines - old_buffer_lines
+      lines_changed = @editor.count_lines - old_buffer_lines
+      return unless lines_changed
       @editor.cursor = [current_row + lines_changed, current_col]
     end
 
@@ -63,7 +64,7 @@ module ImportJS
     # @return [Array]
     def find_unused_variables
       content = "/* jshint undef: true, strict: true */\n" +
-                "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
+                %q{/* eslint no-unused-vars: [2, { "vars": "all", "args": "none" }] */\n} +
                 @editor.current_file_content
 
       out, _ = Open3.capture3("#{@config.get('jshint_cmd')} -", stdin_data: content)
@@ -82,10 +83,8 @@ module ImportJS
       js_modules = find_js_modules(variable_name)
       @timing[:end] = Time.now
       if js_modules.empty?
-        message(<<-EOS.split.join(' '))
-          No js module to import for variable `#{variable_name}` #{timing}
-        EOS
-        return
+        return message(
+          "No JS module to import for variable `#{variable_name}` #{timing}")
       end
 
       resolved_js_module = resolve_one_js_module(js_modules, variable_name)
@@ -167,6 +166,7 @@ module ImportJS
       newline_count = imports.length + imports.reduce(0) do |sum, import|
         sum + import.scan(/\n/).length
       end
+
       {
         imports: imports,
         newline_count: newline_count
@@ -248,8 +248,8 @@ module ImportJS
       end
 
       selected_index = @editor.ask_for_selection(
-        "\"ImportJS: Pick js module to import for '#{variable_name}': #{timing}\"",
-        js_modules.map {|m| m.display_name}
+        "\"ImportJS: Pick JS module to import for '#{variable_name}': #{timing}\"",
+        js_modules.map(&:display_name)
       )
       return unless selected_index
       js_modules[selected_index]
