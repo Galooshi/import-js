@@ -7,6 +7,8 @@ file.
 
 ![Demo of import-js in action](https://raw.github.com/trotzig/import-js/master/import-js-demo.gif)
 
+[Using with Emacs](EMACS.md)
+
 ## Importing: Example
 
 Let's say that you have a project with the following setup:
