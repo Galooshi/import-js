@@ -1,17 +1,29 @@
 # Introduction
 
-`import-js` is a vim plugin that simplifies your CommonJS project by
-automatically resolving variables in a `require` statement. Use it by placing
-the cursor on a variable, then hit `<leader>j` to import it at the top of the
-file.
+`import-js` is a tool to automatically import dependencies in your JavaScript
+project. Use it in Vim or Emacs by placing your cursor on a variable and hit
+`<leader>j` (Vim), or `(M-x) import-js-import` (Emacs).
 
 ![Demo of import-js in action](https://raw.github.com/trotzig/import-js/master/import-js-demo.gif)
 
-[Using with Emacs](EMACS.md)
+## Editor support
+
+import-js comes with plugins for the following editors:
+
+- [Emacs (experimental)](EMACS.md) (Thanks to @kevin.kehl!)
+- [Vim](VIM.md)
+- [(your editor here?)](CONTRIBUTING.md)
+
+Detailed instructions on how to install import-js can be found in the editor
+links above.
+
+*Want to add another editor to the list?* [See how to
+contribute](CONTRIBUTING.md).
 
 ## Importing: Example
 
-Let's say that you have a project with the following setup:
+To demonstrate what import-js can do, let's use an example. Let's say that you
+have a JavaScript project with the following setup:
 
 ```
 .
@@ -25,16 +37,18 @@ Let's say that you have a project with the following setup:
 |     |-- index.js
 ```
 
-And let's pretend that you're editing `pages/index.js` in Vim. It currently
-looks like this:
+Let's pretend that you're editing `pages/index.js` that currently looks like
+this:
 
 ```js
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
 
-At this point, `Button` is undefined. We need to import it. You begin by
-placing your cursor on "Button". Then hit `<leader>j` (or enter
-`:ImportJSImport`). The Vim buffer changes to the following:
+At this point, `Button` is undefined. We need to import it. If you are used to
+doing this manually, this involves figuring out the path to the JavaScript
+module that defines `Button`. With import-js, you instead place your cursor on
+the word "Button", then hit `<leader>j` (Vim) or `(M-x) import-js-import`
+(Emacs). The file buffer will now change to the following:
 
 ```js
 var Button = require('components/button');
@@ -42,33 +56,34 @@ var Button = require('components/button');
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
 
-There, you just saved yourself having to type ~40 characters and doing a manual
-lookup to see where in the file system that button component was located.
+That's basically it. Import-js will help you find modules and automatically add
+a `require` statement. But keep reading for some more neat features.
 
 ## Import all undefined variables
 
 If you use [jshint](http://jshint.com/) or
 [jsxhint](https://github.com/STRML/JSXHint/) import-js can be used to
-automatically import all undefined variables. Just type `:ImportJSImportAll`
-(or hit `<leader>i`), and all your variables will be resolved. By default,
-import-js expects a global `jshint` command to be available. You can override
-that through the `jshint_cmd` configuration option.
+automatically import all undefined variables. Just hit `<leader>i` (Vim),
+and all your variables will be resolved. By default, import-js expects a global
+`jshint` command to be available. You can override that through the
+`jshint_cmd` configuration option.
 
 ## Experimental: Go to module
 
-Since Import-JS is pretty good at finding JS modules, it makes sense that
+Since import-js is pretty good at finding JS modules, it makes sense that
 there's an option to open/go to a file rather than import it. This is similar
 to VIM's built in ["Open file under
 cursor"](http://vim.wikia.com/wiki/Open_file_under_cursor). Use it by placing
-the cursor on a variable and type `:ImportJSGoTo`, or hit `<leader>g`.
+the cursor on a variable and hit `<leader>g` (Vim) or `(M-x) import-js-goto`
+(Emacs).
 
 ## Things to note
 
 - Only files ending in .js\* are considered when importing
 - All imports are expressed on one line each, starting with `var`/`const`/`let`
-  (configurable)
+  (configurable through the `declaration_keyword` option)
 - As part of resolving an import, all imports will be sorted
-- The plugin is written in Ruby. You need a Vim with Ruby support.
+- The Vim plugin is written in Ruby. You need a [Vim with Ruby support](VIM.md).
 
 ## Configuration
 
@@ -87,7 +102,7 @@ Webpack, these should match the `modulesDirectories` configuration. Example:
 ]
 ```
 
-*Tip:* Don't put `node_modules` here. Import-JS will find your Node
+*Tip:* Don't put `node_modules` here. import-js will find your Node
 dependencies through your `package.json` file.
 
 ### `excludes`
@@ -156,25 +171,12 @@ Configure a path to a `jshint` compatible command, e.g. `jsxhint` or `eslint`.
 
 ### `keep_file_extensions`
 
-Set to true to make Import-JS keep the file extension of the imported JS file.
+Set to true to make import-js keep the file extension of the imported JS file.
 E.g. `const Foo = require('foo.js')`.
 
 ```json
 "keep_file_extensions": true
 ```
-
-## Dependencies
-
-import-js is written in Ruby, so in order to make it work in your Vim you need
-Ruby support. You can test for Ruby support by typing `:ruby 1` from within
-your Vim. If your Vim doesn't have Ruby support, you'll see something like
-this:
-
-```
- E319: Sorry, the command is not available in this version
-```
-
-(from https://github.com/wincent/command-t/blob/master/README.txt)
 
 ## Contributing
 
