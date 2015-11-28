@@ -169,19 +169,20 @@ Configure a path to a `jshint` compatible command, e.g. `jsxhint` or `eslint`.
 "jshint_cmd": "jsxhint"
 ```
 
-### `keep_file_extensions`
+### `strip_file_extensions`
 
-Set to true to make import-js keep the file extension of the imported JS file.
-E.g. `const Foo = require('foo.js')`.
+An array that controls what file extensions are stripped out from the resulting
+`require` statement. The default configuration strips out `[".js", ".jsx"]`.
+Set to an empty array `[]` to avoid stripping out extensions.
 
 ```json
-"keep_file_extensions": true
+"strip_file_extensions": [".web.js", ".js"]
 ```
 
 ## Contributing
 
 See the
 [CONTRIBUTING.md](https://github.com/trotzig/import-js/blob/master/CONTRIBUTING.md)
-file for tips on how to run, test and develop import-js locally.
+document for tips on how to run, test and develop import-js locally.
 
 Happy hacking!

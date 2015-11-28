@@ -11,8 +11,9 @@ module ImportJS
     # @param lookup_path [String] the lookup path in which this module was found
     # @param relative_file_path [String] a full path to the file, relative to
     #   the project root.
-    # @param configuration [ImportJS::Configuration]
-    def initialize(lookup_path, relative_file_path, configuration)
+    # @param strip_file_extensions [Array] a list of file extensions to strip,
+    #   e.g. ['.js', '.jsx']
+    def initialize(lookup_path, relative_file_path, strip_file_extensions)
       @lookup_path = lookup_path
       @file_path = relative_file_path
       if relative_file_path.end_with? '/package.json'
@@ -26,8 +27,11 @@ module ImportJS
         @import_path = match[1]
       else
         @import_path = relative_file_path
-        unless configuration.get('keep_file_extensions')
-          @import_path = @import_path.sub(/\.js.*$/, '')
+        strip_file_extensions.each do |ext|
+          if @import_path.end_with?(ext)
+            @import_path = @import_path[0...-ext.length]
+            break
+          end
         end
       end
 
