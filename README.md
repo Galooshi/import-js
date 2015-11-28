@@ -80,8 +80,9 @@ the cursor on a variable and hit `<leader>g` (Vim) or `(M-x) import-js-goto`
 ## Things to note
 
 - Only files ending in .js\* are considered when importing
-- All imports are expressed on one line each, starting with `var`/`const`/`let`
-  (configurable through the `declaration_keyword` option)
+- All imports are expressed on one line each, starting with
+  `var`/`const`/`let`/`import` (configurable through the `declaration_keyword`
+  option)
 - As part of resolving an import, all imports will be sorted
 - The Vim plugin is written in Ruby. You need a [Vim with Ruby support](VIM.md).
 
@@ -153,12 +154,18 @@ memoize(() => { foo() });
 
 ### `declaration_keyword`
 
-If you are using ES6 (ES 2015), you have access to `let` and `const` in addition
-to `var` as ways to declare variables. To use one of these, set the
+If you are using ES6 (ES 2015), you have access to `let`, `const`, and `import`
+in addition to `var` as ways to declare variables. To use one of these, set the
 `declaration_keyword` configuration.
 
 ```json
 "declaration_keyword": "const"
+```
+
+If you set it to `import`, you get imports of the form `import foo from 'foo'`.
+
+```json
+"declaration_keyword": "import"
 ```
 
 ### `jshint_cmd`

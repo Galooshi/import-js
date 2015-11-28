@@ -114,9 +114,13 @@ module ImportJS
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|
         # Determine uniqueness by discarding the declaration keyword (`const`,
-        # `let`, or `var`) and normalizing multiple whitespace chars to single
-        # spaces.
-        import.sub(/\A(const|let|var)\s+/, '').sub(/\s\s+/s, ' ')
+        # `let`, `var`, or `import`), "=" or "from", and normalizing multiple
+        # whitespace chars to single spaces.
+        import
+          .sub(/\A(const|let|var|import)\s+/, '')
+          .sub(/(from|=\s+require)/m, '')
+          .sub(/\(?('.*')\)?/m, '\1')
+          .sub(/\s\s+/s, ' ')
       end
 
       # Delete old imports, then add the modified list back in.
@@ -129,8 +133,11 @@ module ImportJS
     end
 
     def inject_destructured_variable(variable_name, js_module, imports)
+      path = js_module.import_path
       imports.each do |import|
-        match = import.match(%r{((const|let|var) \{ )(.*)( \} = require\('#{js_module.import_path}'\);)})
+        match =
+          import.match(%r{((const|let|var) \{ )(.*)( \} = require\('#{path}'\);)}) ||
+          import.match(%r{((import) \{ )(.*)( \} from '#{path}';)})
         next unless match
 
         variables = match[3].split(/,\s*/).concat([variable_name]).uniq.sort
@@ -158,8 +165,11 @@ module ImportJS
       # Scan potential imports for everything ending in a semicolon, then
       # iterate through those and stop at anything that's not an import.
       potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
-        break unless potential_import.match(
-          /(?:const|let|var)\s+.+=\s+require\(.*\).*;/)
+        break unless
+          potential_import.match(
+            /(?:const|let|var)\s+.+=\s+require\(.*\).*;/) ||
+          potential_import.match(
+            /import\s+.+from\s+['"].+['"].*;/)
         imports << potential_import
       end
 
@@ -178,12 +188,18 @@ module ImportJS
     # @return [String] the import string to be added to the imports block
     def generate_import(variable_name, js_module)
       declaration_keyword = @config.get('declaration_keyword')
+      equals = declaration_keyword == 'import' ? 'from' : '='
       if js_module.is_destructured
-        declaration = "#{declaration_keyword} { #{variable_name} } ="
+        declaration = "#{declaration_keyword} { #{variable_name} } #{equals}"
       else
-        declaration = "#{declaration_keyword} #{variable_name} ="
+        declaration = "#{declaration_keyword} #{variable_name} #{equals}"
       end
-      value = "require('#{js_module.import_path}');"
+
+      value = if declaration_keyword == 'import'
+                "'#{js_module.import_path}';"
+              else
+                "require('#{js_module.import_path}');"
+              end
 
       if @editor.max_line_length && "#{declaration} #{value}".length > @editor.max_line_length
         "#{declaration}\n#{@editor.tab}#{value}"
