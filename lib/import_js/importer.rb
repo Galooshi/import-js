@@ -210,7 +210,8 @@ module ImportJS
             next if @config.get('excludes').any? do |glob_pattern|
               File.fnmatch(glob_pattern, f)
             end
-            js_module = ImportJS::JSModule.new(lookup_path, f, @config)
+            js_module = ImportJS::JSModule.new(
+              lookup_path, f, @config.get('strip_file_extensions'))
             next if js_module.skip
             js_module
           end.compact
@@ -221,7 +222,7 @@ module ImportJS
       @config.package_dependencies.each do |dep|
         next unless dep =~ /^#{formatted_to_regex(variable_name)}$/
         js_module = ImportJS::JSModule.new(
-          'node_modules', "node_modules/#{dep}/package.json", @config)
+          'node_modules', "node_modules/#{dep}/package.json", [])
         next if js_module.skip
         matched_modules << js_module
       end

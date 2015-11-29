@@ -143,7 +143,7 @@ describe 'Importer' do
     end
 
     context 'with a variable name that will resolve' do
-      let(:existing_files) { ['bar/foo.js.jsx'] }
+      let(:existing_files) { ['bar/foo.jsx'] }
 
       it 'adds an import to the top of the buffer' do
         expect(subject).to eq(<<-EOS.strip)
@@ -171,7 +171,7 @@ foo
       end
 
       context 'when the variable resolves to a node.js conventional module' do
-        let(:existing_files) { ['Foo/index.js.jsx'] }
+        let(:existing_files) { ['Foo/index.jsx'] }
 
         it 'adds an import to the top of the buffer' do
           expect(subject).to eq(<<-EOS.strip)
@@ -183,11 +183,11 @@ foo
 
         it 'displays a message about the imported module' do
           expect(VIM.last_command_message).to start_with(
-            'ImportJS: Imported `Foo (main: index.js.jsx)`')
+            'ImportJS: Imported `Foo (main: index.jsx)`')
         end
 
         context 'when that module has a dot in its name' do
-          let(:existing_files) { ['Foo.io/index.js.jsx'] }
+          let(:existing_files) { ['Foo.io/index.jsx'] }
           let(:word) { 'FooIO' }
           let(:text) { 'FooIO' }
 
@@ -341,7 +341,7 @@ foo
       context 'when multiple files resolve the variable' do
         let(:existing_files) do
           [
-            'bar/foo.js.jsx',
+            'bar/foo.jsx',
             'zoo/foo.js',
             'zoo/goo/Foo/index.js'
           ]
@@ -538,7 +538,7 @@ foo
             .and_return(40)
         end
 
-        let(:existing_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.js.jsx'] }
+        let(:existing_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.jsx'] }
 
         context 'when expandtab is not set' do
           before(:each) do
@@ -606,7 +606,7 @@ foo
             .to receive(:max_line_length).and_return(80)
         end
 
-        let(:existing_files) { ['bar/foo.js.jsx'] }
+        let(:existing_files) { ['bar/foo.jsx'] }
 
         it 'does not wrap them' do
           expect(subject).to eq(<<-EOS.strip)
@@ -751,11 +751,11 @@ memoize
         end
       end
 
-      context 'when keep_file_extensions is true' do
+      context 'when strip_file_extensions is empty' do
         let(:existing_files) { ['bar/foo.js'] }
         let(:configuration) do
           {
-            'keep_file_extensions' => true
+            'strip_file_extensions' => []
           }
         end
 
@@ -802,7 +802,7 @@ foo
         end
 
         context 'with a variable name that will resolve' do
-          let(:existing_files) { ['bar/foo.js.jsx'] }
+          let(:existing_files) { ['bar/foo.jsx'] }
 
           it 'adds an import to the top of the buffer using the declaration_keyword' do
             expect(subject).to eq(<<-EOS.strip)
@@ -895,7 +895,7 @@ foo
     end
 
     context 'when one undefined variable exists' do
-      let(:existing_files) { ['bar/foo.js.jsx'] }
+      let(:existing_files) { ['bar/foo.jsx'] }
       let(:jshint_result) do
         "stdin: line 3, col 11, 'foo' is not defined."
       end
@@ -939,7 +939,7 @@ foo
     end
 
     context 'when multiple undefined variables exist' do
-      let(:existing_files) { ['bar/foo.js.jsx', 'bar.js'] }
+      let(:existing_files) { ['bar/foo.jsx', 'bar.js'] }
       let(:text) { 'var a = foo + bar;' }
 
       let(:jshint_result) do
@@ -958,7 +958,7 @@ var a = foo + bar;
     end
 
     context 'when the list of undefined variables has duplicates' do
-      let(:existing_files) { ['bar/foo.js.jsx', 'bar.js'] }
+      let(:existing_files) { ['bar/foo.jsx', 'bar.js'] }
       let(:text) { 'var a = foo + bar;' }
 
       let(:jshint_result) do

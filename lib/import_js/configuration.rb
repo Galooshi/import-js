@@ -10,6 +10,7 @@ module ImportJS
     'excludes' => [],
     'jshint_cmd' => 'jshint',
     'lookup_paths' => ['.'],
+    'strip_file_extensions' => ['.js', '.jsx']
   }
 
   # Class that initializes configuration from a .importjs.json file
@@ -33,14 +34,14 @@ module ImportJS
       return resolve_destructured_alias(variable_name) unless path
 
       path = path['path'] if path.is_a? Hash
-      ImportJS::JSModule.new(nil, path, self)
+      ImportJS::JSModule.new(nil, path, [])
     end
 
     def resolve_destructured_alias(variable_name)
       @config['aliases'].each do |_, path|
         next if path.is_a? String
         if (path['destructure'] || []).include?(variable_name)
-          js_module = ImportJS::JSModule.new(nil, path['path'], self)
+          js_module = ImportJS::JSModule.new(nil, path['path'], [])
           js_module.is_destructured = true
           return js_module
         end
