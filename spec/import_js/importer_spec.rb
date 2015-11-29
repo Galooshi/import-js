@@ -751,6 +751,97 @@ memoize
         end
       end
 
+      context 'alias with `import` and a destructure object' do
+        let(:configuration) do
+          {
+            'declaration_keyword' => 'import',
+            'aliases' => {
+              '_' => {
+                'path' => 'underscore',
+                'destructure' => %w(
+                  memoize
+                  debounce
+                )
+              }
+            }
+          }
+        end
+        let(:text) { '_' }
+        let(:word) { '_' }
+
+        it 'resolves the main alias without destructuring' do
+          expect(subject).to eq(<<-EOS.strip)
+import _ from 'underscore';
+
+_
+        EOS
+        end
+
+        context 'when importing a destructured object' do
+          let(:text) { 'memoize' }
+          let(:word) { 'memoize' }
+
+          it 'resolves that import in a destructured way' do
+            expect(subject).to eq(<<-EOS.strip)
+import { memoize } from 'underscore';
+
+memoize
+            EOS
+          end
+
+          context 'with other imports' do
+            let(:text) { <<-EOS.strip }
+import bar from 'foo/bar';
+import { xyz } from 'alphabet';
+
+memoize
+            EOS
+
+            it 'places the import at the right place' do
+              expect(subject).to eq(<<-EOS.strip)
+import bar from 'foo/bar';
+import { memoize } from 'underscore';
+import { xyz } from 'alphabet';
+
+memoize
+              EOS
+            end
+          end
+
+          context 'when other destructured imports exist for the same module' do
+            let(:text) { <<-EOS.strip }
+import { xyz, debounce } from 'underscore';
+
+memoize
+            EOS
+
+            it 'combines the destructured import and sorts items' do
+              expect(subject).to eq(<<-EOS.strip)
+import { debounce, memoize, xyz } from 'underscore';
+
+memoize
+              EOS
+            end
+
+            context 'when the module is already in the destructured object' do
+              let(:text) { <<-EOS.strip }
+import { debounce, memoize, xyz } from 'underscore';
+
+memoize
+              EOS
+
+              it 'does not add a duplicate' do
+                expect(subject).to eq(<<-EOS.strip)
+import { debounce, memoize, xyz } from 'underscore';
+
+memoize
+                EOS
+              end
+            end
+          end
+        end
+      end
+
       context 'when strip_file_extensions is empty' do
         let(:existing_files) { ['bar/foo.js'] }
         let(:configuration) do
@@ -789,7 +880,7 @@ foo
         end
       end
 
-      context 'with declaration_keyword' do
+      context 'with declaration_keyword=const' do
         subject do
           ImportJS::Importer.new.import
           VIM::Buffer.current_buffer.to_s
@@ -856,6 +947,83 @@ foo
             it 'adds the import and sorts the entire list' do
               expect(subject).to eq(<<-EOS.strip)
 const foo = require('bar/foo');
+let bar = require('foo/bar');
+var zoo = require('foo/zoo');
+
+foo
+            EOS
+            end
+          end
+        end
+      end
+
+      context 'with declaration_keyword=import' do
+        subject do
+          ImportJS::Importer.new.import
+          VIM::Buffer.current_buffer.to_s
+        end
+
+        let(:configuration) do
+          {
+            'declaration_keyword' => 'import'
+          }
+        end
+
+        context 'with a variable name that will resolve' do
+          let(:existing_files) { ['bar/foo.jsx'] }
+
+          it 'adds an import to the top of the buffer' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+
+          context 'when that variable is already imported using `var`' do
+            let(:text) { <<-EOS.strip }
+var foo = require('bar/foo');
+
+foo
+            EOS
+
+            it 'changes the `var` to declaration_keyword' do
+              expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+              EOS
+            end
+          end
+
+          context 'when the import contains a line-break' do
+            let(:text) { <<-EOS.strip }
+var foo =
+  require('bar/foo');
+
+foo
+            EOS
+
+            it 'changes the `var` to declaration_keyword and removes the whitespace' do
+              expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+              EOS
+            end
+          end
+
+          context 'when other imports exist' do
+            let(:text) { <<-EOS.strip }
+var zoo = require('foo/zoo');
+let bar = require('foo/bar');
+
+foo
+            EOS
+
+            it 'adds the import and sorts the entire list' do
+              expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
 let bar = require('foo/bar');
 var zoo = require('foo/zoo');
 
