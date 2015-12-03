@@ -93,6 +93,39 @@ module ImportJS
       write_imports(variable_name, resolved_js_module)
     end
 
+    # Helper for determining uniqueness.
+    # @param import [String]
+    # @return [String]
+    def normalize_import(import)
+      const_let_var_regex = %r{
+        \A
+        (?:const|let|var)\s+ # declaration keyword
+        (.+?)                # \1 variable assignment
+        \s*=\s*
+        require\(
+          ('|")              # \2 opening quote
+          ([^\2]+)           # \3 module path
+          \2                 # closing quote
+        \);?
+        \s*
+      }xm
+
+      import_regex = %r{
+        \A
+        import\s+
+        (.*?)              # \1 variable assignment
+        \s+from\s+
+        ('|")              # \2 opening quote
+        ([^\2]+)           # \3 module path
+        \2                 # closing quote
+        ;?\s*
+      }xm
+
+      import
+        .sub(const_let_var_regex, '\1 \3')
+        .sub(import_regex, '\1 \3')
+    end
+
     # @param variable_name [String]
     # @param js_module [ImportJS::JSModule]
     def write_imports(variable_name, js_module)
@@ -113,14 +146,7 @@ module ImportJS
 
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|
-        # Determine uniqueness by discarding the declaration keyword (`const`,
-        # `let`, `var`, or `import`), "=" or "from", and normalizing multiple
-        # whitespace chars to single spaces.
-        import
-          .sub(/\A(const|let|var|import)\s+/, '')
-          .sub(/(from|=\s+require)/m, '')
-          .sub(/\(?('.*')\)?/m, '\1')
-          .sub(/\s\s+/s, ' ')
+        normalize_import(import)
       end
 
       # Delete old imports, then add the modified list back in.

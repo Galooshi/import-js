@@ -970,7 +970,7 @@ foo
         end
 
         context 'with a variable name that will resolve' do
-          let(:existing_files) { ['bar/foo.jsx'] }
+          let(:existing_files) { ['bar/foo.jsx', 'bar/fromfoo.jsx'] }
 
           it 'adds an import to the top of the buffer' do
             expect(subject).to eq(<<-EOS.strip)
@@ -992,6 +992,39 @@ foo
 import foo from 'bar/foo';
 
 foo
+              EOS
+            end
+          end
+
+          context 'when that variable is already imported using `var` and double quotes' do
+            let(:text) { <<-EOS.strip }
+var foo = require("bar/foo");
+
+foo
+            EOS
+
+            it 'changes the `var` to declaration_keyword and doubles to singles' do
+              expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+              EOS
+            end
+          end
+
+          context 'when that variable is already imported and has "from" in it' do
+            let(:text) { <<-EOS.strip }
+var fromfoo = require('bar/fromfoo');
+
+fromfoo
+            EOS
+            let(:word) { 'fromfoo' }
+
+            it 'changes the `var` to declaration_keyword' do
+              expect(subject).to eq(<<-EOS.strip)
+import fromfoo from 'bar/fromfoo';
+
+fromfoo
               EOS
             end
           end
