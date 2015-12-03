@@ -100,12 +100,12 @@ module ImportJS
       const_let_var_regex = %r{
         \A
         (?:const|let|var)\s+ # declaration keyword
-        (.+?)                # \1 variable assignment
+        (?<assignment>.+?)   # <assignment> variable assignment
         \s*=\s*
         require\(
-          ('|")              # \2 opening quote
-          ([^\2]+)           # \3 module path
-          \2                 # closing quote
+          (?<quote>'|")      # <quote> opening quote
+          (?<path>[^\2]+)    # <path> module path
+          \k<quote>          # closing quote
         \);?
         \s*
       }xm
@@ -113,17 +113,17 @@ module ImportJS
       import_regex = %r{
         \A
         import\s+
-        (.*?)              # \1 variable assignment
+        (?<assignment>.*?) # <assignment> variable assignment
         \s+from\s+
-        ('|")              # \2 opening quote
-        ([^\2]+)           # \3 module path
-        \2                 # closing quote
+        (?<quote>'|")      # <quote> opening quote
+        (?<path>[^\2]+)    # <path> module path
+        \k<quote>          # closing quote
         ;?\s*
       }xm
 
       import
-        .sub(const_let_var_regex, '\1 \3')
-        .sub(import_regex, '\1 \3')
+        .sub(const_let_var_regex, '\k<assignment> \k<path>')
+        .sub(import_regex, '\k<assignment> \k<path>')
     end
 
     # @param variable_name [String]
