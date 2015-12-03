@@ -996,6 +996,22 @@ foo
             end
           end
 
+          context 'when that variable is already imported using `var` and double quotes' do
+            let(:text) { <<-EOS.strip }
+var foo = require("bar/foo");
+
+foo
+            EOS
+
+            it 'changes the `var` to declaration_keyword and doubles to singles' do
+              expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+              EOS
+            end
+          end
+
           context 'when that variable is already imported and has "from" in it' do
             let(:text) { <<-EOS.strip }
 var fromfoo = require('bar/fromfoo');

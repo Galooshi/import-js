@@ -103,7 +103,9 @@ module ImportJS
         (.+?)                # \1 variable assignment
         \s*=\s*
         require\(
-          ('.*')             # \2 module path
+          ('|")              # \2 opening quote
+          ([^\2]+)           # \3 module path
+          \2                 # closing quote
         \);?
         \s*
       }xm
@@ -111,15 +113,17 @@ module ImportJS
       import_regex = %r{
         \A
         import\s+
-        (.*?)       # \1 variable assignment
+        (.*?)              # \1 variable assignment
         \s+from\s+
-        ('.*')      # \2 module path
+        ('|")              # \2 opening quote
+        ([^\2]+)           # \3 module path
+        \2                 # closing quote
         ;?\s*
       }xm
 
       import
-        .sub(const_let_var_regex, '\1\2')
-        .sub(import_regex, '\1\2')
+        .sub(const_let_var_regex, '\1 \3')
+        .sub(import_regex, '\1 \3')
     end
 
     # @param variable_name [String]
