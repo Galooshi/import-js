@@ -185,10 +185,8 @@ module ImportJS
       # iterate through those and stop at anything that's not an import.
       potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
         break unless
-          potential_import.match(
-            /(?:const|let|var)\s+.+=\s+require\(.*\).*;/) ||
-          potential_import.match(
-            /import\s+.+from\s+['"].+['"].*;/)
+          potential_import.match(REGEX_CONST_LET_VAR) ||
+          potential_import.match(REGEX_IMPORT)
         imports << potential_import
       end
 
