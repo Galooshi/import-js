@@ -3,6 +3,30 @@ require 'open3'
 
 module ImportJS
   class Importer
+    REGEX_CONST_LET_VAR = %r{
+      \A
+      (?:const|let|var)\s+ # declaration keyword
+      (?<assignment>.+?)   # <assignment> variable assignment
+      \s*=\s*
+      require\(
+        (?<quote>'|")      # <quote> opening quote
+        (?<path>[^\2]+)    # <path> module path
+        \k<quote>          # closing quote
+      \);?
+      \s*
+    }xm
+
+    REGEX_IMPORT = %r{
+      \A
+      import\s+
+      (?<assignment>.*?) # <assignment> variable assignment
+      \s+from\s+
+      (?<quote>'|")      # <quote> opening quote
+      (?<path>[^\2]+)    # <path> module path
+      \k<quote>          # closing quote
+      ;?\s*
+    }xm
+
     def initialize(editor = ImportJS::VIMEditor.new)
       @config = ImportJS::Configuration.new
       @editor = editor
@@ -93,39 +117,6 @@ module ImportJS
       write_imports(variable_name, resolved_js_module)
     end
 
-    # Helper for determining uniqueness.
-    # @param import [String]
-    # @return [String]
-    def normalize_import(import)
-      const_let_var_regex = %r{
-        \A
-        (?:const|let|var)\s+ # declaration keyword
-        (?<assignment>.+?)   # <assignment> variable assignment
-        \s*=\s*
-        require\(
-          (?<quote>'|")      # <quote> opening quote
-          (?<path>[^\2]+)    # <path> module path
-          \k<quote>          # closing quote
-        \);?
-        \s*
-      }xm
-
-      import_regex = %r{
-        \A
-        import\s+
-        (?<assignment>.*?) # <assignment> variable assignment
-        \s+from\s+
-        (?<quote>'|")      # <quote> opening quote
-        (?<path>[^\2]+)    # <path> module path
-        \k<quote>          # closing quote
-        ;?\s*
-      }xm
-
-      import
-        .sub(const_let_var_regex, '\k<assignment> \k<path>')
-        .sub(import_regex, '\k<assignment> \k<path>')
-    end
-
     # @param variable_name [String]
     # @param js_module [ImportJS::JSModule]
     def write_imports(variable_name, js_module)
@@ -146,7 +137,9 @@ module ImportJS
 
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|
-        normalize_import(import)
+        import
+          .sub(REGEX_CONST_LET_VAR, '\k<assignment> \k<path>')
+          .sub(REGEX_IMPORT, '\k<assignment> \k<path>')
       end
 
       # Delete old imports, then add the modified list back in.
