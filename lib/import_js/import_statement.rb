@@ -27,6 +27,7 @@ module ImportJS
     }xm
 
     attr_accessor :assignment
+    attr_accessor :original_import_string # a cache of the parsed import string
     attr_accessor :variables
     attr_accessor :is_destructured # can't use `destructured?` because of 1.9.3
     attr_accessor :path
@@ -41,6 +42,7 @@ module ImportJS
       return unless match
 
       statement = new
+      statement.original_import_string = match.string
       statement.path = match[:path]
       statement.assignment = match[:assignment]
       if dest_match = statement.assignment.match(/\{\s*(.*)\s*\}/)
@@ -56,8 +58,10 @@ module ImportJS
     #   variables.
     # @param variable_name [String]
     def inject_variable(variable_name)
-      @variables << variable_name
-      @variables.sort!.uniq!
+      variables << variable_name
+      variables.sort!.uniq!
+
+      @original_import_string = nil # clear import string cache if there was one
     end
 
     # @return [Array] an array that can be used in `uniq!` to dedupe equal
@@ -65,7 +69,7 @@ module ImportJS
     #   `const foo = require('foo');`
     #   `import foo from 'foo';`
     def normalize
-      [@assignment, @path]
+      [variables, path]
     end
 
     # @param declaration_keyword [String] const, let, var, or import
@@ -73,6 +77,8 @@ module ImportJS
     # @param tab [String] e.g. '  ' (two spaces)
     # @return a generated import statement string
     def to_import_string(declaration_keyword, max_line_length, tab)
+      return original_import_string if original_import_string
+
       equals = declaration_keyword == 'import' ? 'from' : '='
       if is_destructured
         declaration =

@@ -108,36 +108,37 @@ module ImportJS
       # Add new import to the block of imports, wrapping at the max line length
       unless js_module.is_destructured && inject_destructured_variable(
         variable_name, js_module, modified_imports)
-        modified_imports << generate_import(variable_name, js_module)
+        modified_imports.unshift(generate_import(variable_name, js_module))
       end
 
-      # Sort the block of imports
-      modified_imports.sort!.uniq! do |import|
-        ImportJS::ImportStatement.parse(import).normalize
-      end
+      # Remove duplicate import statements
+      modified_imports.uniq!(&:normalize)
+
+      # Generate import strings
+      import_strings = modified_imports.map do |import|
+        import.to_import_string(
+          @config.get('declaration_keyword'),
+          @editor.max_line_length,
+          @editor.tab)
+      end.sort
 
       # Delete old imports, then add the modified list back in.
       old_imports[:newline_count].times { @editor.delete_line(1) }
-      modified_imports.reverse_each do |import|
+      import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
-        import.split("\n").reverse_each { |line| @editor.append_line(0, line) }
+        import_string.split("\n").reverse_each do |line|
+          @editor.append_line(0, line)
+        end
       end
     end
 
     def inject_destructured_variable(variable_name, js_module, imports)
-      path = js_module.import_path
       imports.each do |import|
-        statement = ImportJS::ImportStatement.parse(import)
-        next unless statement
-        next unless statement.path == path
-        next unless statement.is_destructured
+        next unless import.path == js_module.import_path
+        next unless import.is_destructured
 
-        statement.inject_variable(variable_name)
-        import.sub!(/.*/, statement.to_import_string(
-          @config.get('declaration_keyword'),
-          @editor.max_line_length,
-          @editor.tab))
+        import.inject_variable(variable_name)
         return true
       end
       false
@@ -156,23 +157,21 @@ module ImportJS
       # for multiline imports
       potential_imports_blob = potential_import_lines.join("\n")
 
-      imports = []
+      result = {
+        imports: [],
+        newline_count: 0
+      }
 
       # Scan potential imports for everything ending in a semicolon, then
       # iterate through those and stop at anything that's not an import.
       potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
-        break unless ImportJS::ImportStatement.parse(potential_import)
-        imports << potential_import
-      end
+        import_statement = ImportJS::ImportStatement.parse(potential_import)
+        break unless import_statement
 
-      newline_count = imports.length + imports.reduce(0) do |sum, import|
-        sum + import.scan(/\n/).length
+        result[:imports] << import_statement
+        result[:newline_count] += potential_import.scan(/\n/).length + 1
       end
-
-      {
-        imports: imports,
-        newline_count: newline_count
-      }
+      result
     end
 
     # @param variable_name [String]
@@ -183,9 +182,7 @@ module ImportJS
       statement.is_destructured = js_module.is_destructured
       statement.variables = [variable_name]
       statement.path = js_module.import_path
-      statement.to_import_string(@config.get('declaration_keyword'),
-                                 @editor.max_line_length,
-                                 @editor.tab)
+      statement
     end
 
     # @param variable_name [String]
