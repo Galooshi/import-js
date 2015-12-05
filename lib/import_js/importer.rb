@@ -3,30 +3,6 @@ require 'open3'
 
 module ImportJS
   class Importer
-    REGEX_CONST_LET_VAR = %r{
-      \A
-      (?:const|let|var)\s+ # declaration keyword
-      (?<assignment>.+?)   # <assignment> variable assignment
-      \s*=\s*
-      require\(
-        (?<quote>'|")      # <quote> opening quote
-        (?<path>[^\2]+)    # <path> module path
-        \k<quote>          # closing quote
-      \);?
-      \s*
-    }xm
-
-    REGEX_IMPORT = %r{
-      \A
-      import\s+
-      (?<assignment>.*?) # <assignment> variable assignment
-      \s+from\s+
-      (?<quote>'|")      # <quote> opening quote
-      (?<path>[^\2]+)    # <path> module path
-      \k<quote>          # closing quote
-      ;?\s*
-    }xm
-
     def initialize(editor = ImportJS::VIMEditor.new)
       @config = ImportJS::Configuration.new
       @editor = editor
@@ -137,9 +113,7 @@ module ImportJS
 
       # Sort the block of imports
       modified_imports.sort!.uniq! do |import|
-        import
-          .sub(REGEX_CONST_LET_VAR, '\k<assignment> \k<path>')
-          .sub(REGEX_IMPORT, '\k<assignment> \k<path>')
+        ImportJS::ImportStatement.parse(import).normalize
       end
 
       # Delete old imports, then add the modified list back in.
@@ -154,13 +128,16 @@ module ImportJS
     def inject_destructured_variable(variable_name, js_module, imports)
       path = js_module.import_path
       imports.each do |import|
-        match =
-          import.match(%r{((const|let|var) \{ )(.*)( \} = require\('#{path}'\);)}) ||
-          import.match(%r{((import) \{ )(.*)( \} from '#{path}';)})
-        next unless match
+        statement = ImportJS::ImportStatement.parse(import)
+        next unless statement
+        next unless statement.path == path
+        next unless statement.is_destructured
 
-        variables = match[3].split(/,\s*/).concat([variable_name]).uniq.sort
-        import.sub!(/.*/, "#{match[1]}#{variables.join(', ')}#{match[4]}")
+        statement.inject_variable(variable_name)
+        import.sub!(/.*/, statement.to_import_string(
+          @config.get('declaration_keyword'),
+          @editor.max_line_length,
+          @editor.tab))
         return true
       end
       false
@@ -184,9 +161,7 @@ module ImportJS
       # Scan potential imports for everything ending in a semicolon, then
       # iterate through those and stop at anything that's not an import.
       potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
-        break unless
-          potential_import.match(REGEX_CONST_LET_VAR) ||
-          potential_import.match(REGEX_IMPORT)
+        break unless ImportJS::ImportStatement.parse(potential_import)
         imports << potential_import
       end
 
@@ -204,25 +179,13 @@ module ImportJS
     # @param js_module [ImportJS::JSModule]
     # @return [String] the import string to be added to the imports block
     def generate_import(variable_name, js_module)
-      declaration_keyword = @config.get('declaration_keyword')
-      equals = declaration_keyword == 'import' ? 'from' : '='
-      if js_module.is_destructured
-        declaration = "#{declaration_keyword} { #{variable_name} } #{equals}"
-      else
-        declaration = "#{declaration_keyword} #{variable_name} #{equals}"
-      end
-
-      value = if declaration_keyword == 'import'
-                "'#{js_module.import_path}';"
-              else
-                "require('#{js_module.import_path}');"
-              end
-
-      if @editor.max_line_length && "#{declaration} #{value}".length > @editor.max_line_length
-        "#{declaration}\n#{@editor.tab}#{value}"
-      else
-        "#{declaration} #{value}"
-      end
+      statement = ImportJS::ImportStatement.new
+      statement.is_destructured = js_module.is_destructured
+      statement.variables = [variable_name]
+      statement.path = js_module.import_path
+      statement.to_import_string(@config.get('declaration_keyword'),
+                                 @editor.max_line_length,
+                                 @editor.tab)
     end
 
     # @param variable_name [String]
