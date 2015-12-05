@@ -108,7 +108,7 @@ module ImportJS
       # Add new import to the block of imports, wrapping at the max line length
       unless js_module.is_destructured && inject_destructured_variable(
         variable_name, js_module, modified_imports)
-        modified_imports.unshift(generate_import(variable_name, js_module))
+        modified_imports.unshift(js_module.to_import_statement(variable_name))
       end
 
       # Remove duplicate import statements
@@ -172,17 +172,6 @@ module ImportJS
         result[:newline_count] += potential_import.scan(/\n/).length + 1
       end
       result
-    end
-
-    # @param variable_name [String]
-    # @param js_module [ImportJS::JSModule]
-    # @return [String] the import string to be added to the imports block
-    def generate_import(variable_name, js_module)
-      statement = ImportJS::ImportStatement.new
-      statement.is_destructured = js_module.is_destructured
-      statement.variables = [variable_name]
-      statement.path = js_module.import_path
-      statement
     end
 
     # @param variable_name [String]

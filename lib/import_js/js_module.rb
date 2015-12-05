@@ -46,5 +46,15 @@ module ImportJS
       parts << " (main: #{@main_file})" if @main_file
       parts.join('')
     end
+
+    # @param variable_name [String]
+    # @return [ImportJS::ImportStatement]
+    def to_import_statement(variable_name)
+      ImportJS::ImportStatement.new.tap do |statement|
+        statement.is_destructured = is_destructured
+        statement.variables = [variable_name]
+        statement.path = import_path
+      end
+    end
   end
 end
