@@ -22,3 +22,8 @@
     (global-set-key (kbd "s-a") 'my-keymap)
     (define-key my-keymap (kbd "a u") 'import-js-import)
     ```
+6. (Experimental) Go directly to a file
+  * The experimental import-js goto interface allows us to jump to a package
+  * `(M-x) import-js-goto` will jump to the appropriate file found by import-js
+  * This should also be bound to something useful:
+    `(global-set-key (kbd "<f4>") 'import-js-goto)`
