@@ -33,7 +33,11 @@
         (let ((old-buffer (current-buffer)))
           (save-current-buffer
             (set-buffer import-buffer)
-            (revert-buffer t t t))))))
+            (revert-buffer t t t)))))
+  (if (string-match "goto:success:\\(.*\\)" output)
+      (let ((old-buffer (current-buffer)))
+        (save-current-buffer
+          (find-file (match-string 1 output))))))
 
 (defun run-import-js ()
   "Open a process buffer to run import-js"

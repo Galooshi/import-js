@@ -13,10 +13,10 @@ class ImportJS::EmacsEditor
       begin
         @path = path
         @file = File.readlines(path).map(&:chomp)
+        @current_word = value
 
         case command
         when 'import'
-          @current_word = value
           ImportJS::Importer.new(self).import
           write_file
           puts 'import:success'
@@ -39,7 +39,7 @@ class ImportJS::EmacsEditor
   #
   # @param file_path [String]
   def open_file(file_path)
-    puts file_path
+    puts "goto:success:#{File.expand_path(file_path)}"
   end
 
   # Display a message to the user.
