@@ -99,6 +99,7 @@ module ImportJS
       eslint_args = [
         '--stdin',
         '--format compact',
+        '--rule \'no-undef: 2\'',
         '--rule \'no-unused-vars: [2, { "vars": "all", "args": "none" }]\''
       ].join(' ')
       out, err = Open3.capture3("eslint #{eslint_args}",
