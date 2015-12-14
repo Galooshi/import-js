@@ -1095,6 +1095,26 @@ foo
       end
     end
 
+    context 'when eslint can not parse' do
+      let(:jshint_result) do
+        'stdin: line 1, col 1, Error - Parsing error: Unexpected token ILLEGAL'
+      end
+
+      it 'throws an error' do
+        expect { subject }.to raise_error(ImportJS::ParseError)
+      end
+    end
+
+    context 'when jshint can not parse' do
+      let(:jshint_result) do
+        'stdin: line 103, col 8, Unrecoverable syntax error'
+      end
+
+      it 'throws an error' do
+        expect { subject }.to raise_error(ImportJS::ParseError)
+      end
+    end
+
     context 'when one undefined variable exists' do
       let(:existing_files) { ['bar/foo.jsx'] }
       let(:jshint_result) do

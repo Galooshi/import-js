@@ -68,6 +68,12 @@ module ImportJS
                 @editor.current_file_content
 
       out, _ = Open3.capture3("#{@config.get('jshint_cmd')} -", stdin_data: content)
+
+      if out =~ /Error - Parsing error: Unexpected token ILLEGAL/ ||
+         out =~ /Unrecoverable syntax error/
+        raise ImportJS::ParseError.new, out
+      end
+
       result = []
       out.split("\n").each do |line|
         /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
