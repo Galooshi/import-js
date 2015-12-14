@@ -104,7 +104,7 @@ module ImportJS
       out, _ = Open3.capture3("eslint #{eslint_args}",
                               stdin_data: @editor.current_file_content)
 
-      if out =~ /Error - Parsing error: Unexpected token ILLEGAL/ ||
+      if out =~ /Error - Parsing error: / ||
          out =~ /Unrecoverable syntax error/
         fail ImportJS::ParseError.new, out
       end
