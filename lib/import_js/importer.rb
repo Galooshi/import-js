@@ -23,7 +23,12 @@ module ImportJS
       current_row, current_col = @editor.cursor
 
       old_buffer_lines = @editor.count_lines
-      import_one_variable variable_name
+      js_module = find_one_js_module(variable_name)
+      return unless js_module
+
+      old_imports = find_current_imports
+      inject_js_module(variable_name, js_module, old_imports[:imports])
+      replace_imports(old_imports[:newline_count], old_imports[:imports])
       lines_changed = @editor.count_lines - old_buffer_lines
       return unless lines_changed
       @editor.cursor = [current_row + lines_changed, current_col]
@@ -40,19 +45,47 @@ module ImportJS
       @editor.open_file(js_module.file_path)
     end
 
+    def fix_imports
+      remove_unused_imports
+      import_all
+    end
+
     # Finds all variables that haven't yet been imported.
     def import_all
       @config.refresh
-      unused_variables = find_unused_variables
+      undefined_variables = run_eslint_command.map do |line|
+        /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
+          match_data[1]
+        end
+      end.compact.uniq
 
-      if unused_variables.empty?
-        message('No variables to import')
-        return
-      end
+      return message('No variables to import') if undefined_variables.empty?
 
-      unused_variables.each do |variable|
-        import_one_variable(variable)
+      old_imports = find_current_imports
+      undefined_variables.each do |variable|
+        if js_module = find_one_js_module(variable)
+          inject_js_module(variable, js_module, old_imports[:imports])
+        end
       end
+      replace_imports(old_imports[:newline_count], old_imports[:imports])
+    end
+
+    def remove_unused_imports
+      @config.refresh
+      unused_variables = run_eslint_command.map do |line|
+        /.*['"]([^'"]+)['"] is defined but never used/.match(line) do |match_data|
+          match_data[1]
+        end
+      end.compact.uniq
+
+      old_imports = find_current_imports
+      new_imports = old_imports[:imports].reject do |import_statement|
+        unused_variables.each do |unused_variable|
+          import_statement.delete_variable(unused_variable)
+        end
+        import_statement.variables.empty?
+      end
+      replace_imports(old_imports[:newline_count], new_imports)
     end
 
     private
@@ -61,61 +94,62 @@ module ImportJS
       @editor.message("ImportJS: #{str}")
     end
 
-    # @return [Array]
-    def find_unused_variables
-      content = "/* jshint undef: true, strict: true */\n" +
-                %q{/* eslint no-unused-vars: [2, { "vars": "all", "args": "none" }] */\n} +
+    # @return [Array<String>] the output from eslint, line by line
+    def run_eslint_command
+      content = "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
                 @editor.current_file_content
 
-      out, _ = Open3.capture3("#{@config.get('jshint_cmd')} -", stdin_data: content)
-      result = []
-      out.split("\n").each do |line|
-        /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
-          result << match_data[1]
-        end
+      out, _ = Open3.capture3("eslint --stdin --format compact -",
+                              stdin_data: content)
+
+      if out =~ /Error - Parsing error: Unexpected token ILLEGAL/ ||
+         out =~ /Unrecoverable syntax error/
+        fail ImportJS::ParseError.new, out
       end
-      result.uniq
+
+      out.split("\n")
     end
 
     # @param variable_name [String]
-    def import_one_variable(variable_name)
+    # @return [ImportJS::JSModule?]
+    def find_one_js_module(variable_name)
       @timing = { start: Time.now }
       js_modules = find_js_modules(variable_name)
       @timing[:end] = Time.now
       if js_modules.empty?
-        return message(
+        message(
           "No JS module to import for variable `#{variable_name}` #{timing}")
+        return
       end
 
-      resolved_js_module = resolve_one_js_module(js_modules, variable_name)
-      return unless resolved_js_module
-
-      write_imports(variable_name, resolved_js_module)
+      resolve_one_js_module(js_modules, variable_name)
     end
 
     # @param variable_name [String]
     # @param js_module [ImportJS::JSModule]
-    def write_imports(variable_name, js_module)
-      old_imports = find_current_imports
-
-      # Ensure that there is a blank line after the block of all imports
-      unless @editor.read_line(old_imports[:newline_count] + 1).strip.empty?
-        @editor.append_line(old_imports[:newline_count], '')
-      end
-
-      modified_imports = old_imports[:imports] # Array
-
+    # @param imports [Array<ImportJS::ImportStatement>]
+    def inject_js_module(variable_name, js_module, imports)
       # Add new import to the block of imports, wrapping at the max line length
       unless js_module.is_destructured && inject_destructured_variable(
-        variable_name, js_module, modified_imports)
-        modified_imports.unshift(js_module.to_import_statement(variable_name))
+        variable_name, js_module, imports)
+        imports.unshift(js_module.to_import_statement(variable_name))
       end
 
       # Remove duplicate import statements
-      modified_imports.uniq!(&:normalize)
+      imports.uniq!(&:normalize)
+    end
+
+    # @param old_imports_lines [Number]
+    # @param new_imports [Array<ImportJS::ImportStatement>]
+    def replace_imports(old_imports_lines, new_imports)
+      # Ensure that there is a blank line after the block of all imports
+      if old_imports_lines + new_imports.length > 0 &&
+         !@editor.read_line(old_imports_lines + 1).strip.empty?
+        @editor.append_line(old_imports_lines, '')
+      end
 
       # Generate import strings
-      import_strings = modified_imports.map do |import|
+      import_strings = new_imports.map do |import|
         import.to_import_string(
           @config.get('declaration_keyword'),
           @editor.max_line_length,
@@ -123,7 +157,7 @@ module ImportJS
       end.sort
 
       # Delete old imports, then add the modified list back in.
-      old_imports[:newline_count].times { @editor.delete_line(1) }
+      old_imports_lines.times { @editor.delete_line(1) }
       import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.

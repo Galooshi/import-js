@@ -8,7 +8,6 @@ module ImportJS
     'aliases' => {},
     'declaration_keyword' => 'var',
     'excludes' => [],
-    'jshint_cmd' => 'jshint',
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx']
   }

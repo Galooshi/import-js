@@ -59,14 +59,12 @@ document.createElement(new Button({ text: 'Save' }).toDOMElement());
 That's basically it. Import-js will help you find modules and automatically add
 a `require` statement. But keep reading for some more neat features.
 
-## Import all undefined variables
+## Fix imports
 
-If you use [jshint](http://jshint.com/) or
-[jsxhint](https://github.com/STRML/JSXHint/) import-js can be used to
-automatically import all undefined variables. Just hit `<leader>i` (Vim),
-and all your variables will be resolved. By default, import-js expects a global
-`jshint` command to be available. You can override that through the
-`jshint_cmd` configuration option.
+If you have [eslint](http://eslint.org/) installed, import-js can be used to
+automatically fix all imports. By hiting `<leader>i` (Vim), all your undefined
+variables will be resolved, and all your unused imports will be removed. By
+default, import-js expects a global `eslint` command to be available.
 
 ## Experimental: Go to module
 
@@ -166,14 +164,6 @@ If you set it to `import`, you get imports of the form `import foo from 'foo'`.
 
 ```json
 "declaration_keyword": "import"
-```
-
-### `jshint_cmd`
-
-Configure a path to a `jshint` compatible command, e.g. `jsxhint` or `eslint`.
-
-```json
-"jshint_cmd": "jsxhint"
 ```
 
 ### `strip_file_extensions`
