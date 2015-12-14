@@ -54,7 +54,7 @@ module ImportJS
     def import_all
       @config.refresh
       undefined_variables = run_eslint_command.map do |line|
-        /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
+        /"([^"]+)" is not defined/.match(line) do |match_data|
           match_data[1]
         end
       end.compact.uniq
@@ -73,7 +73,7 @@ module ImportJS
     def remove_unused_imports
       @config.refresh
       unused_variables = run_eslint_command.map do |line|
-        /.*['"]([^'"]+)['"] is defined but never used/.match(line) do |match_data|
+        /"([^"]+)" is defined but never used/.match(line) do |match_data|
           match_data[1]
         end
       end.compact.uniq
