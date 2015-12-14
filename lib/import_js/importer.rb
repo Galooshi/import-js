@@ -96,11 +96,13 @@ module ImportJS
 
     # @return [Array<String>] the output from eslint, line by line
     def run_eslint_command
-      content = "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
-                @editor.current_file_content
-
-      out, _ = Open3.capture3("eslint --stdin --format compact -",
-                              stdin_data: content)
+      eslint_args = [
+        '--stdin',
+        '--format compact',
+        '--rule \'no-unused-vars: [2, { "vars": "all", "args": "none" }]\''
+      ].join(' ')
+      out, _ = Open3.capture3("eslint #{eslint_args}",
+                              stdin_data: @editor.current_file_content)
 
       if out =~ /Error - Parsing error: Unexpected token ILLEGAL/ ||
          out =~ /Unrecoverable syntax error/
