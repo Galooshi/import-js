@@ -45,6 +45,11 @@ module ImportJS
       @editor.open_file(js_module.file_path)
     end
 
+    def fix_imports
+      remove_unused_imports
+      import_all
+    end
+
     # Finds all variables that haven't yet been imported.
     def import_all
       @config.refresh

@@ -10,6 +10,9 @@ endfunction
 function importjs#ImportJSRemoveUnusedImports()
   ruby $import_js.remove_unused_imports
 endfunction
+function importjs#ImportJSFixImports()
+  ruby $import_js.fix_imports
+endfunction
 
 " WideMsg() prints [long] message up to (&columns-1) length
 " guaranteed without "Press Enter" prompt.

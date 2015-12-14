@@ -59,18 +59,12 @@ document.createElement(new Button({ text: 'Save' }).toDOMElement());
 That's basically it. Import-js will help you find modules and automatically add
 a `require` statement. But keep reading for some more neat features.
 
-## Import all undefined variables
+## Fix imports
 
 If you have [eslint](http://eslint.org/) installed, import-js can be used to
-automatically import all undefined variables. Just hit `<leader>i` (Vim), and
-all your variables will be resolved. By default, import-js expects a global
-`eslint` command to be available.
-
-## Remove unused imports
-
-Import-js can automatically remove all unused imports. Just run
-`:ImportJSRemoveUnusedImports`. This feature also depends on
-[eslint](http://eslint.org/).
+automatically fix all imports. By hiting `<leader>i` (Vim), all your undefined
+variables will be resolved, and all your unused imports will be removed. By
+default, import-js expects a global `eslint` command to be available.
 
 ## Experimental: Go to module
 
