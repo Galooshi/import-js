@@ -117,11 +117,6 @@ module ImportJS
     def write_imports(variable_name, js_module)
       old_imports = find_current_imports
 
-      # Ensure that there is a blank line after the block of all imports
-      unless @editor.read_line(old_imports[:newline_count] + 1).strip.empty?
-        @editor.append_line(old_imports[:newline_count], '')
-      end
-
       modified_imports = old_imports[:imports] # Array
 
       # Add new import to the block of imports, wrapping at the max line length
@@ -139,6 +134,12 @@ module ImportJS
     # @param old_imports_lines [Number]
     # @param new_imports [Array<ImportJS::ImportStatement>]
     def replace_imports(old_imports_lines, new_imports)
+      # Ensure that there is a blank line after the block of all imports
+      if old_imports_lines + new_imports.length > 0 &&
+         !@editor.read_line(old_imports_lines + 1).strip.empty?
+        @editor.append_line(old_imports_lines, '')
+      end
+
       # Generate import strings
       import_strings = new_imports.map do |import|
         import.to_import_string(
