@@ -43,7 +43,7 @@ module ImportJS
     # Finds all variables that haven't yet been imported.
     def import_all
       @config.refresh
-      undefined_variables = run_jshint_command.map do |line|
+      undefined_variables = run_eslint_command.map do |line|
         /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
           match_data[1]
         end
@@ -58,7 +58,7 @@ module ImportJS
 
     def remove_unused_imports
       @config.refresh
-      unused_variables = run_jshint_command.map do |line|
+      unused_variables = run_eslint_command.map do |line|
         /.*['"]([^'"]+)['"] is defined but never used/.match(line) do |match_data|
           match_data[1]
         end
@@ -80,17 +80,17 @@ module ImportJS
       @editor.message("ImportJS: #{str}")
     end
 
-    # @return [Array<String>] the output from jshint/eslint, line by line
-    def run_jshint_command
-      content = "/* jshint undef: true, strict: true */\n" +
-                "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
+    # @return [Array<String>] the output from eslint, line by line
+    def run_eslint_command
+      content = "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
                 @editor.current_file_content
 
-      out, _ = Open3.capture3("#{@config.get('jshint_cmd')} -", stdin_data: content)
+      out, _ = Open3.capture3("eslint --stdin --format compact -",
+                              stdin_data: content)
 
       if out =~ /Error - Parsing error: Unexpected token ILLEGAL/ ||
          out =~ /Unrecoverable syntax error/
-        raise ImportJS::ParseError.new, out
+        fail ImportJS::ParseError.new, out
       end
 
       out.split("\n")

@@ -1070,11 +1070,11 @@ foo
   end
 
   describe '#import_all' do
-    let(:jshint_result) { '' }
+    let(:eslint_result) { '' }
     before do
       allow(Open3).to receive(:capture3).and_call_original
-      allow(Open3).to receive(:capture3).with(/jshint/, anything)
-        .and_return([jshint_result, nil])
+      allow(Open3).to receive(:capture3).with(/eslint/, anything)
+        .and_return([eslint_result, nil])
     end
 
     subject do
@@ -1096,18 +1096,8 @@ foo
     end
 
     context 'when eslint can not parse' do
-      let(:jshint_result) do
+      let(:eslint_result) do
         'stdin: line 1, col 1, Error - Parsing error: Unexpected token ILLEGAL'
-      end
-
-      it 'throws an error' do
-        expect { subject }.to raise_error(ImportJS::ParseError)
-      end
-    end
-
-    context 'when jshint can not parse' do
-      let(:jshint_result) do
-        'stdin: line 103, col 8, Unrecoverable syntax error'
       end
 
       it 'throws an error' do
@@ -1117,7 +1107,7 @@ foo
 
     context 'when one undefined variable exists' do
       let(:existing_files) { ['bar/foo.jsx'] }
-      let(:jshint_result) do
+      let(:eslint_result) do
         "stdin: line 3, col 11, 'foo' is not defined."
       end
 
@@ -1129,8 +1119,8 @@ foo
         EOS
       end
 
-      context 'when jshint returns other issues' do
-        let(:jshint_result) do
+      context 'when eslint returns other issues' do
+        let(:eslint_result) do
           "stdin: line 1, col 1, Use the function form of \"use strict\".\n" \
           "stdin: line 3, col 11, 'foo' is not defined."
         end
@@ -1145,7 +1135,7 @@ foo
       end
 
       context 'when the variable name is wrapped in double quotes' do
-        let(:jshint_result) do
+        let(:eslint_result) do
           'stdin: line 3, col 11, "foo" is not defined.'
         end
 
@@ -1163,7 +1153,7 @@ foo
       let(:existing_files) { ['bar/foo.jsx', 'bar.js'] }
       let(:text) { 'var a = foo + bar;' }
 
-      let(:jshint_result) do
+      let(:eslint_result) do
         "stdin: line 3, col 11, 'foo' is not defined.\n" \
         "stdin: line 3, col 11, 'bar' is not defined."
       end
@@ -1182,7 +1172,7 @@ var a = foo + bar;
       let(:existing_files) { ['bar/foo.jsx', 'bar.js'] }
       let(:text) { 'var a = foo + bar;' }
 
-      let(:jshint_result) do
+      let(:eslint_result) do
         "stdin: line 3, col 11, 'foo' is not defined.\n" +
         "stdin: line 3, col 11, 'foo' is not defined.\n" +
         "stdin: line 3, col 11, 'foo' is not defined.\n" +
@@ -1201,11 +1191,11 @@ var a = foo + bar;
   end
 
   describe '#remove_unused_imports' do
-    let(:jshint_result) { '' }
+    let(:eslint_result) { '' }
     before do
       allow(Open3).to receive(:capture3).and_call_original
-      allow(Open3).to receive(:capture3).with(/jshint/, anything)
-        .and_return([jshint_result, nil])
+      allow(Open3).to receive(:capture3).with(/eslint/, anything)
+        .and_return([eslint_result, nil])
     end
 
     subject do
@@ -1220,18 +1210,8 @@ var a = foo + bar;
     end
 
     context 'when eslint can not parse' do
-      let(:jshint_result) do
+      let(:eslint_result) do
         'stdin: line 1, col 1, Error - Parsing error: Unexpected token ILLEGAL'
-      end
-
-      it 'throws an error' do
-        expect { subject }.to raise_error(ImportJS::ParseError)
-      end
-    end
-
-    context 'when jshint can not parse' do
-      let(:jshint_result) do
-        'stdin: line 103, col 8, Unrecoverable syntax error'
       end
 
       it 'throws an error' do
@@ -1246,7 +1226,7 @@ var foo = require('bar/foo');
 
 bar
       EOS
-      let(:jshint_result) do
+      let(:eslint_result) do
         "stdin: line 1, col 4, 'foo' is defined but never used"
       end
 
@@ -1268,7 +1248,7 @@ var foo = require('bar/foo');
 baz
       EOS
 
-      let(:jshint_result) do
+      let(:eslint_result) do
         "stdin: line 3, col 11, 'foo' is defined but never used\n" \
         "stdin: line 3, col 11, 'bar' is defined but never used"
       end
@@ -1289,7 +1269,7 @@ var { bar, foo } = require('baz');
 bar
       EOS
 
-      let(:jshint_result) do
+      let(:eslint_result) do
         "stdin: line 3, col 11, 'foo' is defined but never used\n" \
       end
 
@@ -1310,7 +1290,7 @@ var { foo } = require('baz');
 bar
       EOS
 
-      let(:jshint_result) do
+      let(:eslint_result) do
         "stdin: line 3, col 11, 'foo' is defined but never used\n" \
       end
 
