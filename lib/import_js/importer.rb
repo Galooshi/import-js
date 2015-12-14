@@ -96,13 +96,14 @@ module ImportJS
 
     # @return [Array<String>] the output from eslint, line by line
     def run_eslint_command
-      eslint_args = [
+      command = [
+        'eslint',
         '--stdin',
         '--format compact',
         '--rule \'no-undef: 2\'',
         '--rule \'no-unused-vars: [2, { "vars": "all", "args": "none" }]\''
       ].join(' ')
-      out, err = Open3.capture3("eslint #{eslint_args}",
+      out, err = Open3.capture3(command,
                                 stdin_data: @editor.current_file_content)
 
       if out =~ /Error - Parsing error: / ||
