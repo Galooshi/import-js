@@ -101,13 +101,15 @@ module ImportJS
         '--format compact',
         '--rule \'no-unused-vars: [2, { "vars": "all", "args": "none" }]\''
       ].join(' ')
-      out, _ = Open3.capture3("eslint #{eslint_args}",
-                              stdin_data: @editor.current_file_content)
+      out, err = Open3.capture3("eslint #{eslint_args}",
+                                stdin_data: @editor.current_file_content)
 
       if out =~ /Error - Parsing error: / ||
          out =~ /Unrecoverable syntax error/
         fail ImportJS::ParseError.new, out
       end
+
+      fail ImportJS::ParseError.new, err if err =~ /SyntaxError: /
 
       out.split("\n")
     end
