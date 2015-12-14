@@ -111,7 +111,10 @@ module ImportJS
         fail ImportJS::ParseError.new, out
       end
 
-      fail ImportJS::ParseError.new, err if err =~ /SyntaxError: /
+      if err =~ /SyntaxError: / ||
+         err =~ /eslint: command not found/
+        fail ImportJS::ParseError.new, err
+      end
 
       out.split("\n")
     end
