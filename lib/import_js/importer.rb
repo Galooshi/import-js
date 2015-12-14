@@ -23,7 +23,12 @@ module ImportJS
       current_row, current_col = @editor.cursor
 
       old_buffer_lines = @editor.count_lines
-      import_one_variable variable_name
+      js_module = find_one_js_module(variable_name)
+      return unless js_module
+
+      old_imports = find_current_imports
+      inject_js_module(variable_name, js_module, old_imports[:imports])
+      replace_imports(old_imports[:newline_count], old_imports[:imports])
       lines_changed = @editor.count_lines - old_buffer_lines
       return unless lines_changed
       @editor.cursor = [current_row + lines_changed, current_col]
@@ -51,9 +56,13 @@ module ImportJS
 
       return message('No variables to import') if undefined_variables.empty?
 
+      old_imports = find_current_imports
       undefined_variables.each do |variable|
-        import_one_variable(variable)
+        if js_module = find_one_js_module(variable)
+          inject_js_module(variable, js_module, old_imports[:imports])
+        end
       end
+      replace_imports(old_imports[:newline_count], old_imports[:imports])
     end
 
     def remove_unused_imports
@@ -97,38 +106,32 @@ module ImportJS
     end
 
     # @param variable_name [String]
-    def import_one_variable(variable_name)
+    # @return [ImportJS::JSModule?]
+    def find_one_js_module(variable_name)
       @timing = { start: Time.now }
       js_modules = find_js_modules(variable_name)
       @timing[:end] = Time.now
       if js_modules.empty?
-        return message(
+        message(
           "No JS module to import for variable `#{variable_name}` #{timing}")
+        return
       end
 
-      resolved_js_module = resolve_one_js_module(js_modules, variable_name)
-      return unless resolved_js_module
-
-      write_imports(variable_name, resolved_js_module)
+      resolve_one_js_module(js_modules, variable_name)
     end
 
     # @param variable_name [String]
     # @param js_module [ImportJS::JSModule]
-    def write_imports(variable_name, js_module)
-      old_imports = find_current_imports
-
-      modified_imports = old_imports[:imports] # Array
-
+    # @param imports [Array<ImportJS::ImportStatement>]
+    def inject_js_module(variable_name, js_module, imports)
       # Add new import to the block of imports, wrapping at the max line length
       unless js_module.is_destructured && inject_destructured_variable(
-        variable_name, js_module, modified_imports)
-        modified_imports.unshift(js_module.to_import_statement(variable_name))
+        variable_name, js_module, imports)
+        imports.unshift(js_module.to_import_statement(variable_name))
       end
 
       # Remove duplicate import statements
-      modified_imports.uniq!(&:normalize)
-
-      replace_imports(old_imports[:newline_count], modified_imports)
+      imports.uniq!(&:normalize)
     end
 
     # @param old_imports_lines [Number]
