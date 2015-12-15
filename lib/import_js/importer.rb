@@ -54,7 +54,7 @@ module ImportJS
     def import_all
       @config.refresh
       undefined_variables = run_eslint_command.map do |line|
-        /.*['"]([^'"]+)['"] is not defined/.match(line) do |match_data|
+        /"([^"]+)" is not defined/.match(line) do |match_data|
           match_data[1]
         end
       end.compact.uniq
@@ -73,7 +73,7 @@ module ImportJS
     def remove_unused_imports
       @config.refresh
       unused_variables = run_eslint_command.map do |line|
-        /.*['"]([^'"]+)['"] is defined but never used/.match(line) do |match_data|
+        /"([^"]+)" is defined but never used/.match(line) do |match_data|
           match_data[1]
         end
       end.compact.uniq
@@ -96,15 +96,24 @@ module ImportJS
 
     # @return [Array<String>] the output from eslint, line by line
     def run_eslint_command
-      content = "/* eslint no-unused-vars: [2, { \"vars\": \"all\", \"args\": \"none\" }] */\n" +
-                @editor.current_file_content
+      command = %w[
+        eslint
+        --stdin
+        --format compact
+        --rule 'no-undef: 2'
+        --rule 'no-unused-vars: [2, { "vars": "all", "args": "none" }]'
+      ].join(' ')
+      out, err = Open3.capture3(command,
+                                stdin_data: @editor.current_file_content)
 
-      out, _ = Open3.capture3("eslint --stdin --format compact -",
-                              stdin_data: content)
-
-      if out =~ /Error - Parsing error: Unexpected token ILLEGAL/ ||
+      if out =~ /Error - Parsing error: / ||
          out =~ /Unrecoverable syntax error/
         fail ImportJS::ParseError.new, out
+      end
+
+      if err =~ /SyntaxError: / ||
+         err =~ /eslint: command not found/
+        fail ImportJS::ParseError.new, err
       end
 
       out.split("\n")

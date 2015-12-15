@@ -1108,7 +1108,7 @@ foo
     context 'when one undefined variable exists' do
       let(:existing_files) { ['bar/foo.jsx'] }
       let(:eslint_result) do
-        "stdin: line 3, col 11, 'foo' is not defined."
+        "stdin: line 3, col 11, \"foo\" is not defined."
       end
 
       it 'imports that variable' do
@@ -1122,7 +1122,7 @@ foo
       context 'when eslint returns other issues' do
         let(:eslint_result) do
           "stdin: line 1, col 1, Use the function form of \"use strict\".\n" \
-          "stdin: line 3, col 11, 'foo' is not defined."
+          "stdin: line 3, col 11, \"foo\" is not defined."
         end
 
         it 'still imports the variable' do
@@ -1154,8 +1154,8 @@ foo
       let(:text) { 'var a = foo + bar;' }
 
       let(:eslint_result) do
-        "stdin: line 3, col 11, 'foo' is not defined.\n" \
-        "stdin: line 3, col 11, 'bar' is not defined."
+        "stdin: line 3, col 11, \"foo\" is not defined.\n" \
+        "stdin: line 3, col 11, \"bar\" is not defined."
       end
 
       it 'imports all variables' do
@@ -1173,10 +1173,10 @@ var a = foo + bar;
       let(:text) { 'var a = foo + bar;' }
 
       let(:eslint_result) do
-        "stdin: line 3, col 11, 'foo' is not defined.\n" +
-        "stdin: line 3, col 11, 'foo' is not defined.\n" +
-        "stdin: line 3, col 11, 'foo' is not defined.\n" +
-        "stdin: line 3, col 11, 'bar' is not defined."
+        "stdin: line 3, col 11, \"foo\" is not defined.\n" +
+        "stdin: line 3, col 11, \"foo\" is not defined.\n" +
+        "stdin: line 3, col 11, \"foo\" is not defined.\n" +
+        "stdin: line 3, col 11, \"bar\" is not defined."
       end
 
       it 'imports all variables' do
@@ -1227,7 +1227,7 @@ var foo = require('bar/foo');
 bar
       EOS
       let(:eslint_result) do
-        "stdin: line 1, col 4, 'foo' is defined but never used"
+        "stdin: line 1, col 4, \"foo\" is defined but never used"
       end
 
       it 'removes that import' do
@@ -1249,8 +1249,8 @@ baz
       EOS
 
       let(:eslint_result) do
-        "stdin: line 3, col 11, 'foo' is defined but never used\n" \
-        "stdin: line 3, col 11, 'bar' is defined but never used"
+        "stdin: line 3, col 11, \"foo\" is defined but never used\n" \
+        "stdin: line 3, col 11, \"bar\" is defined but never used"
       end
 
       it 'removes all unused imports' do
@@ -1270,7 +1270,7 @@ bar
       EOS
 
       let(:eslint_result) do
-        "stdin: line 3, col 11, 'foo' is defined but never used\n" \
+        "stdin: line 3, col 11, \"foo\" is defined but never used\n" \
       end
 
       it 'removes that variable from the destructured list' do
@@ -1291,7 +1291,7 @@ bar
       EOS
 
       let(:eslint_result) do
-        "stdin: line 3, col 11, 'foo' is defined but never used\n" \
+        "stdin: line 3, col 11, \"foo\" is defined but never used\n" \
       end
 
       it 'removes the whole import' do
