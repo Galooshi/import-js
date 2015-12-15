@@ -1133,20 +1133,6 @@ foo
           EOS
         end
       end
-
-      context 'when the variable name is wrapped in double quotes' do
-        let(:eslint_result) do
-          'stdin: line 3, col 11, "foo" is not defined.'
-        end
-
-        it 'imports that variable' do
-          expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
-
-foo
-          EOS
-        end
-      end
     end
 
     context 'when multiple undefined variables exist' do
