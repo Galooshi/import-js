@@ -88,25 +88,23 @@ module ImportJS
     def to_import_string(declaration_keyword, max_line_length, tab)
       return original_import_string if original_import_string
 
-      equals = declaration_keyword == 'import' ? 'from' : '='
-      if is_destructured
-        declaration =
-          "#{declaration_keyword} { #{variables.join(', ')} } #{equals}"
-      else
-        declaration =
-          "#{declaration_keyword} #{variables.first} #{equals}"
-      end
+      declaration = if is_destructured
+                      "#{declaration_keyword} { #{variables.join(', ')} }"
+                    else
+                      "#{declaration_keyword} #{variables.first}"
+                    end
 
-      value = if declaration_keyword == 'import'
-                "'#{path}';"
-              else
-                "require('#{path}');"
-              end
+      equals, value = if declaration_keyword == 'import'
+                        ['from', "'#{path}';"]
+                      else
+                        ['=', "require('#{path}');"]
+                      end
 
-      if max_line_length && "#{declaration} #{value}".length > max_line_length
-        "#{declaration}\n#{tab}#{value}"
+      if max_line_length &&
+         "#{declaration} #{equals} #{value}".length > max_line_length
+        "#{declaration} #{equals}\n#{tab}#{value}"
       else
-        "#{declaration} #{value}"
+        "#{declaration} #{equals} #{value}"
       end
     end
   end
