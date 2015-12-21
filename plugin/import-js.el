@@ -1,3 +1,33 @@
+;;; import-js.el --- Import Javascript dependencies -*- lexical-binding: t; -*-
+;; Copyright (C) 2015 Henric Trotzig and Kevin Kehl
+;;
+;; Author: Kevin Kehl <kevin.kehl@gmail.com>
+;; URL: http://github.com/trotzig/import-js/
+;; Package-Requires: ((emacs "24"))
+;; Version: 0.1
+;; Keywords: javascript
+
+;; This file is not part of GNU Emacs.
+
+;;; License:
+
+;; Licensed under the MIT license, see:
+;; http://github.com/trotzig/import-js/blob/master/LICENSE
+
+;;; Commentary:
+
+;; Quick start:
+;; run-import-js
+;;
+;; Bind the following commands:
+;; import-js-import
+;; import-js-goto
+;;
+;; For a detailed introduction see:
+;; http://github.com/trotzig/import-js/blob/master/README.md
+
+;;; Code:
+
 (require 'comint)
 
 (defvar import-js-buffer nil "Current import-js process buffer")
