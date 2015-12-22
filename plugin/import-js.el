@@ -72,21 +72,18 @@
 (defun run-import-js ()
   "Open a process buffer to run import-js"
   (interactive)
-
-  (setq command
-        (concat "ruby -e \"require 'import_js';Dir.chdir('"
-                import-js-project-root "');ImportJS::EmacsEditor.new\""))
-  (setq name "import-js")
-
-  (if (not (comint-check-proc import-js-buffer))
-      (let ((commandlist (split-string-and-unquote command))
-            (buffer (current-buffer))
-            (process-environment process-environment))
-        (setenv "PAGER" (executable-find "cat"))
-        (set-buffer (apply 'make-comint name (car commandlist)
-                           nil (cdr commandlist)))))
-  (setq import-js-buffer (format "*%s*" name))
-  (add-hook 'comint-output-filter-functions 'import-js-output-filter nil t))
+  (let ((command (concat "ruby -e \"require 'import_js';Dir.chdir('"
+                         import-js-project-root "');ImportJS::EmacsEditor.new\""))
+        (name "import-js"))
+    (if (not (comint-check-proc import-js-buffer))
+        (let ((commandlist (split-string-and-unquote command))
+              (buffer (current-buffer))
+              (process-environment process-environment))
+          (setenv "PAGER" (executable-find "cat"))
+          (set-buffer (apply 'make-comint name (car commandlist)
+                             nil (cdr commandlist)))))
+    (setq import-js-buffer (format "*%s*" name))
+    (add-hook 'comint-output-filter-functions 'import-js-output-filter nil t)))
 
 (provide 'import-js)
 ;;; import-js.el ends here
