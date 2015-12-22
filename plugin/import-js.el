@@ -46,12 +46,14 @@
       (setq module (buffer-substring beg (point)))
       module)))
 
+;;;###autoload
 (defun import-js-import ()
   (interactive)
   (save-some-buffers)
   (setq import-buffer (current-buffer))
   (import-js-send-input "import" (import-js-word-at-point) buffer-file-name))
 
+;;;###autoload
 (defun import-js-goto ()
   (interactive)
   (import-js-send-input "goto" (import-js-word-at-point) buffer-file-name))
@@ -66,6 +68,7 @@
       (save-current-buffer
         (find-file (match-string 1 output)))))
 
+;;;###autoload
 (defun run-import-js ()
   "Open a process buffer to run import-js"
   (interactive)
