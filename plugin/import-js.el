@@ -59,15 +59,12 @@
 (defun import-js-output-filter (output)
   "Check if the current prompt is a top-level prompt."
   (if (string-match "import:success" output)
-      (progn
-        (let ((old-buffer (current-buffer)))
-          (save-current-buffer
-            (set-buffer import-buffer)
-            (revert-buffer t t t)))))
+      (save-current-buffer
+        (set-buffer import-buffer)
+        (revert-buffer t t t)))
   (if (string-match "goto:success:\\(.*\\)" output)
-      (let ((old-buffer (current-buffer)))
-        (save-current-buffer
-          (find-file (match-string 1 output))))))
+      (save-current-buffer
+        (find-file (match-string 1 output)))))
 
 (defun run-import-js ()
   "Open a process buffer to run import-js"
@@ -77,7 +74,6 @@
         (name "import-js"))
     (if (not (comint-check-proc import-js-buffer))
         (let ((commandlist (split-string-and-unquote command))
-              (buffer (current-buffer))
               (process-environment process-environment))
           (setenv "PAGER" (executable-find "cat"))
           (set-buffer (apply 'make-comint name (car commandlist)
