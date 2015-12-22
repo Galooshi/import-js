@@ -28,7 +28,9 @@ module ImportJS
 
       old_imports = find_current_imports
       inject_js_module(variable_name, js_module, old_imports[:imports])
-      replace_imports(old_imports[:newline_count], old_imports[:imports])
+      replace_imports(old_imports[:newline_count],
+                      old_imports[:imports],
+                      old_imports[:imports_start_at])
       lines_changed = @editor.count_lines - old_buffer_lines
       return unless lines_changed
       @editor.cursor = [current_row + lines_changed, current_col]
@@ -67,7 +69,9 @@ module ImportJS
           inject_js_module(variable, js_module, old_imports[:imports])
         end
       end
-      replace_imports(old_imports[:newline_count], old_imports[:imports])
+      replace_imports(old_imports[:newline_count],
+                      old_imports[:imports],
+                      old_imports[:imports_start_at])
     end
 
     def remove_unused_imports
@@ -85,7 +89,9 @@ module ImportJS
         end
         import_statement.variables.empty?
       end
-      replace_imports(old_imports[:newline_count], new_imports)
+      replace_imports(old_imports[:newline_count],
+                      new_imports,
+                      old_imports[:imports_start_at])
     end
 
     private
@@ -150,11 +156,12 @@ module ImportJS
 
     # @param old_imports_lines [Number]
     # @param new_imports [Array<ImportJS::ImportStatement>]
-    def replace_imports(old_imports_lines, new_imports)
+    # @param imports_start_at [Number]
+    def replace_imports(old_imports_lines, new_imports, imports_start_at)
       # Ensure that there is a blank line after the block of all imports
       if old_imports_lines + new_imports.length > 0 &&
-         !@editor.read_line(old_imports_lines + 1).strip.empty?
-        @editor.append_line(old_imports_lines, '')
+         !@editor.read_line(old_imports_lines + imports_start_at + 1).strip.empty?
+        @editor.append_line(old_imports_lines + imports_start_at, '')
       end
 
       # Generate import strings
@@ -166,12 +173,12 @@ module ImportJS
       end.sort
 
       # Delete old imports, then add the modified list back in.
-      old_imports_lines.times { @editor.delete_line(1) }
+      old_imports_lines.times { @editor.delete_line(1 + imports_start_at) }
       import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
         import_string.split("\n").reverse_each do |line|
-          @editor.append_line(0, line)
+          @editor.append_line(0 + imports_start_at, line)
         end
       end
     end
@@ -196,14 +203,20 @@ module ImportJS
         potential_import_lines << line
       end
 
+      result = {
+        imports: [],
+        newline_count: 0,
+        imports_start_at: 0
+      }
+
+      if potential_import_lines[0] =~ /(['"])use strict\1;?/
+        result[:imports_start_at] = 1
+        potential_import_lines.shift
+      end
+
       # We need to put the potential imports back into a blob in order to scan
       # for multiline imports
       potential_imports_blob = potential_import_lines.join("\n")
-
-      result = {
-        imports: [],
-        newline_count: 0
-      }
 
       # Scan potential imports for everything ending in a semicolon, then
       # iterate through those and stop at anything that's not an import.
