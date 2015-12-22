@@ -79,6 +79,8 @@ describe 'Importer' do
       .to receive(:get).with('lookup_paths').and_return([@tmp_dir])
     allow_any_instance_of(ImportJS::VIMEditor)
       .to receive(:available_columns).and_return(100)
+    allow_any_instance_of(ImportJS::VIMEditor)
+      .to receive(:path_to_current_file).and_return(nil)
 
     existing_files.each do |file|
       full_path = File.join(@tmp_dir, file)
@@ -640,6 +642,57 @@ var $ = require('jquery');
 
 $
         EOS
+        end
+
+        context 'and an alias has a dynamic {filename}' do
+          before do
+            allow_any_instance_of(ImportJS::VIMEditor)
+              .to receive(:path_to_current_file)
+              .and_return(path_to_current_file)
+          end
+
+          let(:configuration) do
+            {
+              'aliases' => { 'styles' => './{filename}.scss' }
+            }
+          end
+          let(:text) { 'styles' }
+          let(:word) { 'styles' }
+          let(:path_to_current_file) { 'bar/foo.jsx' }
+
+          it 'uses the filename of the current file' do
+            expect(subject).to eq(<<-EOS.strip)
+var styles = require('./foo.scss');
+
+styles
+            EOS
+          end
+
+          context 'when editing an anonymous file' do
+            context 'that is nil' do
+              let(:path_to_current_file) { nil }
+
+              it 'does not replace the dynamic part' do
+                expect(subject).to eq(<<-EOS.strip)
+var styles = require('./{filename}.scss');
+
+styles
+                EOS
+              end
+            end
+
+            context 'that is an empty string' do
+              let(:path_to_current_file) { '' }
+
+              it 'does not replace the dynamic part' do
+                expect(subject).to eq(<<-EOS.strip)
+var styles = require('./{filename}.scss');
+
+styles
+                EOS
+              end
+            end
+          end
         end
 
         context 'and an alias contains a slash' do

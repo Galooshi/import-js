@@ -220,7 +220,8 @@ module ImportJS
     # @param variable_name [String]
     # @return [Array]
     def find_js_modules(variable_name)
-      if alias_module = @config.resolve_alias(variable_name)
+      if alias_module = @config.resolve_alias(variable_name,
+                                              @editor.path_to_current_file)
         return [alias_module]
       end
 

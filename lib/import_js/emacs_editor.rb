@@ -42,6 +42,15 @@ class ImportJS::EmacsEditor
     puts "goto:success:#{File.expand_path(file_path)}"
   end
 
+  # Get the path to the file currently being edited. May return `nil` if an
+  # anonymous file is being edited.
+  #
+  # @return [String?]
+  def path_to_current_file
+    # Not yet implemented for Emacs
+    nil
+  end
+
   # Display a message to the user.
   #
   # @param str [String]

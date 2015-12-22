@@ -28,11 +28,19 @@ module ImportJS
       @config[key]
     end
 
-    def resolve_alias(variable_name)
+    # @param variable_name [String]
+    # @param path_to_current_file [String?]
+    # @return [ImportJS::JSModule?]
+    def resolve_alias(variable_name, path_to_current_file)
       path = @config['aliases'][variable_name]
       return resolve_destructured_alias(variable_name) unless path
 
       path = path['path'] if path.is_a? Hash
+
+      if path_to_current_file && !path_to_current_file.empty?
+        path = path.sub(/\{filename\}/,
+                        File.basename(path_to_current_file, '.*'))
+      end
       ImportJS::JSModule.new(nil, path, [])
     end
 
