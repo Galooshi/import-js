@@ -89,3 +89,4 @@
   (add-hook 'comint-output-filter-functions 'import-js-output-filter nil t))
 
 (provide 'import-js)
+;;; import-js.el ends here
