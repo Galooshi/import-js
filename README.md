@@ -150,6 +150,23 @@ const { memoize } = require('underscore');
 memoize(() => { foo() });
 ```
 
+Aliases can be made dynamic by using the `{filename}` string. This part of the
+alias will be replaced by the name of the file you are currently editing.
+
+e.g.
+
+```json
+"aliases": {
+  "styles": "./{filename}.scss"
+}
+```
+
+will for a file `foo/bar.js` result in
+
+```javascript
+const styles = require('./bar.scss');
+```
+
 ### `declaration_keyword`
 
 If you are using ES6 (ES 2015), you have access to `let`, `const`, and `import`

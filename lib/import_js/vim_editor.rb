@@ -10,6 +10,14 @@ module ImportJS
       VIM.evaluate("expand('<cword>')")
     end
 
+    # Get the path to the file currently being edited. May return `nil` if an
+    # anonymous file is being edited.
+    #
+    # @return [String?]
+    def path_to_current_file
+      VIM.evaluate("expand('%')")
+    end
+
     # Open a file specified by a path.
     #
     # @param file_path [String]
