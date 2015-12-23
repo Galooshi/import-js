@@ -168,6 +168,75 @@ foo
         it 'leaves the buffer unchanged' do
           expect(subject).to eq(text)
         end
+
+        context "when 'use strict' is at the top of the file" do
+          let(:text) { <<-EOS.strip }
+'use strict';
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+'use strict';
+var foo = require('bar/foo');
+
+foo
+            EOS
+          end
+        end
+
+        context "when there are other imports under 'use strict'" do
+          let(:text) { <<-EOS.strip }
+'use strict';
+var bar = require('bar');
+
+foo + bar
+          EOS
+
+          it 'adds the import at the right place' do
+            expect(subject).to eq(<<-EOS.strip)
+'use strict';
+var bar = require('bar');
+var foo = require('bar/foo');
+
+foo + bar
+            EOS
+          end
+        end
+
+        context "when there is no newline under a lonely 'use strict'" do
+          let(:text) { <<-EOS.strip }
+'use strict';
+foo + bar
+          EOS
+
+          it 'adds a newline as part of importing ' do
+            expect(subject).to eq(<<-EOS.strip)
+'use strict';
+var foo = require('bar/foo');
+
+foo + bar
+            EOS
+          end
+        end
+
+        context 'when "use strict" is within double quotes' do
+          let(:text) { <<-EOS.strip }
+"use strict";
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+"use strict";
+var foo = require('bar/foo');
+
+foo
+            EOS
+          end
+        end
       end
 
       context 'when the variable resolves to a node.js conventional module' do
