@@ -46,12 +46,14 @@
       (setq module (buffer-substring beg (point)))
       module)))
 
+;;;###autoload
 (defun import-js-import ()
   (interactive)
   (save-some-buffers)
   (setq import-buffer (current-buffer))
   (import-js-send-input "import" (import-js-word-at-point) buffer-file-name))
 
+;;;###autoload
 (defun import-js-goto ()
   (interactive)
   (import-js-send-input "goto" (import-js-word-at-point) buffer-file-name))
@@ -59,33 +61,28 @@
 (defun import-js-output-filter (output)
   "Check if the current prompt is a top-level prompt."
   (if (string-match "import:success" output)
-      (progn
-        (let ((old-buffer (current-buffer)))
-          (save-current-buffer
-            (set-buffer import-buffer)
-            (revert-buffer t t t)))))
+      (save-current-buffer
+        (set-buffer import-buffer)
+        (revert-buffer t t t)))
   (if (string-match "goto:success:\\(.*\\)" output)
-      (let ((old-buffer (current-buffer)))
-        (save-current-buffer
-          (find-file (match-string 1 output))))))
+      (save-current-buffer
+        (find-file (match-string 1 output)))))
 
+;;;###autoload
 (defun run-import-js ()
   "Open a process buffer to run import-js"
   (interactive)
-
-  (setq command
-        (concat "ruby -e \"require 'import_js';Dir.chdir('"
-                import-js-project-root "');ImportJS::EmacsEditor.new\""))
-  (setq name "import-js")
-
-  (if (not (comint-check-proc import-js-buffer))
-      (let ((commandlist (split-string-and-unquote command))
-            (buffer (current-buffer))
-            (process-environment process-environment))
-        (setenv "PAGER" (executable-find "cat"))
-        (set-buffer (apply 'make-comint name (car commandlist)
-                           nil (cdr commandlist)))))
-  (setq import-js-buffer (format "*%s*" name))
-  (add-hook 'comint-output-filter-functions 'import-js-output-filter nil t))
+  (let ((command (concat "ruby -e \"require 'import_js';Dir.chdir('"
+                         import-js-project-root "');ImportJS::EmacsEditor.new\""))
+        (name "import-js"))
+    (if (not (comint-check-proc import-js-buffer))
+        (let ((commandlist (split-string-and-unquote command))
+              (process-environment process-environment))
+          (setenv "PAGER" (executable-find "cat"))
+          (set-buffer (apply 'make-comint name (car commandlist)
+                             nil (cdr commandlist)))))
+    (setq import-js-buffer (format "*%s*" name))
+    (add-hook 'comint-output-filter-functions 'import-js-output-filter nil t)))
 
 (provide 'import-js)
+;;; import-js.el ends here
