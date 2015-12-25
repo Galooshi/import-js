@@ -73,7 +73,8 @@
   "Open a process buffer to run import-js"
   (interactive)
   (let ((command (concat "ruby -e \"require 'import_js';Dir.chdir('"
-                         import-js-project-root "');ImportJS::EmacsEditor.new\""))
+                         (shell-quote-argument import-js-project-root)
+                         "');ImportJS::EmacsEditor.new\""))
         (name "import-js"))
     (if (not (comint-check-proc import-js-buffer))
         (let ((commandlist (split-string-and-unquote command))

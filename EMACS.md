@@ -5,8 +5,9 @@
 2. Configure import-js
   * See [Configuration](README.md#configuration)
 2. Install import-js.el for Emacs
-  * This is not yet available on elpa/melpa, so for now this means dropping
-    import-js.el somewhere in your .emacs.d
+  * Install via [MELPA](https://melpa.org/#/import-js)
+  * Alternatively, Copy plugins/import-js.el into your Emacs load-path and add
+    `(require 'import-js)` to your config
 3. Configure your project root
   * `(setq import-js-project-root "/path/to/project")`
 4. Start the import js project
