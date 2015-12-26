@@ -1,0 +1,12 @@
+[
+  {
+    "id": "tools",
+    "children": [
+      {
+        "id": "import_js",
+        "caption": "Import JS dependencies",
+        "command": "import_js"
+      }
+    ]
+  }
+]
