@@ -1,13 +1,12 @@
 module ImportJS
   class SublimeTextEditor
-    def initialize(word, lines)
-      @word = word
+    def initialize(lines)
       @lines = lines
     end
 
     # @return [String]
     def current_word
-      @word
+      nil
     end
 
     # @return [String?]
