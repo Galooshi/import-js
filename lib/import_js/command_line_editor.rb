@@ -10,6 +10,12 @@ module ImportJS
       @word
     end
 
+    # @return [String?]
+    def path_to_current_file
+      # Not yet implemented.
+      nil
+    end
+
     # @param file_path [String]
     def open_file(_file_path)
       fail 'not supported'
