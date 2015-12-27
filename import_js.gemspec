@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.authors     = ['Henric Trotzig']
   s.email       = 'henric.trotzig@gmail.com'
   s.files       = Dir['lib/**/*']
-  s.executables = ['import-js']
+  s.executables = ['import-js', 'import-js-sublime-text']
   s.homepage    = 'http://rubygems.org/gems/import_js'
   s.license     = 'MIT'
 end

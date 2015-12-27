@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'import_js'
+
+file_contents = STDIN.read.split("\n")
+
+editor = ImportJS::SublimeTextEditor.new(file_contents)
+importer = ImportJS::Importer.new(editor)
+importer.import_all
+
+puts editor.current_file_content
