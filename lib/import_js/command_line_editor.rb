@@ -1,8 +1,8 @@
 module ImportJS
   class CommandLineEditor
     def initialize(word, lines)
-      @word = word
       @lines = lines
+      @word = word
     end
 
     # @return [String]
@@ -23,7 +23,7 @@ module ImportJS
 
     # @param str [String]
     def message(str)
-      puts str
+      # no-op
     end
 
     # @return [String]
@@ -86,26 +86,18 @@ module ImportJS
     # @return [Number, nil] the index of the selected alternative, or nil if
     #   nothing was selected.
     def ask_for_selection(heading, alternatives)
-      puts heading
-      alternatives.each_with_index do |alt, i|
-        puts "#{i + 1}. #{alt}"
-      end
-      print 'Select number: '
-      selected = gets.strip
-      selected_index = selected.to_i - 1
-      return nil if selected_index < 0
-      return nil if selected_index >= alternatives.length
-      selected_index
+      # Just select the first one.
+      0
     end
 
-    # Get the preferred max length of a line
+    # Get the preferred max length of a line.
     # @return [Number?]
     def max_line_length
       80
     end
 
     # @return [String] shiftwidth number of spaces if expandtab is not set,
-    #   otherwise `\t`
+    #   otherwise `\t`.
     def tab
       '  '
     end

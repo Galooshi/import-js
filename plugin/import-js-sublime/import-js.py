@@ -1,6 +1,6 @@
 import sublime, sublime_plugin, subprocess, os
 
-importjs_path = os.path.expanduser('~/.rbenv/shims/import-js-sublime-text')
+importjs_path = os.path.expanduser('~/.rbenv/shims/import-js')
 
 class ImportJsCommand(sublime_plugin.TextCommand):
   def run(self, edit):

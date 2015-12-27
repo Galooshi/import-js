@@ -5,9 +5,6 @@ require 'import_js'
 word = ARGV.delete_at(0)
 file_contents = STDIN.read.split("\n")
 
-# Reset stdin so that we can use it to ask users to resolve imports
-STDIN.reopen('/dev/tty')
-
 editor = ImportJS::CommandLineEditor.new(word, file_contents)
 importer = ImportJS::Importer.new(editor)
 if word
