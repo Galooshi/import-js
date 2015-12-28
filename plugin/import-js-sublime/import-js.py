@@ -25,5 +25,8 @@ class ImportJsCommand(sublime_plugin.TextCommand):
       sublime.error_message('Error when executing import-js: ' + stderr)
       return
 
+    if(len(stderr) > 0):
+      sublime.status_message(stderr)
+
     stdout = result[0].decode()
     self.view.replace(edit, entire_file_region, stdout)

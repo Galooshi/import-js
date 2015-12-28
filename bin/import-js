@@ -12,4 +12,9 @@ if word
 else
   importer.import_all
 end
+
+# Print messages to stderr
+STDERR.puts editor.messages
+
+# Print resulting file to stdout
 puts editor.current_file_content

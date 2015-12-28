@@ -2,6 +2,7 @@ module ImportJS
   class CommandLineEditor
     def initialize(word, lines)
       @lines = lines
+      @messages = []
       @word = word
     end
 
@@ -23,12 +24,17 @@ module ImportJS
 
     # @param str [String]
     def message(str)
-      # no-op
+      @messages << str
     end
 
     # @return [String]
     def current_file_content
       @lines.join("\n")
+    end
+
+    # @return [String]
+    def messages
+      @messages.join("\n")
     end
 
     # Reads a line from the file.
