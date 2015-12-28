@@ -21,7 +21,7 @@ class ImportJsCommand(sublime_plugin.TextCommand):
 
     result = proc.communicate(input=current_file_contents.encode('utf-8'))
     stderr = result[1].decode()
-    if(len(stderr) > 0):
+    if(proc.returncode > 0):
       sublime.error_message('Error when executing import-js: ' + stderr)
       return
 
