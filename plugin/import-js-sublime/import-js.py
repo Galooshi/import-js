@@ -3,14 +3,20 @@ import sublime, sublime_plugin, subprocess, os
 importjs_path = os.path.expanduser('~/.rbenv/shims/import-js')
 
 class ImportJsCommand(sublime_plugin.TextCommand):
-  def run(self, edit):
+  def run(self, edit, **args):
     entire_file_region = sublime.Region(0, self.view.size())
     current_file_contents = self.view.substr(entire_file_region)
 
     environment = { 'LC_ALL': 'en_US.UTF-8', 'LC_CTYPE': 'UTF-8', 'LANG': 'en_US.UTF-8' }
     project_root = self.view.window().extract_variables()['folder']
+    command = [importjs_path]
+
+    if(args.get('word')):
+      word = self.view.substr(self.view.word(self.view.sel()[0]))
+      command.append(word)
+
     proc = subprocess.Popen(
-      importjs_path,
+      command,
       cwd=project_root,
       env=environment,
       stdin=subprocess.PIPE,
