@@ -10,7 +10,7 @@
 5. Open the root of your project as a folder (Project -> Add Folder to Project…)
 6. Import a file!
   * Whenever you have undefined variables, open the Command Palette
-    (CTRL/CMD+SHIFT+P) and select "Import JS Dependencies".
+    (CTRL/CMD+SHIFT+P) and select "ImportJS: Import all dependencies".
   * It will be helpful to bind `import-js-import` to an easy-to-use binding,
     such as:
 

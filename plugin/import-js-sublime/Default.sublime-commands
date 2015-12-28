@@ -1,6 +1,6 @@
 [
   {
-    "caption": "Import JS dependencies",
+    "caption": "ImportJS: import all dependencies",
     "command": "import_js"
   }
 ]
