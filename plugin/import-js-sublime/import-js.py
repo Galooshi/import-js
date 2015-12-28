@@ -11,7 +11,6 @@ class ImportJsCommand(sublime_plugin.TextCommand):
     project_root = self.view.window().extract_variables()['folder']
     proc = subprocess.Popen(
       importjs_path,
-      shell=True,
       cwd=project_root,
       env=environment,
       stdin=subprocess.PIPE,
