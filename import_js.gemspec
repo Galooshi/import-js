@@ -1,6 +1,8 @@
+require './lib/import_js/version'
+
 Gem::Specification.new do |s|
   s.name        = 'import_js'
-  s.version     = '0.1.0'
+  s.version     = ImportJS::VERSION
   s.date        = '2015-11-15'
   s.summary     = 'Import-JS'
   s.description = 'A tool to simplify importing javascript modules'

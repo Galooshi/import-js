@@ -5,6 +5,10 @@ require 'slop'
 
 opts = Slop.parse do |o|
   o.string '-w', '--word', 'a word/variable to import'
+  o.on '-v', '--version', 'print the current version' do
+    puts ImportJS::VERSION
+    exit
+  end
 end
 
 file_contents = STDIN.read.split("\n")
@@ -22,4 +26,3 @@ puts editor.current_file_content
 
 # Print messages to stderr
 STDERR.puts editor.messages
-
