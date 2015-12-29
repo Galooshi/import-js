@@ -9,6 +9,10 @@ opts = Slop.parse do |o|
     puts ImportJS::VERSION
     exit
   end
+  o.on '-h', '--help', 'prints help' do
+    puts o
+    exit
+  end
 end
 
 file_contents = STDIN.read.split("\n")
