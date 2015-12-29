@@ -93,12 +93,13 @@ module ImportJS
 
     # Ask the user to select something from a list of alternatives.
     #
-    # @param heading [String] A heading text
+    # @param word [String] The word/variable to import
     # @param alternatives [Array<String>] A list of alternatives
     # @return [Number, nil] the index of the selected alternative, or nil if
     #   nothing was selected.
-    def ask_for_selection(heading, alternatives)
-      escaped_list = [heading]
+    def ask_for_selection(word, alternatives)
+      escaped_list =
+        ["\"ImportJS: Pick JS module to import for '#{word}':\""]
       escaped_list << alternatives.each_with_index.map do |alternative, i|
         "\"#{i + 1}: #{alternative}\""
       end

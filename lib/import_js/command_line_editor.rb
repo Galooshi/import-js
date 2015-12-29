@@ -3,6 +3,8 @@ module ImportJS
     def initialize(lines, opts)
       @lines = lines
       @messages = []
+      @ask_for_selections = []
+      @selections = opts[:selections] unless opts[:selections].empty?
       @word = opts[:word]
     end
 
@@ -25,6 +27,11 @@ module ImportJS
     # @param str [String]
     def message(str)
       @messages << str
+    end
+
+    # @return [Array]
+    def ask_for_selections
+      @ask_for_selections
     end
 
     # @return [String]
@@ -87,13 +94,21 @@ module ImportJS
 
     # Ask the user to select something from a list of alternatives.
     #
-    # @param heading [String] A heading text
+    # @param word [String] The word/variable to import
     # @param alternatives [Array<String>] A list of alternatives
     # @return [Number, nil] the index of the selected alternative, or nil if
     #   nothing was selected.
-    def ask_for_selection(heading, alternatives)
-      # Just select the first one.
-      0
+    def ask_for_selection(word, alternatives)
+      if @selections
+        # this is a re-run, where selections have already been made
+        @selections[word]
+      else
+        @ask_for_selections << {
+          word: word,
+          alternatives: alternatives
+        }
+        nil
+      end
     end
 
     # Get the preferred max length of a line.

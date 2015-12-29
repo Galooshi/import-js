@@ -2,9 +2,11 @@
 
 require 'import_js'
 require 'slop'
+require 'json'
 
 opts = Slop.parse do |o|
   o.string '-w', '--word', 'a word/variable to import'
+  o.array '--selections', 'a list of resolved selections, e.g. Foo:0,Bar:1'
   o.on '-v', '--version', 'print the current version' do
     puts ImportJS::VERSION
     exit
@@ -16,6 +18,14 @@ opts = Slop.parse do |o|
 end
 
 file_contents = STDIN.read.split("\n")
+
+if opts[:selections]
+  # Convert array of string tuples to hash, `word` => `selectedIndex`
+  opts[:selections] = Hash[opts[:selections].map do |str|
+    tuple = str.split(':')
+    [tuple.first, tuple[1].to_i]
+  end]
+end
 
 editor = ImportJS::CommandLineEditor.new(file_contents, opts)
 importer = ImportJS::Importer.new(editor)
@@ -29,4 +39,9 @@ end
 puts editor.current_file_content
 
 # Print messages to stderr
-STDERR.puts editor.messages
+meta = {
+  messages: editor.messages
+}
+ask = editor.ask_for_selections
+meta[:ask_for_selections] = ask unless ask.empty?
+STDERR.puts meta.to_json
