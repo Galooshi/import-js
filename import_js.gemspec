@@ -10,4 +10,5 @@ Gem::Specification.new do |s|
   s.executables = ['import-js']
   s.homepage    = 'http://rubygems.org/gems/import_js'
   s.license     = 'MIT'
+  s.add_runtime_dependency 'slop', '~> 4.2', '>= 4.2.1'
 end

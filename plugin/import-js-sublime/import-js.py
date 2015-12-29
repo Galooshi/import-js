@@ -13,6 +13,7 @@ class ImportJsCommand(sublime_plugin.TextCommand):
 
     if(args.get('word')):
       word = self.view.substr(self.view.word(self.view.sel()[0]))
+      command.append('--word')
       command.append(word)
 
     proc = subprocess.Popen(

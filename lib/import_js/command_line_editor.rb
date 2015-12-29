@@ -1,9 +1,9 @@
 module ImportJS
   class CommandLineEditor
-    def initialize(word, lines)
+    def initialize(lines, opts)
       @lines = lines
       @messages = []
-      @word = word
+      @word = opts[:word]
     end
 
     # @return [String]
