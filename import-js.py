@@ -16,9 +16,15 @@ class ImportJsCommand(sublime_plugin.TextCommand):
       command.append('--word')
       command.append(word)
 
+    if(args.get('goto')):
+      command.append('--goto')
+
     if(args.get('selections')):
       command.append('--selections')
       command.append(','.join(args.get('selections')))
+
+    command.append('--filename')
+    command.append(self.view.file_name())
 
     print(command)
 
@@ -48,11 +54,20 @@ class ImportJsCommand(sublime_plugin.TextCommand):
         return
 
     stdout = result[0].decode()
-    self.view.replace(edit, entire_file_region, stdout)
+    if(args.get('goto')):
+      if(len(stdout.rstrip()) > 0):
+        self.view.window().open_file(self.project_path() + '/' + stdout.rstrip())
+    else:
+      self.view.replace(edit, entire_file_region, stdout)
 
   def rerun(self, edit, args, selections):
     args['selections'] = selections
     self.run(edit, **args)
+
+  def project_path(self):
+    for folder in self.view.window().project_data().get('folders'):
+      if(self.view.file_name().startswith(folder.get('path'))):
+        return folder.get('path')
 
   def ask_for_selections(self, selections, on_selections_done):
     selected = []

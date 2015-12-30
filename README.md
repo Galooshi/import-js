@@ -1,8 +1,9 @@
 # Introduction
 
 `import-js` is a tool to automatically import dependencies in your JavaScript
-project. Use it in Vim or Emacs by placing your cursor on a variable and hit
-`<leader>j` (Vim), or `(M-x) import-js-import` (Emacs).
+project. Use it in Vim, Emacs, or Sublime by placing your cursor on a variable
+and hit `<leader>j` (Vim), or `(M-x) import-js-import` (Emacs), or select
+"ImportJS: import word under cursor" from the Command Palette (Sublime).
 
 ![Demo of import-js in action](https://raw.github.com/trotzig/import-js/master/import-js-demo.gif)
 
@@ -10,8 +11,11 @@ project. Use it in Vim or Emacs by placing your cursor on a variable and hit
 
 import-js comes with plugins for the following editors:
 
-- [Emacs (experimental)](EMACS.md) (Thanks to @kevin.kehl!)
+- [Emacs (experimental)](EMACS.md) (Thanks to
+  [@kevin.kehl](https://github.com/kevin.kehl)!)
 - [Vim](VIM.md)
+- [Sublime](Sublime.md) (Thanks to
+  [@janpaul123](https://github.com/janpaul123))
 - [(your editor here?)](CONTRIBUTING.md)
 
 Detailed instructions on how to install import-js can be found in the editor
@@ -47,8 +51,9 @@ document.createElement(new Button({ text: 'Save' }).toDOMElement());
 At this point, `Button` is undefined. We need to import it. If you are used to
 doing this manually, this involves figuring out the path to the JavaScript
 module that defines `Button`. With import-js, you instead place your cursor on
-the word "Button", then hit `<leader>j` (Vim) or `(M-x) import-js-import`
-(Emacs). The file buffer will now change to the following:
+the word "Button", then hit `<leader>j` (Vim), `(M-x) import-js-import`
+(Emacs), or choose "ImportJS: import word under cursor" (Sublime). The file
+buffer will now change to the following:
 
 ```js
 var Button = require('components/button');
@@ -72,8 +77,8 @@ Since import-js is pretty good at finding JS modules, it makes sense that
 there's an option to open/go to a file rather than import it. This is similar
 to VIM's built in ["Open file under
 cursor"](http://vim.wikia.com/wiki/Open_file_under_cursor). Use it by placing
-the cursor on a variable and hit `<leader>g` (Vim) or `(M-x) import-js-goto`
-(Emacs).
+the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
+(Emacs), or choose "ImportJS: goto module" (Sublime).
 
 ## Things to note
 
@@ -82,7 +87,8 @@ the cursor on a variable and hit `<leader>g` (Vim) or `(M-x) import-js-goto`
   `var`/`const`/`let`/`import` (configurable through the `declaration_keyword`
   option)
 - As part of resolving an import, all imports will be sorted
-- The Vim plugin is written in Ruby. You need a [Vim with Ruby support](VIM.md).
+- The core of the plugin is written in Ruby. If you are using Vim, you need a
+  [Vim with Ruby support](VIM.md).
 
 ## Configuration
 

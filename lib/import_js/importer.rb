@@ -44,7 +44,7 @@ module ImportJS
       @timing[:end] = Time.now
       return if js_modules.empty?
       js_module = resolve_one_js_module(js_modules, variable_name)
-      @editor.open_file(js_module.file_path)
+      @editor.open_file(js_module.file_path) if js_module
     end
 
     def fix_imports
