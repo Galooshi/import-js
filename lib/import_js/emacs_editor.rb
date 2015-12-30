@@ -47,8 +47,7 @@ class ImportJS::EmacsEditor
   #
   # @return [String?]
   def path_to_current_file
-    # Not yet implemented for Emacs
-    nil
+    @path
   end
 
   # Display a message to the user.
