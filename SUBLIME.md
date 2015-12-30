@@ -17,5 +17,6 @@
 
     ```
     { "keys": ["super+alt+i"], "command": "import_js" },
-    { "keys": ["super+alt+j"], "command": "import_js", "args": {"word": true} }
+    { "keys": ["super+alt+j"], "command": "import_js", "args": {"word": true} },
+    { "keys": ["super+alt+g"], "command": "import_js", "args": {"word": true, "goto": true} },
     ```

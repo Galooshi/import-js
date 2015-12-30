@@ -6,6 +6,7 @@ require 'json'
 
 opts = Slop.parse do |o|
   o.string '-w', '--word', 'a word/variable to import'
+  o.bool '--goto', 'instead of importing, just print the path to a module'
   o.array '--selections', 'a list of resolved selections, e.g. Foo:0,Bar:1'
   o.on '-v', '--version', 'print the current version' do
     puts ImportJS::VERSION
@@ -29,14 +30,21 @@ end
 
 editor = ImportJS::CommandLineEditor.new(file_contents, opts)
 importer = ImportJS::Importer.new(editor)
-if opts[:word]
+if opts.goto?
+  importer.goto
+elsif opts[:word]
   importer.import
 else
   importer.import_all
 end
 
-# Print resulting file to stdout
-puts editor.current_file_content
+if opts.goto?
+  # Print the path to the module to go to
+  puts editor.goto
+else
+  # Print resulting file to stdout
+  puts editor.current_file_content
+end
 
 # Print messages to stderr
 meta = {

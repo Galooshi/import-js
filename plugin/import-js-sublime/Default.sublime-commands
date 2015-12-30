@@ -7,5 +7,10 @@
     "caption": "ImportJS: import word under cursor",
     "command": "import_js",
     "args": {"word": true}
+  },
+  {
+    "caption": "ImportJS: goto module",
+    "command": "import_js",
+    "args": {"word": true, "goto": true}
   }
 ]
