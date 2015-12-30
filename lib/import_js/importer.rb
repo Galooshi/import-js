@@ -288,7 +288,7 @@ module ImportJS
       end
 
       selected_index = @editor.ask_for_selection(
-        "\"ImportJS: Pick JS module to import for '#{variable_name}': #{timing}\"",
+        variable_name,
         js_modules.map(&:display_name)
       )
       return unless selected_index

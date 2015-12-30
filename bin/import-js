@@ -1,18 +1,47 @@
 #!/usr/bin/env ruby
 
 require 'import_js'
+require 'slop'
+require 'json'
 
-word = ARGV.delete_at(0)
+opts = Slop.parse do |o|
+  o.string '-w', '--word', 'a word/variable to import'
+  o.array '--selections', 'a list of resolved selections, e.g. Foo:0,Bar:1'
+  o.on '-v', '--version', 'print the current version' do
+    puts ImportJS::VERSION
+    exit
+  end
+  o.on '-h', '--help', 'prints help' do
+    puts o
+    exit
+  end
+end
+
 file_contents = STDIN.read.split("\n")
 
-# Reset stdin so that we can use it to ask users to resolve imports
-STDIN.reopen('/dev/tty')
+if opts[:selections]
+  # Convert array of string tuples to hash, `word` => `selectedIndex`
+  opts[:selections] = Hash[opts[:selections].map do |str|
+    tuple = str.split(':')
+    [tuple.first, tuple[1].to_i]
+  end]
+end
 
-editor = ImportJS::CommandLineEditor.new(word, file_contents)
+editor = ImportJS::CommandLineEditor.new(file_contents, opts)
 importer = ImportJS::Importer.new(editor)
-if word
+if opts[:word]
   importer.import
 else
   importer.import_all
 end
+
+# Print resulting file to stdout
 puts editor.current_file_content
+
+# Print messages to stderr
+meta = {
+  messages: editor.messages
+}
+ask = editor.ask_for_selections
+meta[:ask_for_selections] = ask unless ask.empty?
+STDERR.puts meta.to_json

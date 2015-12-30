@@ -113,13 +113,13 @@ class ImportJS::EmacsEditor
 
   # Ask the user to select something from a list of alternatives.
   #
-  # @param heading [String] A heading text
+  # @param word [String] The word/variable to import
   # @param alternatives [Array<String>] A list of alternatives
   # @return [Number, nil] the index of the selected alternative, or nil if
   #   nothing was selected.
-  def ask_for_selection(heading, alternatives)
+  def ask_for_selection(word, alternatives)
     puts "asking for selection"
-    puts heading
+    puts "ImportJS: Pick JS module to import for '#{word}':"
     puts JSON.pretty_generate(alternatives)
     return
 

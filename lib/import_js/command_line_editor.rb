@@ -1,8 +1,11 @@
 module ImportJS
   class CommandLineEditor
-    def initialize(word, lines)
-      @word = word
+    def initialize(lines, opts)
       @lines = lines
+      @messages = []
+      @ask_for_selections = []
+      @selections = opts[:selections] unless opts[:selections].empty?
+      @word = opts[:word]
     end
 
     # @return [String]
@@ -23,12 +26,22 @@ module ImportJS
 
     # @param str [String]
     def message(str)
-      puts str
+      @messages << str
+    end
+
+    # @return [Array]
+    def ask_for_selections
+      @ask_for_selections
     end
 
     # @return [String]
     def current_file_content
       @lines.join("\n")
+    end
+
+    # @return [String]
+    def messages
+      @messages.join("\n")
     end
 
     # Reads a line from the file.
@@ -81,31 +94,31 @@ module ImportJS
 
     # Ask the user to select something from a list of alternatives.
     #
-    # @param heading [String] A heading text
+    # @param word [String] The word/variable to import
     # @param alternatives [Array<String>] A list of alternatives
     # @return [Number, nil] the index of the selected alternative, or nil if
     #   nothing was selected.
-    def ask_for_selection(heading, alternatives)
-      puts heading
-      alternatives.each_with_index do |alt, i|
-        puts "#{i + 1}. #{alt}"
+    def ask_for_selection(word, alternatives)
+      if @selections
+        # this is a re-run, where selections have already been made
+        @selections[word]
+      else
+        @ask_for_selections << {
+          word: word,
+          alternatives: alternatives
+        }
+        nil
       end
-      print 'Select number: '
-      selected = gets.strip
-      selected_index = selected.to_i - 1
-      return nil if selected_index < 0
-      return nil if selected_index >= alternatives.length
-      selected_index
     end
 
-    # Get the preferred max length of a line
+    # Get the preferred max length of a line.
     # @return [Number?]
     def max_line_length
       80
     end
 
     # @return [String] shiftwidth number of spaces if expandtab is not set,
-    #   otherwise `\t`
+    #   otherwise `\t`.
     def tab
       '  '
     end

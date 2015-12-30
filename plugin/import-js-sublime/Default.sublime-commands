@@ -1,6 +1,11 @@
 [
   {
-    "caption": "Import JS dependencies",
+    "caption": "ImportJS: import all dependencies",
     "command": "import_js"
+  },
+  {
+    "caption": "ImportJS: import word under cursor",
+    "command": "import_js",
+    "args": {"word": true}
   }
 ]
