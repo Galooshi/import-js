@@ -6,7 +6,8 @@
   * `npm install -g eslint`
 3. Configure import-js
   * See [Configuration](README.md#configuration)
-4. Copy plugins/import-js-sublime to your Sublime packages directory
+4. Symlink ipmort-js (root folder) to your Sublime packages directory, e.g. `ln
+   -s ~/import-js import-js`.
 5. Open the root of your project as a folder (Project -> Add Folder to Project…)
 6. Import a file!
   * Whenever you have undefined variables, open the Command Palette
