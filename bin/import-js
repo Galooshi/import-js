@@ -8,6 +8,8 @@ opts = Slop.parse do |o|
   o.string '-w', '--word', 'a word/variable to import'
   o.bool '--goto', 'instead of importing, just print the path to a module'
   o.array '--selections', 'a list of resolved selections, e.g. Foo:0,Bar:1'
+  o.string '--filename',
+    'a path to the file which contents are being passed in as stdin'
   o.on '-v', '--version', 'print the current version' do
     puts ImportJS::VERSION
     exit
