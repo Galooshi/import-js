@@ -1,7 +1,5 @@
 import sublime, sublime_plugin, subprocess, os, json
 
-importjs_path = os.path.expanduser('~/.rbenv/shims/import-js')
-
 class ImportJsCommand(sublime_plugin.TextCommand):
   def run(self, edit, **args):
     entire_file_region = sublime.Region(0, self.view.size())
@@ -9,7 +7,12 @@ class ImportJsCommand(sublime_plugin.TextCommand):
 
     environment = { 'LC_ALL': 'en_US.UTF-8', 'LC_CTYPE': 'UTF-8', 'LANG': 'en_US.UTF-8' }
     project_root = self.view.window().extract_variables()['folder']
-    command = [importjs_path]
+    executable = os.path.expanduser('~/.rbenv/shims/import-js')
+
+    if(args.get('executable')):
+      executable = args.get('executable')
+
+    command = [executable]
 
     if(args.get('word')):
       word = self.view.substr(self.view.word(self.view.sel()[0]))
@@ -28,15 +31,18 @@ class ImportJsCommand(sublime_plugin.TextCommand):
 
     print(command)
 
-    proc = subprocess.Popen(
-      command,
-      cwd=project_root,
-      env=environment,
-      stdin=subprocess.PIPE,
-      stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE
-    )
-
+    try:
+      proc = subprocess.Popen(
+        command,
+        cwd=project_root,
+        env=environment,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+      )
+    except FileNotFoundError as e:
+      sublime.error_message(self.no_executable_error(executable))
+      raise e
     result = proc.communicate(input=current_file_contents.encode('utf-8'))
     stderr = result[1].decode()
 
@@ -68,6 +74,28 @@ class ImportJsCommand(sublime_plugin.TextCommand):
     for folder in self.view.window().project_data().get('folders'):
       if(self.view.file_name().startswith(folder.get('path'))):
         return folder.get('path')
+
+  def no_executable_error(self, executable):
+    return (
+       "Couldn't find executable "
+       '' + executable + ''
+       ".\n\n"
+       'Make sure you have the `import-js` gem installed '
+       '(`gem install import-js`).'
+       "\n\n"
+       'If it is installed but you still get this message, '
+       'you might have to pass in `executable` as an argument '
+       'to your binding, e.g. \n\n'
+       '{ \n'
+       '  "keys": ["super+alt+i"], \n'
+       '  "command": "import_js", \n'
+       '  "executable": "~/path/to/import-js"\n'
+       '}'
+       "\n\n"
+       'To see where import-js was installed, run `which import-js` '
+       'from the command line.'
+    )
+
 
   def ask_for_selections(self, selections, on_selections_done):
     selected = []
