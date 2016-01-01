@@ -14,3 +14,13 @@ Vim. If you don't have Ruby support, you'll see something like this:
 ```
 
 (from https://github.com/wincent/command-t/blob/master/README.txt)
+
+## Default mappings
+
+By default, import-js attempts to set up the following mappings:
+
+Mapping     | Command               | Description
+------------|-----------------------|---------------------------------------------------------------------
+`<Leader>j` | `:ImportJSImport`     | Import the module for the variable under the cursor.
+`<Leader>i` | `:ImportJSFixImports` | Import any missing modules and remove any modules that are not used.
+`<Leader>g` | `:ImportJSGoTo`       | Go to the module of the variable under the cursor.
