@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/trotzig/import-js.svg?branch=master)](https://travis-ci.org/trotzig/import-js)
+[![MELPA](http://melpa.org/packages/import-js-badge.svg)](http://melpa.org/#/import-js)
+
 # Introduction
 
 `import-js` is a tool to automatically import dependencies in your JavaScript

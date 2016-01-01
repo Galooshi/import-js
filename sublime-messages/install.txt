@@ -1,0 +1,2 @@
+Thanks for installing ImportJS! Before you can start using the plugin, you also
+need to install the `import-js` binary. To do that, run `gem install import_js`.
