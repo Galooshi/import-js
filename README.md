@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/trotzig/import-js.svg?branch=master)](https://travis-ci.org/trotzig/import-js)
+[![Gem Version](https://badge.fury.io/rb/import_js.svg)](https://badge.fury.io/rb/import_js)
 [![MELPA](http://melpa.org/packages/import-js-badge.svg)](http://melpa.org/#/import-js)
 
 # Introduction
