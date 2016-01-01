@@ -11,13 +11,13 @@
 5. Open the root of your project as a folder (Project -> Add Folder to Project…)
 6. Import a file!
   * Whenever you have undefined variables, open the Command Palette
-    (CTRL/CMD+SHIFT+P) and select either "ImportJS: import all dependencies" or
-    "ImportJS: import word under cursor".
+    (CTRL/CMD+SHIFT+P) and select "ImportJS: import all dependencies",
+    "ImportJS: fix all imports" or "ImportJS: import word under cursor".
   * It will be helpful to bind `import_js` to easy-to-use bindings,
     such as:
 
     ```
-    { "keys": ["super+alt+i"], "command": "import_js" },
+    { "keys": ["super+alt+i"], "command": "import_js", "args": {"fix": true} },
     { "keys": ["super+alt+j"], "command": "import_js", "args": {"word": true} },
     { "keys": ["super+alt+g"], "command": "import_js", "args": {"word": true, "goto": true} },
     ```

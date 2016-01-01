@@ -55,6 +55,9 @@ class ImportJsCommand(sublime_plugin.TextCommand):
       command.append('--word')
       command.append(word)
 
+    if(args.get('fix')):
+      command.append('--fix')
+
     if(args.get('goto')):
       command.append('--goto')
 
