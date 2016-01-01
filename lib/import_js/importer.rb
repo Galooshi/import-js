@@ -56,8 +56,8 @@ module ImportJS
     def import_all
       @config.refresh
       undefined_variables = run_eslint_command.map do |line|
-        /"([^"]+)" is not defined/.match(line) do |match_data|
-          match_data[1]
+        /(["'])([^"']+)\1 is not defined/.match(line) do |match_data|
+          match_data[2]
         end
       end.compact.uniq
 
