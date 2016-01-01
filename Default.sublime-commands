@@ -4,6 +4,11 @@
     "command": "import_js"
   },
   {
+    "caption": "ImportJS: fix all imports",
+    "command": "import_js",
+    "args": {"fix": true}
+  },
+  {
     "caption": "ImportJS: import word under cursor",
     "command": "import_js",
     "args": {"word": true}
