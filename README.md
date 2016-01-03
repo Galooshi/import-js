@@ -15,7 +15,7 @@ and hit `<leader>j` (Vim), or `(M-x) import-js-import` (Emacs), or select
 
 import-js comes with plugins for the following editors:
 
-- [Emacs (experimental)](EMACS.md) (Thanks to
+- [Emacs](EMACS.md) (Thanks to
   [@kevin.kehl](https://github.com/kevin.kehl)!)
 - [Vim](VIM.md)
 - [Sublime](Sublime.md) (Thanks to

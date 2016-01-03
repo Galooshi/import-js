@@ -54,6 +54,13 @@
   (import-js-send-input "import" (import-js-word-at-point) buffer-file-name))
 
 ;;;###autoload
+(defun import-js-fix ()
+  (interactive)
+  (save-some-buffers)
+  (setq import-buffer (current-buffer))
+  (import-js-send-input "fix" "*" buffer-file-name))
+
+;;;###autoload
 (defun import-js-goto ()
   (interactive)
   (import-js-send-input "goto" (import-js-word-at-point) buffer-file-name))
