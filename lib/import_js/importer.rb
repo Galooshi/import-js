@@ -105,14 +105,14 @@ module ImportJS
       command = %w[
         eslint
         --stdin
-        --format compact
+        --format unix
         --rule 'no-undef: 2'
         --rule 'no-unused-vars: [2, { "vars": "all", "args": "none" }]'
       ].join(' ')
       out, err = Open3.capture3(command,
                                 stdin_data: @editor.current_file_content)
 
-      if out =~ /Error - Parsing error: / ||
+      if out =~ /Parsing error: / ||
          out =~ /Unrecoverable syntax error/
         fail ImportJS::ParseError.new, out
       end
