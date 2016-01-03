@@ -22,6 +22,12 @@ class ImportJS::EmacsEditor
           puts 'import:success'
         when 'goto'
           ImportJS::Importer.new(self).goto
+        when 'fix'
+          ImportJS::Importer.new(self).fix_imports
+          write_file
+          puts 'import:success'
+        else
+          puts "unknown command: #{command}"
         end
       rescue Exception => e
         puts e.inspect
@@ -61,7 +67,7 @@ class ImportJS::EmacsEditor
   #
   # @return [String]
   def current_file_content
-    @file.join('\n')
+    @file.join("\n")
   end
 
   # Reads a line from the file.
