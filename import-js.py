@@ -1,23 +1,5 @@
 import sublime, sublime_plugin, subprocess, os, json
 
-def plugin_loaded():
-  settings = sublime.load_settings('ImportJS.sublime-settings')
-  executable = os.path.expanduser(settings.get('executable'))
-  try:
-    version = subprocess.check_output(
-            [executable, '--version']) .decode('UTF-8').strip()
-  except FileNotFoundError:
-    print(no_executable_error(executable))
-
-  version_rb = os.path.join(os.path.dirname(__file__), 'lib/import_js/version.rb')
-  with open(version_rb) as f:
-    contents = f.read()
-
-  if("VERSION = '" + version + "'" not in contents):
-    print('The installed version of import-js does not match ' +
-          'the current version: ' + version)
-
-
 def no_executable_error(executable):
   return (
     "Couldn't find executable "
