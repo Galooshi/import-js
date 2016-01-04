@@ -1,9 +1,5 @@
 [
   {
-    "caption": "ImportJS: import all dependencies",
-    "command": "import_js"
-  },
-  {
     "caption": "ImportJS: fix all imports",
     "command": "import_js",
     "args": {"fix": true}

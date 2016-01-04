@@ -47,36 +47,17 @@ module ImportJS
       @editor.open_file(js_module.file_path) if js_module
     end
 
+    # Removes unused imports and adds imports for undefined variables
     def fix_imports
-      remove_unused_imports
-      import_all
-    end
-
-    # Finds all variables that haven't yet been imported.
-    def import_all
       @config.refresh
-      undefined_variables = run_eslint_command.map do |line|
+      eslint_result = run_eslint_command
+      undefined_variables = eslint_result.map do |line|
         /(["'])([^"']+)\1 is not defined/.match(line) do |match_data|
           match_data[2]
         end
       end.compact.uniq
 
-      return message('No variables to import') if undefined_variables.empty?
-
-      old_imports = find_current_imports
-      undefined_variables.each do |variable|
-        if js_module = find_one_js_module(variable)
-          inject_js_module(variable, js_module, old_imports[:imports])
-        end
-      end
-      replace_imports(old_imports[:newline_count],
-                      old_imports[:imports],
-                      old_imports[:imports_start_at])
-    end
-
-    def remove_unused_imports
-      @config.refresh
-      unused_variables = run_eslint_command.map do |line|
+      unused_variables = eslint_result.map do |line|
         /"([^"]+)" is defined but never used/.match(line) do |match_data|
           match_data[1]
         end
@@ -89,6 +70,13 @@ module ImportJS
         end
         import_statement.variables.empty?
       end
+
+      undefined_variables.each do |variable|
+        if js_module = find_one_js_module(variable)
+          inject_js_module(variable, js_module, new_imports)
+        end
+      end
+
       replace_imports(old_imports[:newline_count],
                       new_imports,
                       old_imports[:imports_start_at])
