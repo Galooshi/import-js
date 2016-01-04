@@ -1191,7 +1191,7 @@ foo
     end
   end
 
-  describe '#import_all' do
+  describe '#fix_imports' do
     let(:eslint_result) { '' }
     before do
       allow(Open3).to receive(:capture3).and_call_original
@@ -1200,7 +1200,7 @@ foo
     end
 
     subject do
-      ImportJS::Importer.new.import_all
+      ImportJS::Importer.new.fix_imports
       VIM::Buffer.current_buffer.to_s
     end
 
@@ -1312,20 +1312,6 @@ var a = foo + bar;
         EOS
       end
     end
-  end
-
-  describe '#remove_unused_imports' do
-    let(:eslint_result) { '' }
-    before do
-      allow(Open3).to receive(:capture3).and_call_original
-      allow(Open3).to receive(:capture3).with(/eslint/, anything)
-        .and_return([eslint_result, nil])
-    end
-
-    subject do
-      ImportJS::Importer.new.remove_unused_imports
-      VIM::Buffer.current_buffer.to_s
-    end
 
     context 'when no unused variables exist' do
       it 'leaves the buffer unchanged' do
@@ -1333,17 +1319,7 @@ var a = foo + bar;
       end
     end
 
-    context 'when eslint can not parse' do
-      let(:eslint_result) do
-        'stdin:1:1: Parsing error: Unexpected token ILLEGAL [Error]'
-      end
-
-      it 'throws an error' do
-        expect { subject }.to raise_error(ImportJS::ParseError)
-      end
-    end
-
-    context 'when one unused variable exists' do
+    context 'when one unused import exists' do
       let(:text) { <<-EOS.strip }
 var bar = require('foo/bar');
 var foo = require('bar/foo');
@@ -1382,6 +1358,28 @@ baz
 var baz = require('bar/baz');
 
 baz
+        EOS
+      end
+    end
+
+    context 'when an unused import and an undefined variable exists' do
+      let(:existing_files) { ['bar/foo.jsx'] }
+      let(:text) { <<-EOS.strip }
+var bar = require('foo/bar');
+
+foo
+      EOS
+
+      let(:eslint_result) do
+        "stdin:3:11: \"bar\" is defined but never used [Error/no-unused-vars]\n" \
+        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]"
+      end
+
+      it 'removes the unused import and adds the missing one' do
+        expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
         EOS
       end
     end
