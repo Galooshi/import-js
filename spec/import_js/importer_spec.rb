@@ -1208,13 +1208,6 @@ foo
       it 'leaves the buffer unchanged' do
         expect(subject).to eq(text)
       end
-
-      it 'displays a message' do
-        subject
-        expect(VIM.last_command_message).to eq(
-          'ImportJS: No variables to import'
-        )
-      end
     end
 
     context 'when eslint can not parse' do

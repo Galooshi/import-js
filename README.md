@@ -71,9 +71,11 @@ a `require` statement. But keep reading for some more neat features.
 ## Fix imports
 
 If you have [eslint](http://eslint.org/) installed, import-js can be used to
-automatically fix all imports. By hiting `<leader>i` (Vim), all your undefined
-variables will be resolved, and all your unused imports will be removed. By
-default, import-js expects a global `eslint` command to be available.
+automatically fix all imports. By hiting `<leader>i` (Vim), `(M-x)
+import-js-fix` (Emacs), or choose `ImportJS: fix all imports` (Sublime), all
+your undefined variables will be resolved, and all your unused imports will be
+removed. By default, import-js expects a global `eslint` command to be
+available.
 
 ## Experimental: Go to module
 
