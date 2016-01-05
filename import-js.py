@@ -29,7 +29,7 @@ class ImportJsCommand(sublime_plugin.TextCommand):
     project_root = self.view.window().extract_variables()['folder']
     settings = sublime.load_settings('ImportJS.sublime-settings')
 
-    executable = os.path.expanduser(settings.get('executable'))
+    executable = settings.get('executable')
     command = [executable]
 
     if(args.get('word')):
