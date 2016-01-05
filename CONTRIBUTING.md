@@ -49,3 +49,33 @@ import-js to make it easier to try out your changes.
 ```bash
 ln -s ~/import-js import-js
 ```
+
+## Developing for Sublime
+
+Here are a few tips to make it simpler to test a local copy of import-js in
+Sublime:
+
+### Symlink
+
+Make a symlink inside your Sublime packages folder to the local copy of
+import-js. Every time you change the `import_js.py` file the plugin will
+reload.
+
+```bash
+cd ~/Library/Application Support/Sublime Text 3/Packages
+ln -s ~/import-js import-js
+```
+
+### Build and install the gem locally
+
+Since the Sublime plugin uses the `import-js` CLI tool, you need to rebuild and
+install the `import_js` Ruby gem whenever you make changes to the Ruby code
+powering import-js.
+
+First, update `lib/import_js/version.rb` and bump the version number.
+
+```
+gem build import_js.gemspec && gem install --local import_js-__version__.gem
+```
+
+Replace `__version__` with the bumped version number.

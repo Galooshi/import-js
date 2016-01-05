@@ -1,2 +1,25 @@
 Thanks for installing ImportJS! Before you can start using the plugin, you also
-need to install the `import-js` binary. To do that, run `gem install import_js`.
+need to install a few dependencies:
+
+1. Install the import_js gem
+  * `gem install import_js`
+2. Install eslint
+  * `npm install -g eslint`
+3. Configure import-js
+  * See https://github.com/trotzig/import-js for more information
+4. Open the root of your project as a folder (Project -> Add Folder to Project…)
+
+
+When you are done with that, it's time to start importing files!
+
+* Whenever you have undefined variables, open the Command Palette
+  (CTRL/CMD+SHIFT+P) and select "ImportJS: fix all imports",
+  or "ImportJS: import word under cursor".
+* It will be helpful to bind `import_js` to easy-to-use bindings,
+  such as:
+
+  ```
+  { "keys": ["super+alt+i"], "command": "import_js" },
+  { "keys": ["super+alt+j"], "command": "import_js", "args": { "word": true } },
+  { "keys": ["super+alt+g"], "command": "import_js", "args": { "word": true, "goto": true } },
+    ```

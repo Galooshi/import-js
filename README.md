@@ -18,7 +18,7 @@ import-js comes with plugins for the following editors:
 - [Emacs](EMACS.md) (Thanks to
   [@kevinkehl](https://github.com/kevinkehl)!)
 - [Vim](VIM.md)
-- [Sublime](Sublime.md) (Thanks to
+- [Sublime](SUBLIME.md) (Thanks to
   [@janpaul123](https://github.com/janpaul123))
 - [(your editor here?)](CONTRIBUTING.md)
 
