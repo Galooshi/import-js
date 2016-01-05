@@ -1,13 +1,13 @@
 # Running import-js in Sublime Text
 
-1. Install import-js
-  * `gem install import-js`
-2. Install eslint
+1. Install the [ImportJS plugin via Package
+   Control](https://packagecontrol.io/packages/ImportJS)
+2. Install the import_js gem
+  * `gem install import_js`
+3. Install eslint
   * `npm install -g eslint`
-3. Configure import-js
+4. Configure import-js
   * See [Configuration](README.md#configuration)
-4. Symlink ipmort-js (root folder) to your Sublime packages directory, e.g. `ln
-   -s ~/import-js import-js`.
 5. Open the root of your project as a folder (Project -> Add Folder to Project…)
 6. Import a file!
   * Whenever you have undefined variables, open the Command Palette
