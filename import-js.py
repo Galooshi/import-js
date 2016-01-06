@@ -75,8 +75,11 @@ class ImportJsCommand(sublime_plugin.TextCommand):
       if(meta.get('messages')):
         sublime.status_message(meta.get('messages'))
       if(meta.get('ask_for_selections')):
-        rerun = lambda selections: self.rerun(edit, args, selections)
-        self.ask_for_selections(meta.get('ask_for_selections'), rerun)
+        def handle_selections_done(selections):
+          if (len(selections)):
+           self.rerun(edit, args, selections)
+        self.ask_for_selections(meta.get('ask_for_selections'),
+                                handle_selections_done)
         return
 
     stdout = result[0].decode()
