@@ -34,11 +34,11 @@ describe 'ImportStatement' do
         expect(subject.variables).to eq(['foo'])
       end
 
-      context 'injecting a new variable' do
+      context 'injecting a new destructured variable' do
         let(:injected_variable) { 'bar' }
         let(:statement) do
           statement = subject
-          statement.inject_variable(injected_variable)
+          statement.inject_destructured_variable(injected_variable)
           statement
         end
 

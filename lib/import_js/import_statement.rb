@@ -57,7 +57,7 @@ module ImportJS
     # Injects a new variable into an already existing set of destructured
     #   variables.
     # @param variable_name [String]
-    def inject_variable(variable_name)
+    def inject_destructured_variable(variable_name)
       variables << variable_name
       variables.sort!.uniq!
 

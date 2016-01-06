@@ -176,7 +176,7 @@ module ImportJS
         next unless import.path == js_module.import_path
         next unless import.is_destructured
 
-        import.inject_variable(variable_name)
+        import.inject_destructured_variable(variable_name)
         return true
       end
       false
