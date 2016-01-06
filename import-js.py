@@ -19,11 +19,13 @@ def no_executable_error(executable):
     'from the command line.'
   )
 
+class ImportJsReplaceCommand(sublime_plugin.TextCommand):
+  def run(self, edit, characters):
+    self.view.replace(edit, sublime.Region(0, self.view.size()), characters)
 
 class ImportJsCommand(sublime_plugin.TextCommand):
   def run(self, edit, **args):
-    entire_file_region = sublime.Region(0, self.view.size())
-    current_file_contents = self.view.substr(entire_file_region)
+    current_file_contents = self.view.substr(sublime.Region(0, self.view.size()))
 
     environment = { 'LC_ALL': 'en_US.UTF-8', 'LC_CTYPE': 'UTF-8', 'LANG': 'en_US.UTF-8' }
     project_root = self.view.window().extract_variables()['folder']
@@ -73,8 +75,11 @@ class ImportJsCommand(sublime_plugin.TextCommand):
       if(meta.get('messages')):
         sublime.status_message(meta.get('messages'))
       if(meta.get('ask_for_selections')):
-        rerun = lambda selections: self.rerun(edit, args, selections)
-        self.ask_for_selections(meta.get('ask_for_selections'), rerun)
+        def handle_selections_done(selections):
+          if (len(selections)):
+           self.rerun(edit, args, selections)
+        self.ask_for_selections(meta.get('ask_for_selections'),
+                                handle_selections_done)
         return
 
     stdout = result[0].decode()
@@ -82,7 +87,7 @@ class ImportJsCommand(sublime_plugin.TextCommand):
       if(len(stdout.rstrip()) > 0):
         self.view.window().open_file(self.project_path() + '/' + stdout.rstrip())
     else:
-      self.view.replace(edit, entire_file_region, stdout)
+      self.view.run_command("import_js_replace", {"characters": stdout})
 
   def rerun(self, edit, args, selections):
     args['selections'] = selections
@@ -103,7 +108,8 @@ class ImportJsCommand(sublime_plugin.TextCommand):
         return
 
       def on_done(i):
-        selected.append(selection.get('word') + ':' + str(i))
+        if(i > -1):
+          selected.append(selection.get('word') + ':' + str(i))
         ask_recurse(next(selections_iter, None))
 
       self.view.show_popup_menu(
