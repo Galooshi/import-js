@@ -99,6 +99,18 @@ describe 'ImportStatement' do
         expect(subject.destructured_variables).to eq(['foo'])
       end
     end
+
+    context 'and it has default and a destructured assignment' do
+      let(:string) { "import foo, { bar } from 'foo';" }
+
+      it 'returns a valid ImportStatement instance' do
+        expect(subject.assignment).to eq('foo, { bar }')
+        expect(subject.path).to eq('foo')
+        expect(subject.destructured?).to be_truthy
+        expect(subject.default_variable).to eq('foo')
+        expect(subject.destructured_variables).to eq(['bar'])
+      end
+    end
   end
 
   context 'when the string is not a valid import' do

@@ -132,13 +132,20 @@ module ImportJS
       resolve_one_js_module(js_modules, variable_name)
     end
 
+    # Add new import to the block of imports, wrapping at the max line length
     # @param variable_name [String]
     # @param js_module [ImportJS::JSModule]
     # @param imports [Array<ImportJS::ImportStatement>]
     def inject_js_module(variable_name, js_module, imports)
-      # Add new import to the block of imports, wrapping at the max line length
-      unless js_module.is_destructured &&
-          inject_destructured_variable(variable_name, js_module, imports)
+      import = imports.find { |import| import.path == js_module.import_path }
+
+      if import
+        if js_module.is_destructured
+          import.inject_destructured_variable(variable_name)
+        else
+          import.set_default_variable(variable_name)
+        end
+      else
         imports.unshift(js_module.to_import_statement(variable_name))
       end
 
@@ -173,17 +180,6 @@ module ImportJS
           @editor.append_line(0 + imports_start_at, line)
         end
       end
-    end
-
-    def inject_destructured_variable(variable_name, js_module, imports)
-      imports.each do |import|
-        next unless import.path == js_module.import_path
-        next unless import.destructured?
-
-        import.inject_destructured_variable(variable_name)
-        return true
-      end
-      false
     end
 
     # @return [Hash]

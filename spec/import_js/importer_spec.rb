@@ -808,6 +808,23 @@ _
         EOS
         end
 
+        context 'when a destructured import exists for the same module' do
+          let(:text) { <<-EOS.strip }
+var { memoize } = require('underscore');
+
+_
+          EOS
+
+          it 'adds the default import and rewrites the destructured import' do
+            expect(subject).to eq(<<-EOS.strip)
+var _ = require('underscore');
+var { memoize } = _;
+
+_
+            EOS
+          end
+        end
+
         context 'when importing a destructured object' do
           let(:text) { 'memoize' }
           let(:word) { 'memoize' }
@@ -818,6 +835,23 @@ var { memoize } = require('underscore');
 
 memoize
             EOS
+          end
+
+          context 'when the default import exists for the same module' do
+            let(:text) { <<-EOS.strip }
+var _ = require('underscore');
+
+memoize
+            EOS
+
+            it 'adds the destructuring on a new line' do
+              expect(subject).to eq(<<-EOS.strip)
+var _ = require('underscore');
+var { memoize } = _;
+
+memoize
+              EOS
+            end
           end
 
           context 'with other imports' do
@@ -899,6 +933,22 @@ _
         EOS
         end
 
+        context 'when a destructured import exists for the same module' do
+          let(:text) { <<-EOS.strip }
+import { memoize } from 'underscore';
+
+_
+          EOS
+
+          it 'adds the default import' do
+            expect(subject).to eq(<<-EOS.strip)
+import _, { memoize } from 'underscore';
+
+_
+            EOS
+          end
+        end
+
         context 'when importing a destructured object' do
           let(:text) { 'memoize' }
           let(:word) { 'memoize' }
@@ -955,6 +1005,38 @@ memoize
               it 'does not add a duplicate' do
                 expect(subject).to eq(<<-EOS.strip)
 import { debounce, memoize, xyz } from 'underscore';
+
+memoize
+                EOS
+              end
+            end
+          end
+
+          context 'when a default import exists for the same module' do
+            let(:text) { <<-EOS.strip }
+import _ from 'underscore';
+
+memoize
+            EOS
+
+            it 'adds the destructured import' do
+              expect(subject).to eq(<<-EOS.strip)
+import _, { memoize } from 'underscore';
+
+memoize
+              EOS
+            end
+
+            context 'when the module is already in the destructured object' do
+              let(:text) { <<-EOS.strip }
+import _, { memoize } from 'underscore';
+
+memoize
+              EOS
+
+              it 'does not add a duplicate' do
+                expect(subject).to eq(<<-EOS.strip)
+import _, { memoize } from 'underscore';
 
 memoize
                 EOS

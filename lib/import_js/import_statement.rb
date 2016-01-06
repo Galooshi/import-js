@@ -26,6 +26,18 @@ module ImportJS
       ;?\s*
     }xm
 
+    REGEX_DESTRUCTURE = %r{
+      (?:                    # non-capturing group
+        (?<default>.*?)      # <default> variable
+        ,\s*
+      )?
+      \{
+        \s*
+        (?<destructured>.*)  # <destructured> variables
+        \s*
+      \}
+    }x
+
     attr_accessor :assignment
     attr_accessor :original_import_string # a cache of the parsed import string
     attr_accessor :default_variable
@@ -45,12 +57,21 @@ module ImportJS
       statement.original_import_string = match.string
       statement.path = match[:path]
       statement.assignment = match[:assignment]
-      if dest_match = statement.assignment.match(/\{\s*(.*)\s*\}/)
-        statement.destructured_variables = dest_match[1].split(/,\s*/).map(&:strip)
+      if dest_match = statement.assignment.match(REGEX_DESTRUCTURE)
+        statement.default_variable = dest_match[:default]
+        statement.destructured_variables =
+          dest_match[:destructured].split(/,\s*/).map(&:strip)
       else
         statement.default_variable = statement.assignment
       end
       statement
+    end
+
+    # Sets the default_variable and clears the original import string cache.
+    # @param value [String]
+    def set_default_variable(value)
+      @default_variable = value
+      @original_import_string = nil # clear import string cache if there was one
     end
 
     # Injects a new variable into an already existing set of destructured
@@ -90,27 +111,61 @@ module ImportJS
     # @param declaration_keyword [String] const, let, var, or import
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
-    # @return a generated import statement string
+    # @return [String] a generated import statement string
     def to_import_string(declaration_keyword, max_line_length, tab)
       return original_import_string if original_import_string
 
-      declaration = if destructured?
-                      "#{declaration_keyword} { #{destructured_variables.join(', ')} }"
-                    else
-                      "#{declaration_keyword} #{default_variable}"
-                    end
+      if declaration_keyword == 'import'
+        # ES2015 Modules (ESM) syntax can support default values and
+        # destructuring on the same line.
+        declaration = declaration_keyword
+        if destructured?
+          declaration += " #{default_variable}," if default_variable
+          declaration += " #{destructured_string}"
+        else
+          declaration += " #{default_variable}"
+        end
+        declaration += ' from'
 
-      equals, value = if declaration_keyword == 'import'
-                        ['from', "'#{path}';"]
-                      else
-                        ['=', "require('#{path}');"]
-                      end
+        wrap_import(declaration, "'#{path}';", max_line_length, tab)
+      else # const/let/var
+        if destructured? && !default_variable.nil?
+          # We have both a default variable and a destructuring to do, so we
+          # need to generate 2 lines for CommonJS style syntax.
+          default_declaration = "#{declaration_keyword} #{default_variable} ="
+          destructured_declaration = "#{declaration_keyword} #{destructured_string} ="
+          value = "require('#{path}');"
 
+          return wrap_import(default_declaration, "require('#{path}');", max_line_length, tab) +
+            "\n" +
+            wrap_import(destructured_declaration, "#{default_variable};", max_line_length, tab)
+        end
+
+        declaration_assignment =
+          destructured? ? destructured_string : default_variable
+        declaration = "#{declaration_keyword} #{declaration_assignment} ="
+        wrap_import(declaration, "require('#{path}');", max_line_length, tab)
+      end
+    end
+
+    private
+
+    # @return [String]
+    def destructured_string
+      "{ #{destructured_variables.join(', ')} }"
+    end
+
+    # @param declaration [String]
+    # @param value [String]
+    # @param max_line_length [Number] where to cap lines at
+    # @param tab [String] e.g. '  ' (two spaces)
+    # @return [String] import statement, wrapped at max line length if necessary
+    def wrap_import(declaration, value, max_line_length, tab)
       if max_line_length &&
-         "#{declaration} #{equals} #{value}".length > max_line_length
-        "#{declaration} #{equals}\n#{tab}#{value}"
+         "#{declaration} #{value}".length > max_line_length
+        "#{declaration}\n#{tab}#{value}"
       else
-        "#{declaration} #{equals} #{value}"
+        "#{declaration} #{value}"
       end
     end
   end
