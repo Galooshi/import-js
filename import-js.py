@@ -19,7 +19,7 @@ def no_executable_error(executable):
     'from the command line.'
   )
 
-class ReplaceCommand(sublime_plugin.TextCommand):
+class ImportJsReplaceCommand(sublime_plugin.TextCommand):
     def run(self, edit, characters, start=0, size=False):
       if(size == False):
         size = self.view.size()
@@ -87,7 +87,7 @@ class ImportJsCommand(sublime_plugin.TextCommand):
       if(len(stdout.rstrip()) > 0):
         self.view.window().open_file(self.project_path() + '/' + stdout.rstrip())
     else:
-      self.view.run_command("replace", {"characters": stdout})
+      self.view.run_command("import_js_replace", {"characters": stdout})
 
   def rerun(self, edit, args, selections):
     args['selections'] = selections
