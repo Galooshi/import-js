@@ -70,8 +70,7 @@ module ImportJS
         end
 
         no_default_variable = import_statement.default_variable.nil?
-        no_destructured_variables = import_statement.destructured_variables.nil? ||
-          import_statement.destructured_variables.empty?
+        no_destructured_variables = !import_statement.destructured?
 
         no_default_variable && no_destructured_variables
       end
