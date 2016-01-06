@@ -105,12 +105,8 @@ class ImportJsCommand(sublime_plugin.TextCommand):
         return
 
       def on_done(i):
-
-        # If nothing is selected returns
-        if(i == -1):
-          return
-
-        selected.append(selection.get('word') + ':' + str(i))
+        if(i > -1):
+          selected.append(selection.get('word') + ':' + str(i))
         ask_recurse(next(selections_iter, None))
 
       self.view.show_popup_menu(
