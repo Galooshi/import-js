@@ -20,15 +20,12 @@ def no_executable_error(executable):
   )
 
 class ImportJsReplaceCommand(sublime_plugin.TextCommand):
-    def run(self, edit, characters, start=0, size=False):
-      if(size == False):
-        size = self.view.size()
-      self.view.replace(edit,sublime.Region(start, size), characters)
+  def run(self, edit, characters):
+    self.view.replace(edit, sublime.Region(0, self.view.size()), characters)
 
 class ImportJsCommand(sublime_plugin.TextCommand):
   def run(self, edit, **args):
-    entire_file_region = sublime.Region(0, self.view.size())
-    current_file_contents = self.view.substr(entire_file_region)
+    current_file_contents = self.view.substr(sublime.Region(0, self.view.size()))
 
     environment = { 'LC_ALL': 'en_US.UTF-8', 'LC_CTYPE': 'UTF-8', 'LANG': 'en_US.UTF-8' }
     project_root = self.view.window().extract_variables()['folder']
