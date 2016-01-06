@@ -51,7 +51,6 @@ module ImportJS
     # @return [ImportJS::ImportStatement]
     def to_import_statement(variable_name)
       ImportJS::ImportStatement.new.tap do |statement|
-        statement.is_destructured = is_destructured
         if is_destructured
           statement.destructured_variables = [variable_name]
         else

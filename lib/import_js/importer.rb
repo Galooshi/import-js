@@ -179,7 +179,7 @@ module ImportJS
     def inject_destructured_variable(variable_name, js_module, imports)
       imports.each do |import|
         next unless import.path == js_module.import_path
-        next unless import.is_destructured
+        next unless import.destructured?
 
         import.inject_destructured_variable(variable_name)
         return true

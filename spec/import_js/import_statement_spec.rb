@@ -20,7 +20,7 @@ describe 'ImportStatement' do
       end
 
       it 'is not destructured' do
-        expect(subject.is_destructured).to be_falsy
+        expect(subject.destructured?).to be_falsy
       end
     end
 
@@ -30,7 +30,7 @@ describe 'ImportStatement' do
       it 'returns a valid ImportStatement instance' do
         expect(subject.assignment).to eq('{ foo }')
         expect(subject.path).to eq('foo')
-        expect(subject.is_destructured).to be_truthy
+        expect(subject.destructured?).to be_truthy
         expect(subject.default_variable).to eq(nil)
         expect(subject.destructured_variables).to eq(['foo'])
       end
@@ -94,7 +94,7 @@ describe 'ImportStatement' do
       it 'returns a valid ImportStatement instance' do
         expect(subject.assignment).to eq('{ foo }')
         expect(subject.path).to eq('foo')
-        expect(subject.is_destructured).to be_truthy
+        expect(subject.destructured?).to be_truthy
         expect(subject.default_variable).to eq(nil)
         expect(subject.destructured_variables).to eq(['foo'])
       end

@@ -30,7 +30,6 @@ module ImportJS
     attr_accessor :original_import_string # a cache of the parsed import string
     attr_accessor :default_variable
     attr_accessor :destructured_variables
-    attr_accessor :is_destructured # can't use `destructured?` because of 1.9.3
     attr_accessor :path
 
     # @param string [String] a possible import statement, e.g.
@@ -48,7 +47,6 @@ module ImportJS
       statement.assignment = match[:assignment]
       if dest_match = statement.assignment.match(/\{\s*(.*)\s*\}/)
         statement.destructured_variables = dest_match[1].split(/,\s*/).map(&:strip)
-        statement.is_destructured = true
       else
         statement.default_variable = statement.assignment
       end
@@ -76,6 +74,11 @@ module ImportJS
       @original_import_string = nil # clear import string cache if there was one
     end
 
+    # @return [Boolean] true if there are destructured variables
+    def destructured?
+      !destructured_variables.nil? && !destructured_variables.empty?
+    end
+
     # @return [Array] an array that can be used in `uniq!` to dedupe equal
     #   statements, e.g.
     #   `const foo = require('foo');`
@@ -91,7 +94,7 @@ module ImportJS
     def to_import_string(declaration_keyword, max_line_length, tab)
       return original_import_string if original_import_string
 
-      declaration = if is_destructured
+      declaration = if destructured?
                       "#{declaration_keyword} { #{destructured_variables.join(', ')} }"
                     else
                       "#{declaration_keyword} #{default_variable}"
