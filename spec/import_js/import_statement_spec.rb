@@ -31,7 +31,8 @@ describe 'ImportStatement' do
         expect(subject.assignment).to eq('{ foo }')
         expect(subject.path).to eq('foo')
         expect(subject.is_destructured).to be_truthy
-        expect(subject.variables).to eq(['foo'])
+        expect(subject.default_variable).to eq(nil)
+        expect(subject.destructured_variables).to eq(['foo'])
       end
 
       context 'injecting a new destructured variable' do
@@ -42,8 +43,12 @@ describe 'ImportStatement' do
           statement
         end
 
+        it 'does not add a default_variable' do
+          expect(statement.default_variable).to eq(nil)
+        end
+
         it 'adds that variable and sorts the list' do
-          expect(statement.variables).to eq(['bar', 'foo'])
+          expect(statement.destructured_variables).to eq(['bar', 'foo'])
         end
 
         it 'can reconstruct using `to_import_string`' do
@@ -54,8 +59,12 @@ describe 'ImportStatement' do
         context 'injecting a variable that is already in the list' do
           let(:injected_variable) { 'foo' }
 
+          it 'does not add a default variable' do
+            expect(statement.default_variable).to eq(nil)
+          end
+
           it 'does not add a duplicate' do
-            expect(statement.variables).to eq(['foo'])
+            expect(statement.destructured_variables).to eq(['foo'])
           end
         end
       end
@@ -86,7 +95,8 @@ describe 'ImportStatement' do
         expect(subject.assignment).to eq('{ foo }')
         expect(subject.path).to eq('foo')
         expect(subject.is_destructured).to be_truthy
-        expect(subject.variables).to eq(['foo'])
+        expect(subject.default_variable).to eq(nil)
+        expect(subject.destructured_variables).to eq(['foo'])
       end
     end
   end

@@ -68,7 +68,12 @@ module ImportJS
         unused_variables.each do |unused_variable|
           import_statement.delete_variable(unused_variable)
         end
-        import_statement.variables.empty?
+
+        no_default_variable = import_statement.default_variable.nil?
+        no_destructured_variables = import_statement.destructured_variables.nil? ||
+          import_statement.destructured_variables.empty?
+
+        no_default_variable && no_destructured_variables
       end
 
       undefined_variables.each do |variable|
@@ -133,8 +138,8 @@ module ImportJS
     # @param imports [Array<ImportJS::ImportStatement>]
     def inject_js_module(variable_name, js_module, imports)
       # Add new import to the block of imports, wrapping at the max line length
-      unless js_module.is_destructured && inject_destructured_variable(
-        variable_name, js_module, imports)
+      unless js_module.is_destructured &&
+          inject_destructured_variable(variable_name, js_module, imports)
         imports.unshift(js_module.to_import_statement(variable_name))
       end
 

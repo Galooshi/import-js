@@ -28,7 +28,8 @@ module ImportJS
 
     attr_accessor :assignment
     attr_accessor :original_import_string # a cache of the parsed import string
-    attr_accessor :variables
+    attr_accessor :default_variable
+    attr_accessor :destructured_variables
     attr_accessor :is_destructured # can't use `destructured?` because of 1.9.3
     attr_accessor :path
 
@@ -46,10 +47,10 @@ module ImportJS
       statement.path = match[:path]
       statement.assignment = match[:assignment]
       if dest_match = statement.assignment.match(/\{\s*(.*)\s*\}/)
-        statement.variables = dest_match[1].split(/,\s*/).map(&:strip)
+        statement.destructured_variables = dest_match[1].split(/,\s*/).map(&:strip)
         statement.is_destructured = true
       else
-        statement.variables = [statement.assignment]
+        statement.default_variable = statement.assignment
       end
       statement
     end
@@ -58,17 +59,19 @@ module ImportJS
     #   variables.
     # @param variable_name [String]
     def inject_destructured_variable(variable_name)
-      variables << variable_name
-      variables.sort!.uniq!
+      @destructured_variables ||= []
+      destructured_variables << variable_name
+      destructured_variables.sort!.uniq!
 
       @original_import_string = nil # clear import string cache if there was one
     end
 
-    # Deletes a variable from an already existing set of destructured
-    #   variables.
+    # Deletes a variable from an already existing default variable or set of
+    #   destructured variables.
     # @param variable_name [String]
     def delete_variable(variable_name)
-      variables.delete(variable_name)
+      @default_variable = nil if default_variable == variable_name
+      @destructured_variables.delete(variable_name) unless destructured_variables.nil?
 
       @original_import_string = nil # clear import string cache if there was one
     end
@@ -78,7 +81,7 @@ module ImportJS
     #   `const foo = require('foo');`
     #   `import foo from 'foo';`
     def to_normalized
-      [variables, path]
+      [default_variable, destructured_variables, path]
     end
 
     # @param declaration_keyword [String] const, let, var, or import
@@ -89,9 +92,9 @@ module ImportJS
       return original_import_string if original_import_string
 
       declaration = if is_destructured
-                      "#{declaration_keyword} { #{variables.join(', ')} }"
+                      "#{declaration_keyword} { #{destructured_variables.join(', ')} }"
                     else
-                      "#{declaration_keyword} #{variables.first}"
+                      "#{declaration_keyword} #{default_variable}"
                     end
 
       equals, value = if declaration_keyword == 'import'
