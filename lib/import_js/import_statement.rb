@@ -77,7 +77,7 @@ module ImportJS
     #   statements, e.g.
     #   `const foo = require('foo');`
     #   `import foo from 'foo';`
-    def normalize
+    def to_normalized
       [variables, path]
     end
 

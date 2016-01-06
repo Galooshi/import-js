@@ -139,7 +139,7 @@ module ImportJS
       end
 
       # Remove duplicate import statements
-      imports.uniq!(&:normalize)
+      imports.uniq!(&:to_normalized)
     end
 
     # @param old_imports_lines [Number]
