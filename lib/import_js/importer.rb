@@ -68,11 +68,7 @@ module ImportJS
         unused_variables.each do |unused_variable|
           import_statement.delete_variable(unused_variable)
         end
-
-        no_default_variable = import_statement.default_variable.nil?
-        no_destructured_variables = !import_statement.destructured?
-
-        no_default_variable && no_destructured_variables
+        import_statement.empty?
       end
 
       undefined_variables.each do |variable|

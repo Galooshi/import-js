@@ -100,6 +100,12 @@ module ImportJS
       !destructured_variables.nil? && !destructured_variables.empty?
     end
 
+    # @return [Boolean] true if there is no default variable and there are no
+    #   destructured variables
+    def empty?
+      default_variable.nil? && !destructured?
+    end
+
     # @return [Array] an array that can be used in `uniq!` to dedupe equal
     #   statements, e.g.
     #   `const foo = require('foo');`

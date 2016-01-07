@@ -121,4 +121,51 @@ describe ImportJS::ImportStatement do
       end
     end
   end
+
+  describe '#empty?' do
+    let(:import_statement) { described_class.new }
+    let(:default_variable) { nil }
+    let(:destructured_variables) { nil }
+
+    before do
+      unless default_variable.nil?
+        import_statement.default_variable = default_variable
+      end
+
+      unless destructured_variables.nil?
+        import_statement.destructured_variables = destructured_variables
+      end
+    end
+
+    subject { import_statement.empty? }
+
+    context 'without a default variable or destructured variables' do
+      it { should eq(true) }
+    end
+
+    context 'with a default variable' do
+      let(:default_variable) { 'foo' }
+      it { should eq(false) }
+
+      context 'when default variable is removed' do
+        before { import_statement.delete_variable('foo') }
+        it { should eq(true) }
+      end
+    end
+
+    context 'with destructured variables' do
+      let(:destructured_variables) { ['foo'] }
+      it { should eq(false) }
+
+      context 'when destructured variables are removed' do
+        before { import_statement.delete_variable('foo') }
+        it { should eq(true) }
+      end
+    end
+
+    context 'with an empty array of destructured variables' do
+      let(:destructured_variables) { [] }
+      it { should eq(true) }
+    end
+  end
 end
