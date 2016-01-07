@@ -3,7 +3,7 @@ require 'spec_helper'
 require 'tmpdir'
 require 'pathname'
 
-describe 'Importer' do
+describe ImportJS::Importer do
   before do
     # Setup mocks
     module VIM
@@ -101,7 +101,7 @@ describe 'Importer' do
 
   describe '#import' do
     subject do
-      ImportJS::Importer.new.import
+      described_class.new.import
       VIM::Buffer.current_buffer.to_s
     end
 
@@ -595,7 +595,7 @@ foo
     end
 
     describe 'line wrapping' do
-      let(:importer) { ImportJS::Importer.new }
+      let(:importer) { described_class.new }
 
       subject do
         importer.import
@@ -808,6 +808,23 @@ _
         EOS
         end
 
+        context 'when a destructured import exists for the same module' do
+          let(:text) { <<-EOS.strip }
+var { memoize } = require('underscore');
+
+_
+          EOS
+
+          it 'adds the default import' do
+            expect(subject).to eq(<<-EOS.strip)
+var _ = require('underscore');
+var { memoize } = require('underscore');
+
+_
+            EOS
+          end
+        end
+
         context 'when importing a destructured object' do
           let(:text) { 'memoize' }
           let(:word) { 'memoize' }
@@ -818,6 +835,42 @@ var { memoize } = require('underscore');
 
 memoize
             EOS
+          end
+
+          context 'when the default import exists for the same module' do
+            let(:text) { <<-EOS.strip }
+var _ = require('underscore');
+
+memoize
+            EOS
+
+            it 'adds the destructuring on a new line' do
+              expect(subject).to eq(<<-EOS.strip)
+var _ = require('underscore');
+var { memoize } = require('underscore');
+
+memoize
+              EOS
+            end
+          end
+
+          context 'when the default import exists for the same module with other modules' do
+            let(:text) { <<-EOS.strip }
+var _ = require('underscore');
+var foo = require('foo');
+
+memoize
+            EOS
+
+            it 'adds the destructuring on a new line' do
+              expect(subject).to eq(<<-EOS.strip)
+var _ = require('underscore');
+var foo = require('foo');
+var { memoize } = require('underscore');
+
+memoize
+              EOS
+            end
           end
 
           context 'with other imports' do
@@ -899,6 +952,22 @@ _
         EOS
         end
 
+        context 'when a destructured import exists for the same module' do
+          let(:text) { <<-EOS.strip }
+import { memoize } from 'underscore';
+
+_
+          EOS
+
+          it 'adds the default import' do
+            expect(subject).to eq(<<-EOS.strip)
+import _, { memoize } from 'underscore';
+
+_
+            EOS
+          end
+        end
+
         context 'when importing a destructured object' do
           let(:text) { 'memoize' }
           let(:word) { 'memoize' }
@@ -961,6 +1030,38 @@ memoize
               end
             end
           end
+
+          context 'when a default import exists for the same module' do
+            let(:text) { <<-EOS.strip }
+import _ from 'underscore';
+
+memoize
+            EOS
+
+            it 'adds the destructured import' do
+              expect(subject).to eq(<<-EOS.strip)
+import _, { memoize } from 'underscore';
+
+memoize
+              EOS
+            end
+
+            context 'when the module is already in the destructured object' do
+              let(:text) { <<-EOS.strip }
+import _, { memoize } from 'underscore';
+
+memoize
+              EOS
+
+              it 'does not add a duplicate' do
+                expect(subject).to eq(<<-EOS.strip)
+import _, { memoize } from 'underscore';
+
+memoize
+                EOS
+              end
+            end
+          end
         end
       end
 
@@ -1004,7 +1105,7 @@ foo
 
       context 'with declaration_keyword=const' do
         subject do
-          ImportJS::Importer.new.import
+          described_class.new.import
           VIM::Buffer.current_buffer.to_s
         end
 
@@ -1081,7 +1182,7 @@ foo
 
       context 'with declaration_keyword=import' do
         subject do
-          ImportJS::Importer.new.import
+          described_class.new.import
           VIM::Buffer.current_buffer.to_s
         end
 
@@ -1200,7 +1301,7 @@ foo
     end
 
     subject do
-      ImportJS::Importer.new.fix_imports
+      described_class.new.fix_imports
       VIM::Buffer.current_buffer.to_s
     end
 

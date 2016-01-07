@@ -1,9 +1,9 @@
 require 'spec_helper'
 require 'json'
 
-describe 'Configuration' do
+describe ImportJS::Configuration do
   let(:key) { 'aliases' }
-  subject   { ImportJS::Configuration.new }
+  subject   { described_class.new }
 
   describe '.refresh' do
     let(:configuration) do

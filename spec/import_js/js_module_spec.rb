@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe 'JSModule' do
+describe ImportJS::JSModule do
   let(:lookup_path) { 'app' }
   let(:relative_file_path) { 'app/lib/foo.js' }
 
   subject do
-    ImportJS::JSModule.new(
+    described_class.new(
       lookup_path,
       relative_file_path,
       strip_file_extensions

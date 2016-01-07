@@ -68,7 +68,7 @@ module ImportJS
         unused_variables.each do |unused_variable|
           import_statement.delete_variable(unused_variable)
         end
-        import_statement.variables.empty?
+        import_statement.empty?
       end
 
       undefined_variables.each do |variable|
@@ -128,18 +128,25 @@ module ImportJS
       resolve_one_js_module(js_modules, variable_name)
     end
 
+    # Add new import to the block of imports, wrapping at the max line length
     # @param variable_name [String]
     # @param js_module [ImportJS::JSModule]
     # @param imports [Array<ImportJS::ImportStatement>]
     def inject_js_module(variable_name, js_module, imports)
-      # Add new import to the block of imports, wrapping at the max line length
-      unless js_module.is_destructured && inject_destructured_variable(
-        variable_name, js_module, imports)
+      import = imports.find { |import| import.path == js_module.import_path }
+
+      if import
+        if js_module.is_destructured
+          import.inject_destructured_variable(variable_name)
+        else
+          import.set_default_variable(variable_name)
+        end
+      else
         imports.unshift(js_module.to_import_statement(variable_name))
       end
 
       # Remove duplicate import statements
-      imports.uniq!(&:normalize)
+      imports.uniq!(&:to_normalized)
     end
 
     # @param old_imports_lines [Number]
@@ -154,11 +161,11 @@ module ImportJS
 
       # Generate import strings
       import_strings = new_imports.map do |import|
-        import.to_import_string(
+        import.to_import_strings(
           @config.get('declaration_keyword'),
           @editor.max_line_length,
           @editor.tab)
-      end.sort
+      end.flatten.sort
 
       # Delete old imports, then add the modified list back in.
       old_imports_lines.times { @editor.delete_line(1 + imports_start_at) }
@@ -169,17 +176,6 @@ module ImportJS
           @editor.append_line(0 + imports_start_at, line)
         end
       end
-    end
-
-    def inject_destructured_variable(variable_name, js_module, imports)
-      imports.each do |import|
-        next unless import.path == js_module.import_path
-        next unless import.is_destructured
-
-        import.inject_variable(variable_name)
-        return true
-      end
-      false
     end
 
     # @return [Hash]
@@ -208,13 +204,32 @@ module ImportJS
 
       # Scan potential imports for everything ending in a semicolon, then
       # iterate through those and stop at anything that's not an import.
+      imports = {}
       potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
         import_statement = ImportJS::ImportStatement.parse(potential_import)
         break unless import_statement
 
-        result[:imports] << import_statement
+        if imports[import_statement.path]
+          # Import already exists, so this line is likely one of a destructuring
+          # pair. Combine it into the same ImportStatement.
+          unless import_statement.default_variable.nil?
+            imports[import_statement.path].default_variable =
+              import_statement.default_variable
+          end
+
+          if import_statement.destructured?
+            imports[import_statement.path].destructured_variables ||= []
+            imports[import_statement.path].destructured_variables
+              .concat(import_statement.destructured_variables)
+          end
+        else
+          # This is a new import, so we just add it to the hash.
+          imports[import_statement.path] = import_statement
+        end
+
         result[:newline_count] += potential_import.scan(/\n/).length + 1
       end
+      result[:imports] = imports.values
       result
     end
 
