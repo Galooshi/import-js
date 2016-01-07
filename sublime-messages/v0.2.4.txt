@@ -1,0 +1,3 @@
+With version 0.2.4, there have been some changes to the core of the import_js
+gem. To make sure that the plugin continues to work, please upgrade the gem by
+running `gem update import_js`.
