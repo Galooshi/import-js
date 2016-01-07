@@ -117,9 +117,9 @@ module ImportJS
     # @param declaration_keyword [String] const, let, var, or import
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
-    # @return [String] a generated import statement string
-    def to_import_string(declaration_keyword, max_line_length, tab)
-      return original_import_string if original_import_string
+    # @return [Array] a generated import statement string
+    def to_import_strings(declaration_keyword, max_line_length, tab)
+      return [original_import_string] if original_import_string
 
       if declaration_keyword == 'import'
         # ES2015 Modules (ESM) syntax can support default values and
@@ -133,24 +133,26 @@ module ImportJS
         end
         declaration += ' from'
 
-        wrap_import(declaration, "'#{path}';", max_line_length, tab)
+        [wrap_import(declaration, "'#{path}';", max_line_length, tab)]
       else # const/let/var
+        value = "require('#{path}');"
+
         if destructured? && !default_variable.nil?
           # We have both a default variable and a destructuring to do, so we
           # need to generate 2 lines for CommonJS style syntax.
           default_declaration = "#{declaration_keyword} #{default_variable} ="
           destructured_declaration = "#{declaration_keyword} #{destructured_string} ="
-          value = "require('#{path}');"
 
-          return wrap_import(default_declaration, "require('#{path}');", max_line_length, tab) +
-            "\n" +
-            wrap_import(destructured_declaration, "#{default_variable};", max_line_length, tab)
+          return [
+            wrap_import(default_declaration, value, max_line_length, tab),
+            wrap_import(destructured_declaration, value, max_line_length, tab)
+          ]
         end
 
         declaration_assignment =
           destructured? ? destructured_string : default_variable
         declaration = "#{declaration_keyword} #{declaration_assignment} ="
-        wrap_import(declaration, "require('#{path}');", max_line_length, tab)
+        [wrap_import(declaration, value, max_line_length, tab)]
       end
     end
 

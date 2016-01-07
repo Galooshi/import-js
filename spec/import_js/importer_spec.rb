@@ -815,10 +815,10 @@ var { memoize } = require('underscore');
 _
           EOS
 
-          it 'adds the default import and rewrites the destructured import' do
+          it 'adds the default import' do
             expect(subject).to eq(<<-EOS.strip)
 var _ = require('underscore');
-var { memoize } = _;
+var { memoize } = require('underscore');
 
 _
             EOS
@@ -847,7 +847,26 @@ memoize
             it 'adds the destructuring on a new line' do
               expect(subject).to eq(<<-EOS.strip)
 var _ = require('underscore');
-var { memoize } = _;
+var { memoize } = require('underscore');
+
+memoize
+              EOS
+            end
+          end
+
+          context 'when the default import exists for the same module with other modules' do
+            let(:text) { <<-EOS.strip }
+var _ = require('underscore');
+var foo = require('foo');
+
+memoize
+            EOS
+
+            it 'adds the destructuring on a new line' do
+              expect(subject).to eq(<<-EOS.strip)
+var _ = require('underscore');
+var foo = require('foo');
+var { memoize } = require('underscore');
 
 memoize
               EOS

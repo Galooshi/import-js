@@ -51,9 +51,9 @@ describe ImportJS::ImportStatement do
             expect(statement.destructured_variables).to eq(['bar', 'foo'])
           end
 
-          it 'can reconstruct using `to_import_string`' do
-            expect(statement.to_import_string('const', 80, ' '))
-              .to eq("const { bar, foo } = require('foo');")
+          it 'can reconstruct using `to_import_strings`' do
+            expect(statement.to_import_strings('const', 80, ' '))
+              .to eq(["const { bar, foo } = require('foo');"])
           end
 
           context 'injecting a variable that is already in the list' do

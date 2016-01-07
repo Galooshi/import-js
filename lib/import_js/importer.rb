@@ -161,11 +161,11 @@ module ImportJS
 
       # Generate import strings
       import_strings = new_imports.map do |import|
-        import.to_import_string(
+        import.to_import_strings(
           @config.get('declaration_keyword'),
           @editor.max_line_length,
           @editor.tab)
-      end.sort
+      end.flatten.sort
 
       # Delete old imports, then add the modified list back in.
       old_imports_lines.times { @editor.delete_line(1 + imports_start_at) }
