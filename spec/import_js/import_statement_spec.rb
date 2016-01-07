@@ -215,4 +215,97 @@ describe ImportJS::ImportStatement do
       it { should eq(true) }
     end
   end
+
+  describe '#merge' do
+    let(:existing_import_statement) { described_class.new }
+    let(:new_import_statement) { described_class.new }
+    let(:existing_default_variable) { nil }
+    let(:existing_destructured_variables) { nil }
+    let(:new_default_variable) { nil }
+    let(:new_destructured_variables) { nil }
+
+    before do
+      unless existing_default_variable.nil?
+        existing_import_statement.default_variable = existing_default_variable
+      end
+
+      unless existing_destructured_variables.nil?
+        existing_import_statement.destructured_variables =
+          existing_destructured_variables
+      end
+
+      unless new_default_variable.nil?
+        new_import_statement.default_variable = new_default_variable
+      end
+
+      unless new_destructured_variables.nil?
+        new_import_statement.destructured_variables =
+          new_destructured_variables
+      end
+    end
+
+    subject do
+      existing_import_statement.merge(new_import_statement)
+      existing_import_statement
+    end
+
+    context 'without a new default variable' do
+      let(:existing_default_variable) { 'foo' }
+
+      it 'uses the existing default variable' do
+        expect(subject.default_variable).to eq('foo')
+      end
+    end
+
+    context 'without an existing default variable' do
+      let(:new_default_variable) { 'foo' }
+
+      it 'uses the new default variable' do
+        expect(subject.default_variable).to eq('foo')
+      end
+    end
+
+    context 'with both default variables' do
+      let(:existing_default_variable) { 'foo' }
+      let(:new_default_variable) { 'bar' }
+
+      it 'uses the new default variable' do
+        expect(subject.default_variable).to eq('bar')
+      end
+    end
+
+    context 'without new destructured variables' do
+      let(:existing_destructured_variables) { ['foo'] }
+
+      it 'uses the existing destructured variables' do
+        expect(subject.destructured_variables).to eq(['foo'])
+      end
+    end
+
+    context 'without existing destructured variables' do
+      let(:new_destructured_variables) { ['foo'] }
+
+      it 'uses the new destructured variables' do
+        expect(subject.destructured_variables).to eq(['foo'])
+      end
+    end
+
+    context 'with both destructured variables' do
+      let(:existing_destructured_variables) { ['foo'] }
+      let(:new_destructured_variables) { ['bar'] }
+
+      it 'uses the new destructured variables' do
+        expect(subject.destructured_variables).to eq(['bar', 'foo'])
+      end
+    end
+
+    context 'when the new destructured variable is the same as the existing' do
+      let(:existing_destructured_variables) { ['foo'] }
+      let(:new_destructured_variables) { ['foo'] }
+
+      it 'does not duplicate' do
+        expect(subject.destructured_variables).to eq(['foo'])
+      end
+    end
+  end
 end

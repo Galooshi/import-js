@@ -156,6 +156,22 @@ module ImportJS
       end
     end
 
+    # Merge another ImportStatement into this one.
+    # @param import_statement [ImportJS::ImportStatement]
+    def merge(import_statement)
+      unless import_statement.default_variable.nil?
+        @default_variable = import_statement.default_variable
+        @original_import_string = nil # clear import string cache if there was one
+      end
+
+      if import_statement.destructured?
+        @destructured_variables ||= []
+        @destructured_variables.concat(import_statement.destructured_variables)
+        @destructured_variables.sort!.uniq!
+        @original_import_string = nil # clear import string cache if there was one
+      end
+    end
+
     private
 
     # @return [String]
