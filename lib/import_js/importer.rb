@@ -204,13 +204,32 @@ module ImportJS
 
       # Scan potential imports for everything ending in a semicolon, then
       # iterate through those and stop at anything that's not an import.
+      imports = {}
       potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
         import_statement = ImportJS::ImportStatement.parse(potential_import)
         break unless import_statement
 
-        result[:imports] << import_statement
+        if imports[import_statement.path]
+          # Import already exists, so this line is likely one of a destructuring
+          # pair. Combine it into the same ImportStatement.
+          unless import_statement.default_variable.nil?
+            imports[import_statement.path].default_variable =
+              import_statement.default_variable
+          end
+
+          if import_statement.destructured?
+            imports[import_statement.path].destructured_variables ||= []
+            imports[import_statement.path].destructured_variables
+              .concat(import_statement.destructured_variables)
+          end
+        else
+          # This is a new import, so we just add it to the hash.
+          imports[import_statement.path] = import_statement
+        end
+
         result[:newline_count] += potential_import.scan(/\n/).length + 1
       end
+      result[:imports] = imports.values
       result
     end
 
