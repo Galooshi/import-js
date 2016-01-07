@@ -71,7 +71,7 @@ module ImportJS
     # @param value [String]
     def set_default_variable(value)
       @default_variable = value
-      @original_import_string = nil # clear import string cache if there was one
+      clear_import_string_cache
     end
 
     # Injects a new variable into an already existing set of destructured
@@ -82,7 +82,7 @@ module ImportJS
       destructured_variables << variable_name
       destructured_variables.sort!.uniq!
 
-      @original_import_string = nil # clear import string cache if there was one
+      clear_import_string_cache
     end
 
     # Deletes a variable from an already existing default variable or set of
@@ -92,7 +92,7 @@ module ImportJS
       @default_variable = nil if default_variable == variable_name
       @destructured_variables.delete(variable_name) unless destructured_variables.nil?
 
-      @original_import_string = nil # clear import string cache if there was one
+      clear_import_string_cache
     end
 
     # @return [Boolean] true if there are destructured variables
@@ -161,14 +161,14 @@ module ImportJS
     def merge(import_statement)
       unless import_statement.default_variable.nil?
         @default_variable = import_statement.default_variable
-        @original_import_string = nil # clear import string cache if there was one
+        clear_import_string_cache
       end
 
       if import_statement.destructured?
         @destructured_variables ||= []
         @destructured_variables.concat(import_statement.destructured_variables)
         @destructured_variables.sort!.uniq!
-        @original_import_string = nil # clear import string cache if there was one
+        clear_import_string_cache
       end
     end
 
@@ -191,6 +191,10 @@ module ImportJS
       else
         "#{declaration} #{value}"
       end
+    end
+
+    def clear_import_string_cache
+      @original_import_string = nil
     end
   end
 end
