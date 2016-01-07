@@ -117,7 +117,7 @@ module ImportJS
     # @param declaration_keyword [String] const, let, var, or import
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
-    # @return [Array] a generated import statement string
+    # @return [Array] generated import statement strings
     def to_import_strings(declaration_keyword, max_line_length, tab)
       return [original_import_string] if original_import_string
 
