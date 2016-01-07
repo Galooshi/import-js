@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe 'ImportStatement' do
+describe ImportJS::ImportStatement do
   describe '.parse' do
     let(:string) { "const foo = require('foo');" }
-    subject { ImportJS::ImportStatement.parse(string) }
+    subject { described_class.parse(string) }
 
     context 'when the string is a valid import using const' do
       it 'returns a valid ImportStatement instance' do

@@ -3,7 +3,7 @@ require 'spec_helper'
 require 'tmpdir'
 require 'pathname'
 
-describe 'Importer' do
+describe ImportJS::Importer do
   before do
     # Setup mocks
     module VIM
@@ -101,7 +101,7 @@ describe 'Importer' do
 
   describe '#import' do
     subject do
-      ImportJS::Importer.new.import
+      described_class.new.import
       VIM::Buffer.current_buffer.to_s
     end
 
@@ -595,7 +595,7 @@ foo
     end
 
     describe 'line wrapping' do
-      let(:importer) { ImportJS::Importer.new }
+      let(:importer) { described_class.new }
 
       subject do
         importer.import
@@ -1086,7 +1086,7 @@ foo
 
       context 'with declaration_keyword=const' do
         subject do
-          ImportJS::Importer.new.import
+          described_class.new.import
           VIM::Buffer.current_buffer.to_s
         end
 
@@ -1163,7 +1163,7 @@ foo
 
       context 'with declaration_keyword=import' do
         subject do
-          ImportJS::Importer.new.import
+          described_class.new.import
           VIM::Buffer.current_buffer.to_s
         end
 
@@ -1282,7 +1282,7 @@ foo
     end
 
     subject do
-      ImportJS::Importer.new.fix_imports
+      described_class.new.fix_imports
       VIM::Buffer.current_buffer.to_s
     end
 
