@@ -212,16 +212,7 @@ module ImportJS
         if imports[import_statement.path]
           # Import already exists, so this line is likely one of a destructuring
           # pair. Combine it into the same ImportStatement.
-          unless import_statement.default_variable.nil?
-            imports[import_statement.path].default_variable =
-              import_statement.default_variable
-          end
-
-          if import_statement.destructured?
-            imports[import_statement.path].destructured_variables ||= []
-            imports[import_statement.path].destructured_variables
-              .concat(import_statement.destructured_variables)
-          end
+          imports[import_statement.path].merge(import_statement)
         else
           # This is a new import, so we just add it to the hash.
           imports[import_statement.path] = import_statement
