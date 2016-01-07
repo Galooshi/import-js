@@ -1,7 +1,6 @@
 function importjs#ImportJSImport()
   ruby $import_js.import
 endfunction
-endfunction
 function importjs#ImportJSGoTo()
   ruby $import_js.goto
 endfunction
