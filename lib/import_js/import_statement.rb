@@ -125,12 +125,7 @@ module ImportJS
         # ES2015 Modules (ESM) syntax can support default values and
         # destructuring on the same line.
         if destructured?
-          [wrap_destructured_import(
-            declaration_keyword,
-            max_line_length,
-            tab,
-            include_default_variable: true
-          )]
+          [wrap_destructured_import(declaration_keyword, max_line_length, tab)]
         else
           [wrap_default_import(declaration_keyword, max_line_length, tab)]
         end
@@ -211,11 +206,10 @@ module ImportJS
     # @param declaration_keyword [String]
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
-    # @param include_default_variable [Boolean]
     # @return [String] import statement, wrapped at max line length if necessary
-    def wrap_destructured_import(declaration_keyword, max_line_length, tab, include_default_variable: false)
+    def wrap_destructured_import(declaration_keyword, max_line_length, tab)
       equals, value = equals_and_value(declaration_keyword)
-      if include_default_variable && default_variable
+      if declaration_keyword == 'import' && default_variable
         prefix = "#{default_variable}, "
       end
 
