@@ -127,21 +127,22 @@ module ImportJS
         if destructured?
           prefix = "#{default_variable}, " if default_variable
           [wrap_destructured_import(declaration_keyword, max_line_length, tab, prefix: prefix)]
-        else # not destructured
+        else
           [wrap_default_import(declaration_keyword, max_line_length, tab)]
         end
       else # const/let/var
         if destructured?
-          if default_variable.nil?
-            [wrap_destructured_import(declaration_keyword, max_line_length, tab)]
-          else
+          strings = []
+
+          unless default_variable.nil?
             # We have both a default variable and a destructuring to do, so we
             # need to generate 2 lines for CommonJS style syntax.
-            return [
-              wrap_default_import(declaration_keyword, max_line_length, tab),
-              wrap_destructured_import(declaration_keyword, max_line_length, tab)
-            ]
+            strings <<
+              wrap_default_import(declaration_keyword, max_line_length, tab)
           end
+
+          strings <<
+            wrap_destructured_import(declaration_keyword, max_line_length, tab)
         else
           [wrap_default_import(declaration_keyword, max_line_length, tab)]
         end
