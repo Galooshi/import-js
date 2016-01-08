@@ -124,26 +124,20 @@ module ImportJS
       if declaration_keyword == 'import'
         # ES2015 Modules (ESM) syntax can support default values and
         # destructuring on the same line.
-        equals = 'from';
-        value = "'#{path}';";
-
         declaration = []
         if destructured?
           declaration << "#{default_variable}," if default_variable
           declaration << destructured_string
-          [wrap_destructured_import(declaration_keyword, declaration, equals, value, max_line_length, tab)]
+          [wrap_destructured_import(declaration_keyword, declaration, max_line_length, tab)]
         else # not destructured
           declaration << default_variable
-          [wrap_import(declaration_keyword, declaration, equals, value, max_line_length, tab)]
+          [wrap_import(declaration_keyword, declaration, max_line_length, tab)]
         end
       else # const/let/var
-        equals = '=';
-        value = "require('#{path}');"
-
         if destructured?
           if default_variable.nil?
             declaration = [destructured_string]
-            [wrap_destructured_import(declaration_keyword, declaration, equals, value, max_line_length, tab)]
+            [wrap_destructured_import(declaration_keyword, declaration, max_line_length, tab)]
           else
             # We have both a default variable and a destructuring to do, so we
             # need to generate 2 lines for CommonJS style syntax.
@@ -151,13 +145,13 @@ module ImportJS
             destructured_declaration = [destructured_string]
 
             return [
-              wrap_import(declaration_keyword, default_declaration, equals, value, max_line_length, tab),
-              wrap_destructured_import(declaration_keyword, destructured_declaration, equals, value, max_line_length, tab)
+              wrap_import(declaration_keyword, default_declaration, max_line_length, tab),
+              wrap_destructured_import(declaration_keyword, destructured_declaration, max_line_length, tab)
             ]
           end
         else
           declaration = [default_variable]
-          [wrap_import(declaration_keyword, declaration, equals, value, max_line_length, tab)]
+          [wrap_import(declaration_keyword, declaration, max_line_length, tab)]
         end
       end
     end
@@ -198,14 +192,20 @@ module ImportJS
       max_line_length && line.length > max_line_length
     end
 
+    # @param declaration_keyword [String] e.g. 'import'
+    # @return [Array]
+    def equals_and_value(declaration_keyword)
+      return ['from', "'#{path}';"] if declaration_keyword == 'import'
+      ['=', "require('#{path}');"]
+    end
+
     # @param declaration_keyword [String]
     # @param declaration [Array]
-    # @param equals [String] either 'from' or '='
-    # @param value [String]
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
-    def wrap_import(declaration_keyword, declaration, equals, value, max_line_length, tab)
+    def wrap_import(declaration_keyword, declaration, max_line_length, tab)
+      equals, value = equals_and_value(declaration_keyword)
       line = "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
       return line unless line_too_long?(line, max_line_length)
 
@@ -214,12 +214,11 @@ module ImportJS
 
     # @param declaration_keyword [String]
     # @param declaration [Array]
-    # @param equals [String] either 'from' or '='
-    # @param value [String]
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
-    def wrap_destructured_import(declaration_keyword, declaration, equals, value, max_line_length, tab)
+    def wrap_destructured_import(declaration_keyword, declaration, max_line_length, tab)
+      equals, value = equals_and_value(declaration_keyword)
       line = "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
       return line unless line_too_long?(line, max_line_length)
 
