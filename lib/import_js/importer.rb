@@ -101,12 +101,15 @@ module ImportJS
                                 stdin_data: @editor.current_file_content)
 
       if out =~ /Parsing error: / ||
-         out =~ /Unrecoverable syntax error/
+         out =~ /Unrecoverable syntax error/ ||
+         out =~ /<text>:0:0: Cannot find module '.*'/
         fail ImportJS::ParseError.new, out
       end
 
       if err =~ /SyntaxError: / ||
-         err =~ /eslint: command not found/
+         err =~ /eslint: command not found/ ||
+         err =~ /Cannot read config package: / ||
+         err =~ /Cannot find module '.*'/
         fail ImportJS::ParseError.new, err
       end
 
