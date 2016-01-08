@@ -106,7 +106,8 @@ module ImportJS
       end
 
       if err =~ /SyntaxError: / ||
-         err =~ /eslint: command not found/
+         err =~ /eslint: command not found/ ||
+         err =~ /Cannot read config package: /
         fail ImportJS::ParseError.new, err
       end
 
