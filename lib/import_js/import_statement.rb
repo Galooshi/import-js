@@ -191,15 +191,11 @@ module ImportJS
       end
     end
 
-    # @param declaration_keyword [String]
-    # @param declaration [Array]
-    # @param equals [String] either 'from' or '='
-    # @param value [String]
+    # @param line [String]
     # @param max_line_length [Number] where to cap lines at
     # @return [Boolean]
-    def line_too_long?(declaration_keyword, declaration, equals, value, max_line_length)
-      max_line_length &&
-        "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}".length > max_line_length
+    def line_too_long?(line, max_line_length)
+      max_line_length && line.length > max_line_length
     end
 
     # @param declaration_keyword [String]
@@ -210,11 +206,10 @@ module ImportJS
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
     def wrap_import(declaration_keyword, declaration, equals, value, max_line_length, tab)
-      if line_too_long?(declaration_keyword, declaration, equals, value, max_line_length)
-        "#{declaration_keyword} #{declaration.join(' ')} #{equals}\n#{tab}#{value}"
-      else
-        "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
-      end
+      line = "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
+      return line unless line_too_long?(line, max_line_length)
+
+      "#{declaration_keyword} #{declaration.join(' ')} #{equals}\n#{tab}#{value}"
     end
 
     # @param declaration_keyword [String]
@@ -225,11 +220,11 @@ module ImportJS
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
     def wrap_destructured_import(declaration_keyword, declaration, equals, value, max_line_length, tab)
-      if line_too_long?(declaration_keyword, declaration, equals, value, max_line_length)
-        declaration.pop
-        declaration << destructured_string(wrap: true, tab: tab)
-      end
+      line = "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
+      return line unless line_too_long?(line, max_line_length)
 
+      declaration.pop
+      declaration << destructured_string(wrap: true, tab: tab)
       "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
     end
 
