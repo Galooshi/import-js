@@ -90,7 +90,7 @@ module ImportJS
     # @param variable_name [String]
     def delete_variable(variable_name)
       @default_variable = nil if default_variable == variable_name
-      @destructured_variables.delete(variable_name) unless destructured_variables.nil?
+      @destructured_variables.delete(variable_name) if destructured?
 
       clear_import_string_cache
     end
