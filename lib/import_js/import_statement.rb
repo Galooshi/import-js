@@ -127,14 +127,14 @@ module ImportJS
         equals = 'from';
         value = "'#{path}';";
 
-        declaration = [declaration_keyword]
+        declaration = []
         if destructured?
           declaration << "#{default_variable}," if default_variable
           declaration << destructured_string
-          [wrap_destructured_import(declaration, equals, value, max_line_length, tab)]
+          [wrap_destructured_import(declaration_keyword, declaration, equals, value, max_line_length, tab)]
         else # not destructured
           declaration << default_variable
-          [wrap_import(declaration, equals, value, max_line_length, tab)]
+          [wrap_import(declaration_keyword, declaration, equals, value, max_line_length, tab)]
         end
       else # const/let/var
         equals = '=';
@@ -142,22 +142,22 @@ module ImportJS
 
         if destructured?
           if default_variable.nil?
-            declaration = [declaration_keyword, destructured_string]
-            [wrap_destructured_import(declaration, equals, value, max_line_length, tab)]
+            declaration = [destructured_string]
+            [wrap_destructured_import(declaration_keyword, declaration, equals, value, max_line_length, tab)]
           else
             # We have both a default variable and a destructuring to do, so we
             # need to generate 2 lines for CommonJS style syntax.
-            default_declaration = [declaration_keyword, default_variable]
-            destructured_declaration = [declaration_keyword, destructured_string]
+            default_declaration = [default_variable]
+            destructured_declaration = [destructured_string]
 
             return [
-              wrap_import(default_declaration, equals, value, max_line_length, tab),
-              wrap_destructured_import(destructured_declaration, equals, value, max_line_length, tab)
+              wrap_import(declaration_keyword, default_declaration, equals, value, max_line_length, tab),
+              wrap_destructured_import(declaration_keyword, destructured_declaration, equals, value, max_line_length, tab)
             ]
           end
         else
-          declaration = [declaration_keyword, default_variable]
-          [wrap_import(declaration, equals, value, max_line_length, tab)]
+          declaration = [default_variable]
+          [wrap_import(declaration_keyword, declaration, equals, value, max_line_length, tab)]
         end
       end
     end
@@ -191,43 +191,46 @@ module ImportJS
       end
     end
 
+    # @param declaration_keyword [String]
     # @param declaration [Array]
     # @param equals [String] either 'from' or '='
     # @param value [String]
     # @param max_line_length [Number] where to cap lines at
     # @return [Boolean]
-    def line_too_long?(declaration, equals, value, max_line_length)
+    def line_too_long?(declaration_keyword, declaration, equals, value, max_line_length)
       max_line_length &&
-        "#{declaration.join(' ')} #{equals} #{value}".length > max_line_length
+        "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}".length > max_line_length
     end
 
+    # @param declaration_keyword [String]
     # @param declaration [Array]
     # @param equals [String] either 'from' or '='
     # @param value [String]
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
-    def wrap_import(declaration, equals, value, max_line_length, tab)
-      if line_too_long?(declaration, equals, value, max_line_length)
-        "#{declaration.join(' ')} #{equals}\n#{tab}#{value}"
+    def wrap_import(declaration_keyword, declaration, equals, value, max_line_length, tab)
+      if line_too_long?(declaration_keyword, declaration, equals, value, max_line_length)
+        "#{declaration_keyword} #{declaration.join(' ')} #{equals}\n#{tab}#{value}"
       else
-        "#{declaration.join(' ')} #{equals} #{value}"
+        "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
       end
     end
 
+    # @param declaration_keyword [String]
     # @param declaration [Array]
     # @param equals [String] either 'from' or '='
     # @param value [String]
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
-    def wrap_destructured_import(declaration, equals, value, max_line_length, tab)
-      if line_too_long?(declaration, equals, value, max_line_length)
+    def wrap_destructured_import(declaration_keyword, declaration, equals, value, max_line_length, tab)
+      if line_too_long?(declaration_keyword, declaration, equals, value, max_line_length)
         declaration.pop
         declaration << destructured_string(wrap: true, tab: tab)
       end
 
-      "#{declaration.join(' ')} #{equals} #{value}"
+      "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
     end
 
     def clear_import_string_cache
