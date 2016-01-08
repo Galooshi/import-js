@@ -182,11 +182,18 @@ module ImportJS
     # @param declaration [String]
     # @param value [String]
     # @param max_line_length [Number] where to cap lines at
+    # @return [Boolean]
+    def line_too_long?(declaration, value, max_line_length)
+      max_line_length && "#{declaration} #{value}".length > max_line_length
+    end
+
+    # @param declaration [String]
+    # @param value [String]
+    # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
     def wrap_import(declaration, value, max_line_length, tab)
-      if max_line_length &&
-         "#{declaration} #{value}".length > max_line_length
+      if line_too_long?(declaration, value, max_line_length)
         "#{declaration}\n#{tab}#{value}"
       else
         "#{declaration} #{value}"
