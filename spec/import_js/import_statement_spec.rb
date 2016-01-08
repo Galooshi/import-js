@@ -35,6 +35,18 @@ describe ImportJS::ImportStatement do
           expect(subject.destructured_variables).to eq(['foo'])
         end
 
+        context 'and it has line breaks' do
+          let(:string) { "const {\n  foo,\n  bar,\n} = require('foo');" }
+
+          it 'returns a valid ImportStatement instance' do
+            expect(subject.assignment).to eq("{\n  foo,\n  bar,\n}")
+            expect(subject.path).to eq('foo')
+            expect(subject.destructured?).to be_truthy
+            expect(subject.default_variable).to eq(nil)
+            expect(subject.destructured_variables).to eq(['foo', 'bar'])
+          end
+        end
+
         context 'injecting a new destructured variable' do
           let(:injected_variable) { 'bar' }
           let(:statement) do
@@ -98,6 +110,18 @@ describe ImportJS::ImportStatement do
           expect(subject.default_variable).to eq(nil)
           expect(subject.destructured_variables).to eq(['foo'])
         end
+
+        context 'and it has line breaks' do
+          let(:string) { "import {\n  foo,\n  bar,\n} from 'foo';" }
+
+          it 'returns a valid ImportStatement instance' do
+            expect(subject.assignment).to eq("{\n  foo,\n  bar,\n}")
+            expect(subject.path).to eq('foo')
+            expect(subject.destructured?).to be_truthy
+            expect(subject.default_variable).to eq(nil)
+            expect(subject.destructured_variables).to eq(['foo', 'bar'])
+          end
+        end
       end
 
       context 'and it has default and a destructured assignment' do
@@ -109,6 +133,18 @@ describe ImportJS::ImportStatement do
           expect(subject.destructured?).to be_truthy
           expect(subject.default_variable).to eq('foo')
           expect(subject.destructured_variables).to eq(['bar'])
+        end
+
+        context 'and it has line breaks' do
+          let(:string) { "import foo, {\n  bar,\n  baz,\n} from 'foo';" }
+
+          it 'returns a valid ImportStatement instance' do
+            expect(subject.assignment).to eq("foo, {\n  bar,\n  baz,\n}")
+            expect(subject.path).to eq('foo')
+            expect(subject.destructured?).to be_truthy
+            expect(subject.default_variable).to eq('foo')
+            expect(subject.destructured_variables).to eq(['bar', 'baz'])
+          end
         end
       end
     end

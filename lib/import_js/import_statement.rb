@@ -36,7 +36,7 @@ module ImportJS
         (?<destructured>.*)  # <destructured> variables
         \s*
       \}
-    }x
+    }xm
 
     attr_accessor :assignment
     attr_accessor :original_import_string # a cache of the parsed import string
