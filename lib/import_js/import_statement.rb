@@ -124,6 +124,9 @@ module ImportJS
       if declaration_keyword == 'import'
         # ES2015 Modules (ESM) syntax can support default values and
         # destructuring on the same line.
+        equals = 'from';
+        value = "'#{path}';";
+
         declaration = declaration_keyword
         if destructured?
           declaration += " #{default_variable}," if default_variable
@@ -131,28 +134,28 @@ module ImportJS
         else
           declaration += " #{default_variable}"
         end
-        declaration += ' from'
 
-        [wrap_import(declaration, "'#{path}';", max_line_length, tab)]
+        [wrap_import(declaration, equals, value, max_line_length, tab)]
       else # const/let/var
+        equals = '=';
         value = "require('#{path}');"
 
         if destructured? && !default_variable.nil?
           # We have both a default variable and a destructuring to do, so we
           # need to generate 2 lines for CommonJS style syntax.
-          default_declaration = "#{declaration_keyword} #{default_variable} ="
-          destructured_declaration = "#{declaration_keyword} #{destructured_string} ="
+          default_declaration = "#{declaration_keyword} #{default_variable}"
+          destructured_declaration = "#{declaration_keyword} #{destructured_string}"
 
           return [
-            wrap_import(default_declaration, value, max_line_length, tab),
-            wrap_import(destructured_declaration, value, max_line_length, tab)
+            wrap_import(default_declaration, equals, value, max_line_length, tab),
+            wrap_import(destructured_declaration, equals, value, max_line_length, tab)
           ]
         end
 
         declaration_assignment =
           destructured? ? destructured_string : default_variable
-        declaration = "#{declaration_keyword} #{declaration_assignment} ="
-        [wrap_import(declaration, value, max_line_length, tab)]
+        declaration = "#{declaration_keyword} #{declaration_assignment}"
+        [wrap_import(declaration, equals, value, max_line_length, tab)]
       end
     end
 
@@ -180,23 +183,25 @@ module ImportJS
     end
 
     # @param declaration [String]
+    # @param equals [String] either 'from' or '='
     # @param value [String]
     # @param max_line_length [Number] where to cap lines at
     # @return [Boolean]
-    def line_too_long?(declaration, value, max_line_length)
-      max_line_length && "#{declaration} #{value}".length > max_line_length
+    def line_too_long?(declaration, equals, value, max_line_length)
+      max_line_length && "#{declaration} #{equals} #{value}".length > max_line_length
     end
 
     # @param declaration [String]
+    # @param equals [String] either 'from' or '='
     # @param value [String]
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
-    def wrap_import(declaration, value, max_line_length, tab)
-      if line_too_long?(declaration, value, max_line_length)
-        "#{declaration}\n#{tab}#{value}"
+    def wrap_import(declaration, equals, value, max_line_length, tab)
+      if line_too_long?(declaration, equals, value, max_line_length)
+        "#{declaration} #{equals}\n#{tab}#{value}"
       else
-        "#{declaration} #{value}"
+        "#{declaration} #{equals} #{value}"
       end
     end
 
