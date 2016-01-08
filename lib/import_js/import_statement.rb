@@ -130,21 +130,19 @@ module ImportJS
           [default_import_string(declaration_keyword, max_line_length, tab)]
         end
       else # const/let/var
+        strings = []
+
+        if default_variable
+          strings <<
+            default_import_string(declaration_keyword, max_line_length, tab)
+        end
+
         if destructured?
-          strings = []
-
-          if default_variable
-            # We have both a default variable and a destructuring to do, so we
-            # need to generate 2 lines for CommonJS style syntax.
-            strings <<
-              default_import_string(declaration_keyword, max_line_length, tab)
-          end
-
           strings <<
             destructured_import_string(declaration_keyword, max_line_length, tab)
-        else
-          [default_import_string(declaration_keyword, max_line_length, tab)]
         end
+
+        strings
       end
     end
 
