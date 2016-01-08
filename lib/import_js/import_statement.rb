@@ -125,26 +125,21 @@ module ImportJS
         # ES2015 Modules (ESM) syntax can support default values and
         # destructuring on the same line.
         if destructured?
-          declaration = []
-          declaration << "#{default_variable}," if default_variable
-          declaration << destructured_string
-          [wrap_destructured_import(declaration_keyword, declaration, max_line_length, tab)]
+          prefix = "#{default_variable}, " if default_variable
+          [wrap_destructured_import(declaration_keyword, max_line_length, tab, prefix: prefix)]
         else # not destructured
           [wrap_default_import(declaration_keyword, max_line_length, tab)]
         end
       else # const/let/var
         if destructured?
           if default_variable.nil?
-            declaration = [destructured_string]
-            [wrap_destructured_import(declaration_keyword, declaration, max_line_length, tab)]
+            [wrap_destructured_import(declaration_keyword, max_line_length, tab)]
           else
             # We have both a default variable and a destructuring to do, so we
             # need to generate 2 lines for CommonJS style syntax.
-            destructured_declaration = [destructured_string]
-
             return [
               wrap_default_import(declaration_keyword, max_line_length, tab),
-              wrap_destructured_import(declaration_keyword, destructured_declaration, max_line_length, tab)
+              wrap_destructured_import(declaration_keyword, max_line_length, tab)
             ]
           end
         else
@@ -209,18 +204,17 @@ module ImportJS
     end
 
     # @param declaration_keyword [String]
-    # @param declaration [Array]
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
+    # @param prefix [String] string to prefix destructured string with
     # @return [String] import statement, wrapped at max line length if necessary
-    def wrap_destructured_import(declaration_keyword, declaration, max_line_length, tab)
+    def wrap_destructured_import(declaration_keyword, max_line_length, tab, prefix: '')
       equals, value = equals_and_value(declaration_keyword)
-      line = "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
+      line = "#{declaration_keyword} #{prefix}#{destructured_string} #{equals} #{value}"
       return line unless line_too_long?(line, max_line_length)
 
-      declaration.pop
-      declaration << destructured_string(wrap: true, tab: tab)
-      "#{declaration_keyword} #{declaration.join(' ')} #{equals} #{value}"
+      destructured = destructured_string(wrap: true, tab: tab)
+      "#{declaration_keyword} #{prefix}#{destructured} #{equals} #{value}"
     end
 
     def clear_import_string_cache
