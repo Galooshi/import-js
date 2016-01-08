@@ -166,17 +166,6 @@ module ImportJS
 
     private
 
-    # @param wrap [Boolean]
-    # @param tab [?String]
-    # @return [String]
-    def destructured_string(wrap: false, tab: nil)
-      if wrap
-        "{\n#{tab}#{destructured_variables.join(",\n#{tab}")},\n}"
-      else
-        "{ #{destructured_variables.join(', ')} }"
-      end
-    end
-
     # @param line [String]
     # @param max_line_length [Number] where to cap lines at
     # @return [Boolean]
@@ -213,10 +202,11 @@ module ImportJS
         prefix = "#{default_variable}, "
       end
 
-      line = "#{declaration_keyword} #{prefix}#{destructured_string} #{equals} #{value}"
+      destructured = "{ #{destructured_variables.join(', ')} }"
+      line = "#{declaration_keyword} #{prefix}#{destructured} #{equals} #{value}"
       return line unless line_too_long?(line, max_line_length)
 
-      destructured = destructured_string(wrap: true, tab: tab)
+      destructured = "{\n#{tab}#{destructured_variables.join(",\n#{tab}")},\n}"
       "#{declaration_keyword} #{prefix}#{destructured} #{equals} #{value}"
     end
 
