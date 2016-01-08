@@ -362,7 +362,7 @@ describe ImportJS::ImportStatement do
           let(:destructured_variables) { ['foo', 'bar', 'baz', 'fizz', 'buzz'] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
-          it { should eq(["import { foo, bar, baz, fizz, buzz } from\n  '#{path}';"]) }
+          it { should eq(["import {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} from '#{path}';"]) }
         end
       end
 
@@ -375,7 +375,7 @@ describe ImportJS::ImportStatement do
           let(:destructured_variables) { ['bar', 'baz', 'fizz', 'buzz'] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
-          it { should eq(["import foo, { bar, baz, fizz, buzz } from\n  '#{path}';"]) }
+          it { should eq(["import foo, {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} from '#{path}';"]) }
         end
       end
     end
@@ -408,7 +408,7 @@ describe ImportJS::ImportStatement do
           let(:destructured_variables) { ['foo', 'bar', 'baz', 'fizz', 'buzz'] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
-          it { should eq(["const { foo, bar, baz, fizz, buzz } =\n  require('#{path}');"]) }
+          it { should eq(["const {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = require('#{path}');"]) }
         end
       end
 
@@ -429,7 +429,7 @@ describe ImportJS::ImportStatement do
           it do
             should eq([
               "const foo =\n  require('#{path}');",
-              "const { bar, baz, fizz, buzz } =\n  require('#{path}');",
+              "const {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = require('#{path}');",
             ])
           end
         end
