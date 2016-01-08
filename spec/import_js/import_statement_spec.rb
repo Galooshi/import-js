@@ -308,4 +308,132 @@ describe ImportJS::ImportStatement do
       end
     end
   end
+
+  describe '#to_import_strings' do
+    let(:import_statement) { described_class.new }
+    let(:path) { 'path' }
+    let(:default_variable) { nil }
+    let(:destructured_variables) { nil }
+    let(:max_line_length) { 80 }
+    let(:tab) { '  ' }
+
+    before do
+      import_statement.path = path
+
+      unless default_variable.nil?
+        import_statement.default_variable = default_variable
+      end
+
+      unless destructured_variables.nil?
+        import_statement.destructured_variables = destructured_variables
+      end
+    end
+
+    subject do
+      import_statement.to_import_strings(
+        declaration_keyword, max_line_length, tab)
+    end
+
+    context 'with import declaration keyword' do
+      let(:declaration_keyword) { 'import' }
+
+      context 'with a default variable' do
+        let(:default_variable) { 'foo' }
+        it { should eq(["import foo from 'path';"]) }
+
+        context 'when longer than max line length' do
+          let(:default_variable) { 'ReallyReallyReallyReallyLong' }
+          let(:path) { 'also_very_long_for_some_reason' }
+          let(:max_line_length) { 50 }
+          it { should eq(["import #{default_variable} from\n  '#{path}';"]) }
+
+          context 'with different tab' do
+            let(:tab) { "\t" }
+            it { should eq(["import #{default_variable} from\n\t'#{path}';"]) }
+          end
+        end
+      end
+
+      context 'with destructured variables' do
+        let(:destructured_variables) { ['foo', 'bar'] }
+        it { should eq(["import { foo, bar } from 'path';"]) }
+
+        context 'when longer than max line length' do
+          let(:destructured_variables) { ['foo', 'bar', 'baz', 'fizz', 'buzz'] }
+          let(:path) { 'also_very_long_for_some_reason' }
+          let(:max_line_length) { 50 }
+          it { should eq(["import { foo, bar, baz, fizz, buzz } from\n  '#{path}';"]) }
+        end
+      end
+
+      context 'with default and destructured variables' do
+        let(:default_variable) { 'foo' }
+        let(:destructured_variables) { ['bar', 'baz'] }
+        it { should eq(["import foo, { bar, baz } from 'path';"]) }
+
+        context 'when longer than max line length' do
+          let(:destructured_variables) { ['bar', 'baz', 'fizz', 'buzz'] }
+          let(:path) { 'also_very_long_for_some_reason' }
+          let(:max_line_length) { 50 }
+          it { should eq(["import foo, { bar, baz, fizz, buzz } from\n  '#{path}';"]) }
+        end
+      end
+    end
+
+    context 'with const declaration keyword' do
+      let(:declaration_keyword) { 'const' }
+
+      context 'with a default variable' do
+        let(:default_variable) { 'foo' }
+        it { should eq(["const foo = require('path');"]) }
+
+        context 'when longer than max line length' do
+          let(:default_variable) { 'ReallyReallyReallyReallyLong' }
+          let(:path) { 'also_very_long_for_some_reason' }
+          let(:max_line_length) { 50 }
+          it { should eq(["const #{default_variable} =\n  require('#{path}');"]) }
+
+          context 'with different tab' do
+            let(:tab) { "\t" }
+            it { should eq(["const #{default_variable} =\n\trequire('#{path}');"]) }
+          end
+        end
+      end
+
+      context 'with destructured variables' do
+        let(:destructured_variables) { ['foo', 'bar'] }
+        it { should eq(["const { foo, bar } = require('path');"]) }
+
+        context 'when longer than max line length' do
+          let(:destructured_variables) { ['foo', 'bar', 'baz', 'fizz', 'buzz'] }
+          let(:path) { 'also_very_long_for_some_reason' }
+          let(:max_line_length) { 50 }
+          it { should eq(["const { foo, bar, baz, fizz, buzz } =\n  require('#{path}');"]) }
+        end
+      end
+
+      context 'with default and destructured variables' do
+        let(:default_variable) { 'foo' }
+        let(:destructured_variables) { ['bar', 'baz'] }
+        it do
+          should eq([
+            "const foo = require('path');",
+            "const { bar, baz } = require('path');",
+          ])
+        end
+
+        context 'when longer than max line length' do
+          let(:destructured_variables) { ['bar', 'baz', 'fizz', 'buzz'] }
+          let(:path) { 'also_very_long_for_some_reason' }
+          let(:max_line_length) { 50 }
+          it do
+            should eq([
+              "const foo =\n  require('#{path}');",
+              "const { bar, baz, fizz, buzz } =\n  require('#{path}');",
+            ])
+          end
+        end
+      end
+    end
+  end
 end
