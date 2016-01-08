@@ -133,7 +133,7 @@ module ImportJS
         if destructured?
           strings = []
 
-          unless default_variable.nil?
+          if default_variable
             # We have both a default variable and a destructuring to do, so we
             # need to generate 2 lines for CommonJS style syntax.
             strings <<
@@ -151,7 +151,7 @@ module ImportJS
     # Merge another ImportStatement into this one.
     # @param import_statement [ImportJS::ImportStatement]
     def merge(import_statement)
-      unless import_statement.default_variable.nil?
+      if import_statement.default_variable
         @default_variable = import_statement.default_variable
         clear_import_string_cache
       end
