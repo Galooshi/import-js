@@ -60,13 +60,13 @@ the word "Button", then hit `<leader>j` (Vim), `(M-x) import-js-import`
 buffer will now change to the following:
 
 ```js
-var Button = require('components/button');
+import Button from 'components/button';
 
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
 
 That's basically it. Import-js will help you find modules and automatically add
-a `require` statement. But keep reading for some more neat features.
+an `import` statement. But keep reading for some more neat features.
 
 ## Fix imports
 
@@ -173,23 +173,32 @@ e.g.
 will for a file `foo/bar.js` result in
 
 ```javascript
-const styles = require('./bar.scss');
+import styles from './bar.scss';
 ```
 
 ### `declaration_keyword`
 
-If you are using ES6 (ES 2015), you have access to `let`, `const`, and `import`
-in addition to `var` as ways to declare variables. To use one of these, set the
-`declaration_keyword` configuration.
+The default value for this property is `import`, making your import statements
+use the [ES2015 modules
+syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import):
+
+```js
+import Foo from 'foo';
+```
+
+If you aren't ready for ES2015 yet, you have the option to use `var`, `let`, or
+`const` instead.
 
 ```json
 "declaration_keyword": "const"
 ```
 
-If you set it to `import`, you get imports of the form `import foo from 'foo'`.
+In such case, your import statements will look something like this:
 
-```json
-"declaration_keyword": "import"
+```js
+var Foo = require('foo'); // "declaration_keyword": "var"
+let Foo = require('foo'); // "declaration_keyword": "let"
+const Foo = require('foo'); // "declaration_keyword": "const"
 ```
 
 ### `strip_file_extensions`
