@@ -89,10 +89,7 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 ## Things to note
 
 - Only files ending in .js\* are considered when importing
-- All imports are expressed on one line each, starting with
-  `var`/`const`/`let`/`import` (configurable through the `declaration_keyword`
-  option)
-- As part of resolving an import, all imports will be sorted
+- As part of resolving imports, all imports will be sorted
 - The core of the plugin is written in Ruby. If you are using Vim, you need a
   [Vim with Ruby support](VIM.md).
 
