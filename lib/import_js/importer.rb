@@ -170,6 +170,17 @@ module ImportJS
           @editor.tab)
       end.flatten.sort
 
+      # Find old import strings so we can compare with the new import strings
+      # and see if anything has changed.
+      old_import_strings = []
+      old_imports_lines.times do |line|
+        old_import_strings << @editor.read_line(1 + line + imports_start_at)
+      end
+
+      # If nothing has changed, bail to prevent unnecessarily dirtying the
+      # buffer.
+      return if import_strings == old_import_strings
+
       # Delete old imports, then add the modified list back in.
       old_imports_lines.times { @editor.delete_line(1 + imports_start_at) }
       import_strings.reverse_each do |import_string|
