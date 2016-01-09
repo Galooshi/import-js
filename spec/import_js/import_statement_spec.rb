@@ -5,6 +5,72 @@ describe ImportJS::ImportStatement do
     let(:string) { "const foo = require('foo');" }
     subject { described_class.parse(string) }
 
+    context 'when the string is a valid es6 import' do
+      let(:string) { "import foo from 'foo';" }
+
+      it 'returns a valid ImportStatement instance' do
+        expect(subject.assignment).to eq('foo')
+        expect(subject.path).to eq('foo')
+      end
+
+      context 'and it has line breaks' do
+        let(:string) { "import foo\n  from 'foo';" }
+
+        it 'returns a valid ImportStatement instance' do
+          expect(subject.assignment).to eq('foo')
+          expect(subject.path).to eq('foo')
+        end
+      end
+
+      context 'and it has a destructured assignment' do
+        let(:string) { "import { foo } from 'foo';" }
+
+        it 'returns a valid ImportStatement instance' do
+          expect(subject.assignment).to eq('{ foo }')
+          expect(subject.path).to eq('foo')
+          expect(subject.destructured?).to be_truthy
+          expect(subject.default_variable).to eq(nil)
+          expect(subject.destructured_variables).to eq(['foo'])
+        end
+
+        context 'and it has line breaks' do
+          let(:string) { "import {\n  foo,\n  bar,\n} from 'foo';" }
+
+          it 'returns a valid ImportStatement instance' do
+            expect(subject.assignment).to eq("{\n  foo,\n  bar,\n}")
+            expect(subject.path).to eq('foo')
+            expect(subject.destructured?).to be_truthy
+            expect(subject.default_variable).to eq(nil)
+            expect(subject.destructured_variables).to eq(['foo', 'bar'])
+          end
+        end
+      end
+
+      context 'and it has default and a destructured assignment' do
+        let(:string) { "import foo, { bar } from 'foo';" }
+
+        it 'returns a valid ImportStatement instance' do
+          expect(subject.assignment).to eq('foo, { bar }')
+          expect(subject.path).to eq('foo')
+          expect(subject.destructured?).to be_truthy
+          expect(subject.default_variable).to eq('foo')
+          expect(subject.destructured_variables).to eq(['bar'])
+        end
+
+        context 'and it has line breaks' do
+          let(:string) { "import foo, {\n  bar,\n  baz,\n} from 'foo';" }
+
+          it 'returns a valid ImportStatement instance' do
+            expect(subject.assignment).to eq("foo, {\n  bar,\n  baz,\n}")
+            expect(subject.path).to eq('foo')
+            expect(subject.destructured?).to be_truthy
+            expect(subject.default_variable).to eq('foo')
+            expect(subject.destructured_variables).to eq(['bar', 'baz'])
+          end
+        end
+      end
+    end
+
     context 'when the string is a valid import using const' do
       it 'returns a valid ImportStatement instance' do
         expect(subject.assignment).to eq('foo')
@@ -78,72 +144,6 @@ describe ImportJS::ImportStatement do
             it 'does not add a duplicate' do
               expect(statement.destructured_variables).to eq(['foo'])
             end
-          end
-        end
-      end
-    end
-
-    context 'when the string is a valid es6 import' do
-      let(:string) { "import foo from 'foo';" }
-
-      it 'returns a valid ImportStatement instance' do
-        expect(subject.assignment).to eq('foo')
-        expect(subject.path).to eq('foo')
-      end
-
-      context 'and it has line breaks' do
-        let(:string) { "import foo\n  from 'foo';" }
-
-        it 'returns a valid ImportStatement instance' do
-          expect(subject.assignment).to eq('foo')
-          expect(subject.path).to eq('foo')
-        end
-      end
-
-      context 'and it has a destructured assignment' do
-        let(:string) { "import { foo } from 'foo';" }
-
-        it 'returns a valid ImportStatement instance' do
-          expect(subject.assignment).to eq('{ foo }')
-          expect(subject.path).to eq('foo')
-          expect(subject.destructured?).to be_truthy
-          expect(subject.default_variable).to eq(nil)
-          expect(subject.destructured_variables).to eq(['foo'])
-        end
-
-        context 'and it has line breaks' do
-          let(:string) { "import {\n  foo,\n  bar,\n} from 'foo';" }
-
-          it 'returns a valid ImportStatement instance' do
-            expect(subject.assignment).to eq("{\n  foo,\n  bar,\n}")
-            expect(subject.path).to eq('foo')
-            expect(subject.destructured?).to be_truthy
-            expect(subject.default_variable).to eq(nil)
-            expect(subject.destructured_variables).to eq(['foo', 'bar'])
-          end
-        end
-      end
-
-      context 'and it has default and a destructured assignment' do
-        let(:string) { "import foo, { bar } from 'foo';" }
-
-        it 'returns a valid ImportStatement instance' do
-          expect(subject.assignment).to eq('foo, { bar }')
-          expect(subject.path).to eq('foo')
-          expect(subject.destructured?).to be_truthy
-          expect(subject.default_variable).to eq('foo')
-          expect(subject.destructured_variables).to eq(['bar'])
-        end
-
-        context 'and it has line breaks' do
-          let(:string) { "import foo, {\n  bar,\n  baz,\n} from 'foo';" }
-
-          it 'returns a valid ImportStatement instance' do
-            expect(subject.assignment).to eq("foo, {\n  bar,\n  baz,\n}")
-            expect(subject.path).to eq('foo')
-            expect(subject.destructured?).to be_truthy
-            expect(subject.default_variable).to eq('foo')
-            expect(subject.destructured_variables).to eq(['bar', 'baz'])
           end
         end
       end
