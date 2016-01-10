@@ -1297,6 +1297,29 @@ foo
       VIM::Buffer.current_buffer.to_s
     end
 
+    it 'calls out to global eslint' do
+      expect(Open3).to receive(:capture3).with(/\Aeslint /, any_args)
+      subject
+    end
+
+    context 'with eslint_executable configuration' do
+      let(:eslint_executable) { 'node_modules/.bin/eslint' }
+
+      before do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:get).and_call_original
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:get).with('eslint_executable')
+          .and_return(eslint_executable)
+      end
+
+      it 'calls out to the configured eslint executable' do
+        command = Regexp.escape(eslint_executable)
+        expect(Open3).to receive(:capture3).with(/\A#{command} /, any_args)
+        subject
+      end
+    end
+
     context 'when no undefined variables exist' do
       it 'leaves the buffer unchanged' do
         expect(subject).to eq(text)
