@@ -6,9 +6,9 @@ describe ImportJS::JSModule do
 
   subject do
     described_class.new(
-      lookup_path,
-      relative_file_path,
-      strip_file_extensions
+      lookup_path: lookup_path,
+      relative_file_path: relative_file_path,
+      strip_file_extensions: strip_file_extensions
     )
   end
 

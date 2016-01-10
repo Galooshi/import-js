@@ -13,7 +13,9 @@ module ImportJS
     #   the project root.
     # @param strip_file_extensions [Array] a list of file extensions to strip,
     #   e.g. ['.js', '.jsx']
-    def initialize(lookup_path, relative_file_path, strip_file_extensions)
+    def initialize(lookup_path:,
+                   relative_file_path:,
+                   strip_file_extensions:)
       @lookup_path = lookup_path
       @file_path = relative_file_path
       if relative_file_path.end_with? '/package.json'

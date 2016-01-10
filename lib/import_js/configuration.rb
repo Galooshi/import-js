@@ -41,14 +41,18 @@ module ImportJS
         path = path.sub(/\{filename\}/,
                         File.basename(path_to_current_file, '.*'))
       end
-      ImportJS::JSModule.new(nil, path, [])
+      ImportJS::JSModule.new(lookup_path: nil,
+                             relative_file_path: path,
+                             strip_file_extensions: [])
     end
 
     def resolve_destructured_alias(variable_name)
       @config['aliases'].each do |_, path|
         next if path.is_a? String
         if (path['destructure'] || []).include?(variable_name)
-          js_module = ImportJS::JSModule.new(nil, path['path'], [])
+          js_module = ImportJS::JSModule.new(lookup_path: nil,
+                                             relative_file_path: path['path'],
+                                             strip_file_extensions: [])
           js_module.is_destructured = true
           return js_module
         end
