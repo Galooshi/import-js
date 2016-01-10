@@ -62,6 +62,18 @@ describe ImportJS::JSModule do
       end
     end
 
+    context 'when "index.js" is part of the name' do
+      let(:relative_file_path) { 'lib/index.js/foo.js' }
+
+      it 'creates a valid import_path' do
+        expect(subject.import_path).to eq('lib/index.js/foo')
+      end
+
+      it 'creates a valid display_name' do
+        expect(subject.display_name).to eq('lib/index.js/foo')
+      end
+    end
+
     context 'when asked to produce an import path relative to another file' do
       context 'and the other file is in the same folder' do
         let(:make_relative_to) { 'app/lib/bar.js' }

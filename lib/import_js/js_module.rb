@@ -28,7 +28,7 @@ module ImportJS
         match = relative_file_path.match(/(.*)\/package\.json/)
         @import_path = match[1]
         @skip = !@main_file
-      elsif relative_file_path.match(/\/index\.js.*$/)
+      elsif relative_file_path.match(%r{/index\.js[^/]*$})
         match = relative_file_path.match(/(.*)\/(index\.js.*)/)
         @main_file = match[2]
         @import_path = match[1]
