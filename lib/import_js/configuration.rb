@@ -6,7 +6,7 @@ module ImportJS
 
   DEFAULT_CONFIG = {
     'aliases' => {},
-    'declaration_keyword' => 'var',
+    'declaration_keyword' => 'import',
     'excludes' => [],
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx']

@@ -149,7 +149,7 @@ describe ImportJS::Importer do
 
       it 'adds an import to the top of the buffer' do
         expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
         EOS
@@ -160,9 +160,9 @@ foo
           'ImportJS: Imported `bar/foo`')
       end
 
-      context 'when that variable is already imported' do
+      context 'when that import is already imported' do
         let(:text) { <<-EOS.strip }
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
         EOS
@@ -181,7 +181,7 @@ foo
           it 'adds the import below' do
             expect(subject).to eq(<<-EOS.strip)
 'use strict';
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
             EOS
@@ -191,7 +191,7 @@ foo
         context "when there are other imports under 'use strict'" do
           let(:text) { <<-EOS.strip }
 'use strict';
-var bar = require('bar');
+import bar from 'bar';
 
 foo + bar
           EOS
@@ -199,8 +199,8 @@ foo + bar
           it 'adds the import at the right place' do
             expect(subject).to eq(<<-EOS.strip)
 'use strict';
-var bar = require('bar');
-var foo = require('bar/foo');
+import bar from 'bar';
+import foo from 'bar/foo';
 
 foo + bar
             EOS
@@ -216,7 +216,7 @@ foo + bar
           it 'adds a newline as part of importing ' do
             expect(subject).to eq(<<-EOS.strip)
 'use strict';
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo + bar
             EOS
@@ -233,7 +233,7 @@ foo
           it 'adds the import below' do
             expect(subject).to eq(<<-EOS.strip)
 "use strict";
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
             EOS
@@ -246,7 +246,7 @@ foo
 
         it 'adds an import to the top of the buffer' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('Foo');
+import foo from 'Foo';
 
 foo
           EOS
@@ -264,7 +264,7 @@ foo
 
           it 'imports that module with the dot' do
             expect(subject).to eq(<<-EOS.strip)
-var FooIO = require('Foo.io');
+import FooIO from 'Foo.io';
 
 FooIO
             EOS
@@ -272,7 +272,7 @@ FooIO
         end
       end
 
-      context 'when the variable resolves to a dependency from package.json' do
+      context 'when the import resolves to a dependency from package.json' do
         let(:existing_files) { [] }
 
         before do
@@ -285,7 +285,7 @@ FooIO
 
         it 'adds an import to the top of the buffer' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('foo');
+import foo from 'foo';
 
 foo
           EOS
@@ -299,17 +299,17 @@ foo
 
       context 'when other imports exist' do
         let(:text) { <<-EOS.strip }
-var zoo = require('foo/zoo');
-var bar = require('foo/bar');
+import zoo from 'foo/zoo';
+import bar from 'foo/bar';
 
 foo
         EOS
 
         it 'adds the import and sorts the entire list' do
           expect(subject).to eq(<<-EOS.strip)
-var bar = require('foo/bar');
-var foo = require('bar/foo');
-var zoo = require('foo/zoo');
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+import zoo from 'foo/zoo';
 
 foo
         EOS
@@ -318,17 +318,17 @@ foo
 
       context 'when there is an unconventional import' do
         let(:text) { <<-EOS.strip }
-var zoo = require('foo/zoo');
-var tsar = require('foo/bar').tsar;
+import zoo from 'foo/zoo';
+import tsar from 'foo/bar').tsa;
 
 foo
         EOS
 
         it 'adds the import and sorts the entire list' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
-var tsar = require('foo/bar').tsar;
-var zoo = require('foo/zoo');
+import foo from 'bar/foo';
+import tsar from 'foo/bar').tsa;
+import zoo from 'foo/zoo';
 
 foo
         EOS
@@ -337,11 +337,11 @@ foo
 
       context 'when there is a non-import inline with the imports' do
         let(:text) { <<-EOS.strip }
-var bar = require('bar');
-var star =
-  require('star');
+import bar from 'bar';
+import star from
+  'star';
 var { STRAWBERRY, CHOCOLATE } = bar.scoops;
-var zoo = require('foo/zoo');
+import zoo from 'foo/zoo';
 
 foo
         EOS
@@ -352,13 +352,13 @@ foo
           # involved in that, so cutting off at the non-import is a simpler
           # solution.
           expect(subject).to eq(<<-EOS.strip)
-var bar = require('bar');
-var foo = require('bar/foo');
-var star =
-  require('star');
+import bar from 'bar';
+import foo from 'bar/foo';
+import star from
+  'star';
 
 var { STRAWBERRY, CHOCOLATE } = bar.scoops;
-var zoo = require('foo/zoo');
+import zoo from 'foo/zoo';
 
 foo
         EOS
@@ -367,30 +367,30 @@ foo
 
       context 'when there is an import with line-breaks' do
         let(:text) { <<-EOS.strip }
-var zoo =
-  require('foo/zoo');
-var tsar = require('foo/bar').tsar;
+import zoo from
+  'foo/zoo';
+import tsar from 'foo/bar';
 
-var foo = { require: b }
+var import_foo = { from: b }
         EOS
 
         it 'adds the import, sorts the entire list and keeps the line-break' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
-var tsar = require('foo/bar').tsar;
-var zoo =
-  require('foo/zoo');
+import foo from 'bar/foo';
+import tsar from 'foo/bar';
+import zoo from
+  'foo/zoo';
 
-var foo = { require: b }
+var import_foo = { from: b }
         EOS
         end
       end
 
       context 'when there is a blank line amongst current imports' do
         let(:text) { <<-EOS.strip }
-var zoo = require('foo/zoo');
+import zoo from 'foo/zoo';
 
-var bar = require('foo/bar');
+import bar from 'foo/bar';
 foo
         EOS
 
@@ -400,10 +400,10 @@ foo
           # do better here and ignore that whitespace. But for now, this is the
           # behavior:
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
-var zoo = require('foo/zoo');
+import foo from 'bar/foo';
+import zoo from 'foo/zoo';
 
-var bar = require('foo/bar');
+import bar from 'foo/bar';
 foo
         EOS
         end
@@ -444,7 +444,7 @@ foo
 
             it 'picks the first one' do
               expect(subject).to eq(<<-eos.strip)
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
               eos
@@ -456,7 +456,7 @@ foo
 
             it 'picks the second one' do
               expect(subject).to eq(<<-EOS.strip)
-var foo = require('zoo/foo');
+import foo from 'zoo/foo';
 
 foo
               EOS
@@ -538,7 +538,7 @@ foo
 
         it 'adds an import to the top of the buffer' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('Foo');
+import foo from 'Foo';
 
 foo
           EOS
@@ -556,7 +556,7 @@ foo
 
         it 'adds an import to the top of the buffer' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('Foo');
+import foo from 'Foo';
 
 foo
           EOS
@@ -576,7 +576,7 @@ foo
 
         it 'keeps the .js in the import' do
           expect(subject).to eq(<<-EOS.strip)
-var FooJS = require('Foo.js');
+import FooJS from 'Foo.js';
 
 FooJS
           EOS
@@ -620,8 +620,8 @@ foo
 
           it 'wraps them and indents with a tab' do
             expect(subject).to eq(<<-EOS.strip)
-var foo =
-	require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+import foo from
+	'fiz/bar/biz/baz/fiz/buz/boz/foo';
 
 foo
             EOS
@@ -644,8 +644,8 @@ foo
 
             it 'wraps them and indents with shiftwidth spaces' do
               expect(subject).to eq(<<-EOS.strip)
-var foo =
-   require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+import foo from
+   'fiz/bar/biz/baz/fiz/buz/boz/foo';
 
 foo
               EOS
@@ -661,8 +661,8 @@ foo
 
             it 'wraps them and indents with 2 spaces' do
               expect(subject).to eq(<<-EOS.strip)
-var foo =
-  require('fiz/bar/biz/baz/fiz/buz/boz/foo');
+import foo from
+  'fiz/bar/biz/baz/fiz/buz/boz/foo';
 
 foo
               EOS
@@ -681,7 +681,7 @@ foo
 
         it 'does not wrap them' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
           EOS
@@ -707,7 +707,7 @@ foo
 
         it 'resolves aliased imports to the aliases' do
           expect(subject).to eq(<<-EOS.strip)
-var $ = require('jquery');
+import $ from 'jquery';
 
 $
         EOS
@@ -731,7 +731,7 @@ $
 
           it 'uses the filename of the current file' do
             expect(subject).to eq(<<-EOS.strip)
-var styles = require('./foo.scss');
+import styles from './foo.scss';
 
 styles
             EOS
@@ -743,7 +743,7 @@ styles
 
               it 'does not replace the dynamic part' do
                 expect(subject).to eq(<<-EOS.strip)
-var styles = require('./{filename}.scss');
+import styles from './{filename}.scss';
 
 styles
                 EOS
@@ -755,7 +755,7 @@ styles
 
               it 'does not replace the dynamic part' do
                 expect(subject).to eq(<<-EOS.strip)
-var styles = require('./{filename}.scss');
+import styles from './{filename}.scss';
 
 styles
                 EOS
@@ -774,18 +774,18 @@ styles
 
           it 'keeps the slash in the alias path' do
             expect(subject).to eq(<<-EOS.strip)
-var $ = require('jquery/jquery');
+import $ from 'jquery/jquery';
 
 $
           EOS
           end
-
         end
       end
 
-      context 'alias with a destructure object' do
+      context 'alias with `var` and a destructure object' do
         let(:configuration) do
           {
+            'declaration_keyword' => 'var',
             'aliases' => {
               '_' => {
                 'path' => 'underscore',
@@ -1075,7 +1075,7 @@ memoize
 
         it 'keeps the file ending in the import' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo.js');
+import foo from 'bar/foo.js';
 
 foo
           EOS
@@ -1194,14 +1194,6 @@ foo
 
         context 'with a variable name that will resolve' do
           let(:existing_files) { ['bar/foo.jsx', 'bar/fromfoo.jsx'] }
-
-          it 'adds an import to the top of the buffer' do
-            expect(subject).to eq(<<-EOS.strip)
-import foo from 'bar/foo';
-
-foo
-            EOS
-          end
 
           context 'when that variable is already imported using `var`' do
             let(:text) { <<-EOS.strip }
@@ -1329,7 +1321,7 @@ foo
 
       it 'imports that variable' do
         expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
         EOS
@@ -1342,9 +1334,9 @@ foo
           "stdin:3:11: 'foo' is not defined. [Error/no-undef]"
         end
 
-        it 'imports that variable' do
+        it 'imports that import' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
           EOS
@@ -1357,9 +1349,9 @@ foo
           "stdin:3:11: \"foo\" is not defined. [Error/no-undef]"
         end
 
-        it 'still imports the variable' do
+        it 'still imports the import' do
           expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
           EOS
@@ -1378,8 +1370,8 @@ foo
 
       it 'imports all variables' do
         expect(subject).to eq(<<-EOS.strip)
-var bar = require('bar');
-var foo = require('bar/foo');
+import bar from 'bar';
+import foo from 'bar/foo';
 
 var a = foo + bar;
         EOS
@@ -1399,8 +1391,8 @@ var a = foo + bar;
 
       it 'imports all variables' do
         expect(subject).to eq(<<-EOS.strip)
-var bar = require('bar');
-var foo = require('bar/foo');
+import bar from 'bar';
+import foo from 'bar/foo';
 
 var a = foo + bar;
         EOS
@@ -1415,8 +1407,8 @@ var a = foo + bar;
 
     context 'when one unused import exists' do
       let(:text) { <<-EOS.strip }
-var bar = require('foo/bar');
-var foo = require('bar/foo');
+import bar from 'foo/bar';
+import foo from 'bar/foo';
 
 bar
       EOS
@@ -1426,7 +1418,7 @@ bar
 
       it 'removes that import' do
         expect(subject).to eq(<<-EOS.strip)
-var bar = require('foo/bar');
+import bar from 'foo/bar';
 
 bar
         EOS
@@ -1435,9 +1427,9 @@ bar
 
     context 'when multiple unused imports exist' do
       let(:text) { <<-EOS.strip }
-var bar = require('foo/bar');
-var baz = require('bar/baz');
-var foo = require('bar/foo');
+import bar from 'foo/bar';
+import baz from 'bar/baz';
+import foo from 'bar/foo';
 
 baz
       EOS
@@ -1449,17 +1441,17 @@ baz
 
       it 'removes all unused imports' do
         expect(subject).to eq(<<-EOS.strip)
-var baz = require('bar/baz');
+import baz from 'bar/baz';
 
 baz
         EOS
       end
     end
 
-    context 'when an unused import and an undefined variable exists' do
+    context 'when an unused import and an undefined import exists' do
       let(:existing_files) { ['bar/foo.jsx'] }
       let(:text) { <<-EOS.strip }
-var bar = require('foo/bar');
+import bar from 'foo/bar';
 
 foo
       EOS
@@ -1471,7 +1463,7 @@ foo
 
       it 'removes the unused import and adds the missing one' do
         expect(subject).to eq(<<-EOS.strip)
-var foo = require('bar/foo');
+import foo from 'bar/foo';
 
 foo
         EOS
@@ -1480,7 +1472,7 @@ foo
 
     context 'when a destructured import has an unused variable' do
       let(:text) { <<-EOS.strip }
-var { bar, foo } = require('baz');
+import { bar, foo } from 'baz';
 
 bar
       EOS
@@ -1491,17 +1483,17 @@ bar
 
       it 'removes that variable from the destructured list' do
         expect(subject).to eq(<<-EOS.strip)
-var { bar } = require('baz');
+import { bar } from 'baz';
 
 bar
         EOS
       end
     end
 
-    context 'when the last variable is removed from a destructured import' do
+    context 'when the last import is removed from a destructured import' do
       let(:text) { <<-EOS.strip }
-var bar = require('bar');
-var { foo } = require('baz');
+import bar from 'bar';
+import { foo } from 'baz';
 
 bar
       EOS
@@ -1512,7 +1504,7 @@ bar
 
       it 'removes the whole import' do
         expect(subject).to eq(<<-EOS.strip)
-var bar = require('bar');
+import bar from 'bar';
 
 bar
         EOS
