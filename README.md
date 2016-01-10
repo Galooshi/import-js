@@ -113,6 +113,21 @@ Webpack, these should match the `modulesDirectories` configuration. Example:
 *Tip:* Don't put `node_modules` here. import-js will find your Node
 dependencies through your `package.json` file.
 
+### `eslint_executable`
+
+By default, import-js will call out to the globally installed `eslint` command
+when fixing imports. If you are using ESLint in your project and have a local
+`.eslintrc` file, you may want import-js to use the locally installed `eslint`
+instead. This is especially useful if your `.eslintrc` includes dependencies on
+other `eslint-*` packages such as shared configurations, plugins, or parsers.
+
+To configure this to use the locally installed `eslint`, set the
+`eslint_executable` configuration. Example:
+
+```json
+"eslint_executable": "node_modules/.bin/eslint"
+```
+
 ### `excludes`
 
 Define a list of glob patterns that match files and directories that you don't
