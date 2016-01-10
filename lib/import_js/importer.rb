@@ -241,11 +241,11 @@ module ImportJS
     # @param variable_name [String]
     # @return [Array]
     def find_js_modules(variable_name)
+      path_to_current_file = @editor.path_to_current_file
       if alias_module = @config.resolve_alias(variable_name,
-                                              @editor.path_to_current_file)
+                                              path_to_current_file)
         return [alias_module]
       end
-
       egrep_command =
         "egrep -i \"(/|^)#{formatted_to_regex(variable_name)}(/index)?(/package)?\.js.*\""
       matched_modules = []
@@ -260,7 +260,11 @@ module ImportJS
             js_module = ImportJS::JSModule.new(
               lookup_path: lookup_path,
               relative_file_path: f,
-              strip_file_extensions: @config.get('strip_file_extensions'))
+              strip_file_extensions: @config.get('strip_file_extensions'),
+              make_relative_to: @config.get('use_relative_paths') &&
+                                path_to_current_file
+            )
+
             next if js_module.skip
             js_module
           end.compact

@@ -9,7 +9,8 @@ module ImportJS
     'declaration_keyword' => 'import',
     'excludes' => [],
     'lookup_paths' => ['.'],
-    'strip_file_extensions' => ['.js', '.jsx']
+    'strip_file_extensions' => ['.js', '.jsx'],
+    'use_relative_paths' => false
   }
 
   # Class that initializes configuration from a .importjs.json file

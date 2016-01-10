@@ -1,3 +1,5 @@
+require 'pathname'
+
 module ImportJS
   # Class that represents a js module found in the file system
   class JSModule
@@ -13,9 +15,12 @@ module ImportJS
     #   the project root.
     # @param strip_file_extensions [Array] a list of file extensions to strip,
     #   e.g. ['.js', '.jsx']
+    # @param make_relative_to [String|nil] a path to a different file which the
+    #   resulting import path should be relative to.
     def initialize(lookup_path:,
                    relative_file_path:,
-                   strip_file_extensions:)
+                   strip_file_extensions:,
+                   make_relative_to: nil)
       @lookup_path = lookup_path
       @file_path = relative_file_path
       if relative_file_path.end_with? '/package.json'
@@ -39,6 +44,21 @@ module ImportJS
 
       if lookup_path
         @import_path = @import_path.sub("#{@lookup_path}\/", '') # remove path prefix
+        if make_relative_to
+          make_relative_to = make_relative_to.sub(Dir.pwd + "\/", '')
+          if make_relative_to.start_with? @lookup_path
+            make_relative_to_folder = Pathname.new(File.dirname(
+              make_relative_to.sub("#{@lookup_path}\/", '')
+            ))
+            path = Pathname.new(@import_path).relative_path_from(
+              make_relative_to_folder
+            ).to_s
+            unless path.start_with?('.')
+              path = './' + path
+            end
+            @import_path = path
+          end
+        end
       end
     end
 
