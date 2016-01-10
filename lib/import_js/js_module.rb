@@ -45,21 +45,31 @@ module ImportJS
       if lookup_path
         @import_path = @import_path.sub("#{@lookup_path}\/", '') # remove path prefix
         if make_relative_to
-          make_relative_to = make_relative_to.sub(Dir.pwd + "\/", '')
-          if make_relative_to.start_with? @lookup_path
-            make_relative_to_folder = Pathname.new(File.dirname(
-              make_relative_to.sub("#{@lookup_path}\/", '')
-            ))
-            path = Pathname.new(@import_path).relative_path_from(
-              make_relative_to_folder
-            ).to_s
-            unless path.start_with?('.')
-              path = './' + path
-            end
-            @import_path = path
-          end
+          make_import_path_relative_to(make_relative_to)
         end
       end
+    end
+
+    # @param make_relative_to [String]
+    def make_import_path_relative_to(make_relative_to)
+      # First, strip out any absolute path up until the current directory
+      make_relative_to = make_relative_to.sub(Dir.pwd + "\/", '')
+
+      # Ignore if the file to relate to is part of a different lookup_path
+      return unless make_relative_to.start_with? @lookup_path
+
+      # Strip out the lookup_path
+      make_relative_to.sub!("#{@lookup_path}\/", '')
+
+      path = Pathname.new(@import_path).relative_path_from(
+        Pathname.new(File.dirname(make_relative_to))
+      ).to_s
+
+      unless path.start_with?('.')
+        # `Pathname.relative_path_from` will not add "./" automatically
+        path = './' + path
+      end
+      @import_path = path
     end
 
     # @return [String] a readable description of the module
