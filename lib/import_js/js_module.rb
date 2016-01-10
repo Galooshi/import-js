@@ -17,9 +17,9 @@ module ImportJS
     #   e.g. ['.js', '.jsx']
     # @param make_relative_to [String|nil] a path to a different file which the
     #   resulting import path should be relative to.
-    def initialize(lookup_path:,
-                   relative_file_path:,
-                   strip_file_extensions:,
+    def initialize(lookup_path: nil,
+                   relative_file_path: nil,
+                   strip_file_extensions: nil,
                    make_relative_to: nil)
       @lookup_path = lookup_path
       @file_path = relative_file_path
