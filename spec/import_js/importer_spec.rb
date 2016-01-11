@@ -1281,6 +1281,54 @@ foo
           end
         end
       end
+
+      context 'with `use_relative_paths=true`' do
+        let(:existing_files) { ['bar/foo.jsx'] }
+        let(:text) { <<-EOS.strip }
+foo
+        EOS
+
+        before do
+          allow_any_instance_of(ImportJS::VIMEditor)
+            .to receive(:path_to_current_file)
+            .and_return(path_to_current_file)
+        end
+
+        subject do
+          described_class.new.import
+          VIM::Buffer.current_buffer.to_s
+        end
+
+        let(:configuration) do
+          {
+            'use_relative_paths' => true
+          }
+        end
+
+        context 'when the current file is in the same lookup_path' do
+          let(:path_to_current_file) { File.join(@tmp_dir, 'bar/current.js') }
+
+          it 'uses a relative import path' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from './foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when the current file is not in the same lookup_path' do
+          let(:path_to_current_file) { '/foo/bar/current.js' }
+
+          it 'does not use a relative import path' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+      end
     end
   end
 

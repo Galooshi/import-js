@@ -226,6 +226,24 @@ Set to an empty array `[]` to avoid stripping out extensions.
 "strip_file_extensions": [".web.js", ".js"]
 ```
 
+### `use_relative_paths`
+
+This option is disabled by default. By enabling it, imports will be resolved
+relative to the current file being edited.
+
+```js
+import Foo from './foo';
+import Bar from '../baz/bar';
+```
+
+Only imports located in the same `lookup_path` will be made relative to each
+other. Package dependencies (located in `node_modules`) will not be imported
+relatively.
+
+```json
+"use_relative_paths": true
+```
+
 ## Contributing
 
 See the
