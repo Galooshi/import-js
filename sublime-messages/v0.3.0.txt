@@ -1,0 +1,5 @@
+In version 0.3.0, the default declaration keyword has changed from `var` to
+`import`. If you were using `var`, and would like to keep it, you need to update
+your .importjs.json file and add
+
+"declaration_keyword": "var"
