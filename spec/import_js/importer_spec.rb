@@ -1334,10 +1334,11 @@ foo
 
   describe '#fix_imports' do
     let(:eslint_result) { '' }
+    let(:eslint_error)  { '' }
     before do
       allow(Open3).to receive(:capture3).and_call_original
       allow(Open3).to receive(:capture3).with(/eslint/, anything)
-        .and_return([eslint_result, nil])
+        .and_return([eslint_result, eslint_error])
     end
 
     subject do
@@ -1365,6 +1366,16 @@ foo
         command = Regexp.escape(eslint_executable)
         expect(Open3).to receive(:capture3).with(/\A#{command} /, any_args)
         subject
+      end
+    end
+
+    context 'with an eslint_executable that can not be found' do
+      let(:eslint_error) do
+        'node_modules/.bin/eslink: No such file or directory'
+      end
+
+      it 'throws an error' do
+        expect { subject }.to raise_error(ImportJS::ParseError)
       end
     end
 
