@@ -250,7 +250,11 @@ module ImportJS
         "egrep -i \"(/|^)#{formatted_to_regex(variable_name)}(/index)?(/package)?\.js.*\""
       matched_modules = []
       @config.get('lookup_paths').each do |lookup_path|
-        find_command = "find #{lookup_path} -name \"**.js*\""
+        find_command = [
+          "find #{lookup_path}",
+          "-name \"**.js*\"",
+          "-not -path \"./node_modules/*\""
+        ].join(' ')
         out, _ = Open3.capture3("#{find_command} | #{egrep_command}")
         matched_modules.concat(
           out.split("\n").map do |f|
