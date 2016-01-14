@@ -74,12 +74,46 @@ describe ImportJS::JSModule do
       end
     end
 
+    context 'when lookup_path is the current directory' do
+      let(:lookup_path) { '.' }
+      let(:relative_file_path) { './app/lib/foo.js' }
+
+      it 'produces a correct relative path' do
+        expect(subject.import_path).to eq('app/lib/foo')
+      end
+    end
+
+    context 'when paths start with a dot' do
+      let(:lookup_path) { './app' }
+      let(:relative_file_path) { './app/lib/foo.js' }
+
+      it 'produces a correct relative path' do
+        expect(subject.import_path).to eq('lib/foo')
+      end
+    end
+
     context 'when asked to produce an import path relative to another file' do
       context 'and the other file is in the same folder' do
         let(:make_relative_to) { 'app/lib/bar.js' }
 
         it 'produces a correct relative path' do
           expect(subject.import_path).to eq('./foo')
+        end
+
+        context 'when the lookup_path starts with a dot' do
+          let(:lookup_path) { './app' }
+
+          it 'produces a correct relative path' do
+            expect(subject.import_path).to eq('./foo')
+          end
+        end
+
+        context 'when the lookup_path is the current directory' do
+          let(:lookup_path) { '.' }
+
+          it 'produces a correct relative path' do
+            expect(subject.import_path).to eq('./foo')
+          end
         end
       end
 

@@ -23,6 +23,11 @@ module ImportJS
                    make_relative_to: nil)
       @lookup_path = lookup_path
       @file_path = relative_file_path
+
+      if @lookup_path && @lookup_path.start_with?('.')
+        @lookup_path.sub!(/^\.\/?/, '')
+        @file_path.sub!(/^\.\/?/, '')
+      end
       if relative_file_path.end_with? '/package.json'
         @main_file = JSON.parse(File.read(relative_file_path))['main']
         match = relative_file_path.match(/(.*)\/package\.json/)
@@ -42,8 +47,8 @@ module ImportJS
         end
       end
 
-      if lookup_path
-        @import_path = @import_path.sub("#{@lookup_path}\/", '') # remove path prefix
+      if @lookup_path
+        @import_path.sub!(/^#{Regexp.escape(@lookup_path)}\//, '')
         if make_relative_to
           make_import_path_relative_to(make_relative_to)
         end
@@ -59,7 +64,7 @@ module ImportJS
       return unless make_relative_to.start_with? @lookup_path
 
       # Strip out the lookup_path
-      make_relative_to.sub!("#{@lookup_path}\/", '')
+      make_relative_to.sub!(/^#{Regexp.escape(@lookup_path)}\//, '')
 
       path = Pathname.new(@import_path).relative_path_from(
         Pathname.new(File.dirname(make_relative_to))
