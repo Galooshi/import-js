@@ -9,6 +9,7 @@ module ImportJS
     'declaration_keyword' => 'import',
     'eslint_executable' => 'eslint',
     'excludes' => [],
+    'ignore_package_prefixes' => [],
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx'],
     'use_relative_paths' => false

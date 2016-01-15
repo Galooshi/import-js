@@ -274,26 +274,75 @@ FooIO
 
       context 'when the import resolves to a dependency from package.json' do
         let(:existing_files) { [] }
+        let(:package_dependencies) { ['foo-bar'] }
+        let(:word) { 'fooBar' }
+        let(:text) { 'fooBar' }
 
         before do
           allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:package_dependencies).and_return(['foo'])
-          allow(File).to receive(:read)
-            .with('node_modules/foo/package.json')
-            .and_return('{ "main": "bar.jsx" }')
+            .to receive(:package_dependencies).and_return(package_dependencies)
+          package_dependencies.each do |dep|
+            allow(File).to receive(:read)
+              .with("node_modules/#{dep}/package.json")
+              .and_return('{ "main": "bar.jsx" }')
+          end
         end
 
         it 'adds an import to the top of the buffer' do
           expect(subject).to eq(<<-EOS.strip)
-import foo from 'foo';
+import fooBar from 'foo-bar';
 
-foo
+fooBar
           EOS
         end
 
         it 'displays a message about the imported module' do
           expect(VIM.last_command_message).to start_with(
-            'ImportJS: Imported `foo (main: bar.jsx)`')
+            'ImportJS: Imported `foo-bar (main: bar.jsx)`')
+        end
+
+        context 'with an `ignore_package_prefixes` configuration' do
+          let(:ignore_prefixes) { ['foo-'] }
+
+          before do
+            allow_any_instance_of(ImportJS::Configuration)
+              .to receive(:get).with('ignore_package_prefixes')
+              .and_return(ignore_prefixes)
+          end
+
+          context 'when the variable has the prefix' do
+            it 'still imports the package' do
+              expect(subject).to eq(<<-EOS.strip)
+import fooBar from 'foo-bar';
+
+fooBar
+              EOS
+            end
+          end
+
+          context 'when the variable does not have the prefix' do
+            let(:word) { 'bar' }
+            let(:text) { 'bar' }
+
+            it 'imports the package' do
+              expect(subject).to eq(<<-EOS.strip)
+import bar from 'foo-bar';
+
+bar
+              EOS
+            end
+          end
+
+          context 'when a package matches the prefix but not the word' do
+            let(:word) { 'baz' }
+            let(:text) { 'baz' }
+
+            it 'leaves the buffer unchanged' do
+              expect(subject).to eq(<<-EOS.strip)
+baz
+              EOS
+            end
+          end
         end
       end
 
