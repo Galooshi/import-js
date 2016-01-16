@@ -244,6 +244,20 @@ relatively.
 "use_relative_paths": true
 ```
 
+### `ignore_package_prefixes`
+
+If you have package dependencies speficied in `package.json` that are prefixed
+with e.g. an organization name but want to be able to import these without the
+package prefix, you can set the `ignore_package_prefixes` configuration option.
+
+```json
+"ignore_package_prefixes": ["my-company-"]
+```
+
+When package dependencies are matched, these prefixes will be ignored. As an
+example, a variable named `validator` would match a package named
+`my-company-validator`.
+
 ## Contributing
 
 See the

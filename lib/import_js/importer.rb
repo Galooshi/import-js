@@ -277,13 +277,19 @@ module ImportJS
 
       # Find imports from package.json
       @config.package_dependencies.each do |dep|
-        next unless dep =~ /^#{formatted_to_regex(variable_name)}$/
-        js_module = ImportJS::JSModule.new(
-          lookup_path: 'node_modules',
-          relative_file_path: "node_modules/#{dep}/package.json",
-          strip_file_extensions: [])
-        next if js_module.skip
-        matched_modules << js_module
+        ignore_prefixes = @config.get('ignore_package_prefixes')
+        dep_matcher = /^#{formatted_to_regex(variable_name)}$/
+        if dep =~ dep_matcher ||
+           ignore_prefixes.any? do |prefix|
+             dep.sub(/^#{prefix}/, '') =~ dep_matcher
+           end
+          js_module = ImportJS::JSModule.new(
+            lookup_path: 'node_modules',
+            relative_file_path: "node_modules/#{dep}/package.json",
+            strip_file_extensions: [])
+          next if js_module.skip
+          matched_modules << js_module
+        end
       end
 
       # If you have overlapping lookup paths, you might end up seeing the same
