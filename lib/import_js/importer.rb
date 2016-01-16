@@ -334,10 +334,17 @@ module ImportJS
     def formatted_to_regex(string)
       # Based on
       # http://stackoverflow.com/questions/1509915/converting-camel-case-to-underscore-case-in-ruby
-      string.
-        gsub(/([a-z\d])([A-Z])/, '\1.?\2'). # separates camelCase words with '.?'
-        tr('-_', '.'). # replaces underscores or dashes with '.'
-        downcase # converts all upper to lower case
+
+      # The pattern to match in between words.
+      split_pattern = 's?.?'
+
+      # Split up the string, allow pluralizing and a single (any) character
+      # in between. This will make e.g. 'fooBar' match 'foos/bar', 'foo_bar',
+      # and 'foobar'.
+      string
+        .gsub(/([a-z\d])([A-Z])/, '\1' + split_pattern + '\2') # camelCase
+        .tr('-_', split_pattern)
+        .downcase
     end
 
     # @return [String]
