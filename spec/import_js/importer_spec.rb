@@ -225,6 +225,33 @@ barsFoo
               end
             end
           end
+
+          context 'when the last folder ends with "es"' do
+            let(:existing_files) { ['sko/statuses/foo.jsx'] }
+            let(:word) { 'statusFoo' }
+            let(:text) { 'statusFoo' }
+
+            it 'resolves the import' do
+              expect(subject).to eq(<<-EOS.strip)
+import statusFoo from 'sko/statuses/foo';
+
+statusFoo
+              EOS
+            end
+
+            context 'when the variable also has "es" at the end' do
+              let(:word) { 'statusesFoo' }
+              let(:text) { 'statusesFoo' }
+
+              it 'resolves the import' do
+                expect(subject).to eq(<<-EOS.strip)
+import statusesFoo from 'sko/statuses/foo';
+
+statusesFoo
+                EOS
+              end
+            end
+          end
         end
 
         context 'when the variable name matches a few folders + filename' do
@@ -260,6 +287,33 @@ BarFooTa
 import BarsFoosTa from 'sko/bars/foos/ta';
 
 BarsFoosTa
+                EOS
+              end
+            end
+          end
+
+          context 'when the folders end with "es"' do
+            let(:existing_files) { ['sko/statuses/buses/ta.jsx'] }
+            let(:word) { 'statusBusTa' }
+            let(:text) { 'statusBusTa' }
+
+            it 'resolves the import' do
+              expect(subject).to eq(<<-EOS.strip)
+import statusBusTa from 'sko/statuses/buses/ta';
+
+statusBusTa
+              EOS
+            end
+
+            context 'when the variable also has "es"' do
+              let(:word) { 'StatusesBusesTa' }
+              let(:text) { 'StatusesBusesTa' }
+
+              it 'resolves the import' do
+                expect(subject).to eq(<<-EOS.strip)
+import StatusesBusesTa from 'sko/statuses/buses/ta';
+
+StatusesBusesTa
                 EOS
               end
             end

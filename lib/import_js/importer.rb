@@ -336,7 +336,7 @@ module ImportJS
       # http://stackoverflow.com/questions/1509915/converting-camel-case-to-underscore-case-in-ruby
 
       # The pattern to match in between words.
-      split_pattern = 's?.?'
+      split_pattern = '(?:es|s)?.?'
 
       # Split up the string, allow pluralizing and a single (any) character
       # in between. This will make e.g. 'fooBar' match 'foos/bar', 'foo_bar',
