@@ -345,7 +345,7 @@ module ImportJS
       # {
       #   "^mock": "./mocks/"
       # }
-      split_pattern = '(?:es|s)?.?'
+      split_pattern = '(es|s)?.?'
 
       # Split up the string, allow pluralizing and a single (any) character
       # in between. This will make e.g. 'fooBar' match 'foos/bar', 'foo_bar',
