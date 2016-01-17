@@ -211,6 +211,19 @@ import barFoo from 'sko/bars/foo';
 barFoo
               EOS
             end
+
+            context 'when the variable also has "s" at the end' do
+              let(:word) { 'barsFoo' }
+              let(:text) { 'barsFoo' }
+
+              it 'resolves the import' do
+                expect(subject).to eq(<<-EOS.strip)
+import barsFoo from 'sko/bars/foo';
+
+barsFoo
+                EOS
+              end
+            end
           end
         end
 
@@ -236,6 +249,19 @@ import BarFooTa from 'sko/bars/foos/ta';
 
 BarFooTa
               EOS
+            end
+
+            context 'when the variable also has "s"' do
+              let(:word) { 'BarsFoosTa' }
+              let(:text) { 'BarsFoosTa' }
+
+              it 'resolves the import' do
+                expect(subject).to eq(<<-EOS.strip)
+import BarsFoosTa from 'sko/bars/foos/ta';
+
+BarsFoosTa
+                EOS
+              end
             end
           end
         end
