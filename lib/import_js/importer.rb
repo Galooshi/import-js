@@ -90,7 +90,8 @@ module ImportJS
 
     # @return [Array<String>] the output from eslint, line by line
     def run_eslint_command
-      command = @config.get('eslint_executable') + ' ' + %W[
+      command = %W[
+        #{@config.get('eslint_executable')}
         --stdin
         --stdin-filename #{@editor.path_to_current_file}
         --format unix
