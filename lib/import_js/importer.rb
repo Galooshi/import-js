@@ -90,8 +90,9 @@ module ImportJS
 
     # @return [Array<String>] the output from eslint, line by line
     def run_eslint_command
-      command = @config.get('eslint_executable') + ' ' + %w[
+      command = @config.get('eslint_executable') + ' ' + %W[
         --stdin
+        --stdin-filename #{@editor.path_to_current_file}
         --format unix
         --rule 'no-undef: 2'
         --rule 'no-unused-vars: [2, { "vars": "all", "args": "none" }]'
