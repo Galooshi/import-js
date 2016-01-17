@@ -1,4 +1,4 @@
 # Defines the gem version.
 module ImportJS
-  VERSION = '0.3.0'
+  VERSION = '0.3.1'
 end
