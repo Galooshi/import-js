@@ -252,6 +252,13 @@ module ImportJS
         "egrep -i \"(/|^)#{formatted_to_regex(variable_name)}(/index)?(/package)?\.js.*\""
       matched_modules = []
       @config.get('lookup_paths').each do |lookup_path|
+        if lookup_path == ''
+          # If lookup_path is an empty string, the `find` command will not work
+          # as desired so we bail early.
+          fail ImportJS::FindError.new,
+            "lookup path cannot be empty (#{lookup_path.inspect})"
+        end
+
         find_command = %W[
           find #{lookup_path}
           -name "**.js*"
@@ -260,7 +267,7 @@ module ImportJS
         command = "#{find_command} | #{egrep_command}"
         out, err = Open3.capture3(command)
 
-        fail ImportJS::ParseError.new, err unless err == ''
+        fail ImportJS::FindError.new, err unless err == ''
 
         matched_modules.concat(
           out.split("\n").map do |f|

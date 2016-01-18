@@ -6,6 +6,10 @@ module ImportJS
   class ParseError < StandardError
     # Error thrown when a JS file can't be parsed
   end
+
+  class FindError < StandardError
+    # Error thrown when the find command fails
+  end
 end
 
 require_relative 'import_js/command_line_editor'
