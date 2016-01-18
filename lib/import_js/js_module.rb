@@ -25,20 +25,21 @@ module ImportJS
       @file_path = relative_file_path
 
       if @lookup_path && @lookup_path.start_with?('.')
-        @lookup_path.sub!(/^\.\/?/, '')
-        @file_path.sub!(/^\.\/?/, '')
+        @lookup_path = @lookup_path.sub(/^\.\/?/, '')
+        @file_path = @file_path.sub(/^\.\/?/, '')
       end
-      if relative_file_path.end_with? '/package.json'
-        @main_file = JSON.parse(File.read(relative_file_path))['main']
-        match = relative_file_path.match(/(.*)\/package\.json/)
+
+      if @file_path.end_with? '/package.json'
+        @main_file = JSON.parse(File.read(@file_path))['main']
+        match = @file_path.match(/(.*)\/package\.json/)
         @import_path = match[1]
         @skip = !@main_file
-      elsif relative_file_path.match(%r{/index\.js[^/]*$})
-        match = relative_file_path.match(/(.*)\/(index\.js.*)/)
+      elsif @file_path.match(%r{/index\.js[^/]*$})
+        match = @file_path.match(/(.*)\/(index\.js.*)/)
         @main_file = match[2]
         @import_path = match[1]
       else
-        @import_path = relative_file_path
+        @import_path = @file_path
         strip_file_extensions.each do |ext|
           if @import_path.end_with?(ext)
             @import_path = @import_path[0...-ext.length]
