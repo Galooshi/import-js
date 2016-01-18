@@ -67,6 +67,7 @@ describe ImportJS::Importer do
   let(:text) { 'foo' } # start with a simple buffer
   let(:existing_files) { [] } # start with a simple buffer
   let(:package_json_content) { nil }
+  let(:lookup_paths) { [@tmp_dir] }
 
   before do
     VIM.current_word = word
@@ -76,7 +77,7 @@ describe ImportJS::Importer do
     allow_any_instance_of(ImportJS::Configuration)
       .to receive(:get).and_call_original
     allow_any_instance_of(ImportJS::Configuration)
-      .to receive(:get).with('lookup_paths').and_return([@tmp_dir])
+      .to receive(:get).with('lookup_paths').and_return(lookup_paths)
     allow_any_instance_of(ImportJS::VIMEditor)
       .to receive(:available_columns).and_return(100)
     allow_any_instance_of(ImportJS::VIMEditor)
@@ -103,6 +104,14 @@ describe ImportJS::Importer do
     subject do
       described_class.new.import
       VIM::Buffer.current_buffer.to_s
+    end
+
+    context 'when lookup_paths is just an empty string' do
+      let(:lookup_paths) { [''] }
+
+      it 'throws an error' do
+        expect { subject }.to raise_error(ImportJS::FindError)
+      end
     end
 
     context 'with a variable name that will not resolve' do
