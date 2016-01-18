@@ -257,7 +257,11 @@ module ImportJS
           -name "**.js*"
           -not -path "./node_modules/*"
         ].join(' ')
-        out, _ = Open3.capture3("#{find_command} | #{egrep_command}")
+        command = "#{find_command} | #{egrep_command}"
+        out, err = Open3.capture3(command)
+
+        fail ImportJS::ParseError.new, err unless err == ''
+
         matched_modules.concat(
           out.split("\n").map do |f|
             next if @config.get('excludes').any? do |glob_pattern|
