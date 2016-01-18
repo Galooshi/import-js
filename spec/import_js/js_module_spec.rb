@@ -15,6 +15,21 @@ describe ImportJS::JSModule do
     )
   end
 
+  describe 'when lookup_path and relative_file_path are .' do
+    let(:lookup_path) { '.' }
+    let(:relative_file_path) { '.' }
+
+    it 'does not modify lookup_path' do
+      subject
+      expect(lookup_path).to eq('.')
+    end
+
+    it 'does not modify relative_file_path' do
+      subject
+      expect(relative_file_path).to eq('.')
+    end
+  end
+
   describe '.import_path' do
     context 'with an empty `strip_file_extensions` config' do
       let(:strip_file_extensions) { [] }

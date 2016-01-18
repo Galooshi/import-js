@@ -2,7 +2,6 @@ require 'spec_helper'
 require 'json'
 
 describe ImportJS::Configuration do
-  let(:key) { 'aliases' }
   subject   { described_class.new }
 
   describe '.refresh' do
@@ -50,7 +49,7 @@ describe ImportJS::Configuration do
       end
 
       it 'returns the configured value for the key' do
-        expect(subject.get(key)).to eq('foo' => 'bar')
+        expect(subject.get('aliases')).to eq('foo' => 'bar')
       end
     end
 
@@ -60,7 +59,7 @@ describe ImportJS::Configuration do
       end
 
       it 'returns the default value for the key' do
-        expect(subject.get(key)).to eq({})
+        expect(subject.get('aliases')).to eq({})
       end
     end
   end
@@ -140,7 +139,7 @@ describe ImportJS::Configuration do
       end
 
       it 'returns the default value for the key' do
-        expect(subject.get(key)).to eq({})
+        expect(subject.get('aliases')).to eq({})
       end
     end
   end
