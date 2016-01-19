@@ -10,6 +10,7 @@ module ImportJS
     'eslint_executable' => 'eslint',
     'excludes' => [],
     'ignore_package_prefixes' => [],
+    'import_function' => 'require',
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx'],
     'use_relative_paths' => false

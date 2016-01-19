@@ -169,7 +169,8 @@ module ImportJS
         import.to_import_strings(
           @config.get('declaration_keyword'),
           @editor.max_line_length,
-          @editor.tab)
+          @editor.tab,
+          @config.get('import_function'))
       end.flatten.sort
 
       # Find old import strings so we can compare with the new import strings

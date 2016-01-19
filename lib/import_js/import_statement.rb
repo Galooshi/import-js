@@ -1,13 +1,15 @@
 module ImportJS
   # Class that represents an import statement, e.g.
-  # "const foo = require('foo');"
+  # `const foo = require('foo');`
+  # `let foo = myCustomRequire('foo');`
+  # `import foo from 'foo';`
   class ImportStatement
     REGEX_CONST_LET_VAR = %r{
       \A
       (?:const|let|var)\s+ # declaration keyword
       (?<assignment>.+?)   # <assignment> variable assignment
       \s*=\s*
-      require\(
+      (?<import_function>[^\(]+?)\( # <import_function> variable assignment
         (?<quote>'|")      # <quote> opening quote
         (?<path>[^\2]+)    # <path> module path
         \k<quote>          # closing quote
@@ -39,13 +41,16 @@ module ImportJS
     }xm
 
     attr_accessor :assignment
-    attr_accessor :original_import_string # a cache of the parsed import string
     attr_accessor :default_variable
     attr_accessor :destructured_variables
+    attr_accessor :import_function
+    attr_accessor :original_import_string # a cache of the parsed import string
     attr_accessor :path
 
     # @param string [String] a possible import statement, e.g.
     #   `const foo = require('foo');`
+    #   `let foo = myCustomRequire('foo');`
+    #   `import foo from 'foo';`
     # @return [ImportJS::ImportStatement?] a parsed statement, or nil if the
     #   string can't be parsed
     def self.parse(string)
@@ -57,6 +62,9 @@ module ImportJS
       statement.original_import_string = match.string
       statement.path = match[:path]
       statement.assignment = match[:assignment]
+      if match.names.include? 'import_function'
+        statement.import_function = match[:import_function]
+      end
       if dest_match = statement.assignment.match(REGEX_DESTRUCTURE)
         statement.default_variable = dest_match[:default]
         statement.destructured_variables =
@@ -117,8 +125,12 @@ module ImportJS
     # @param declaration_keyword [String] const, let, var, or import
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
+    # @param import_function [String] e.g. 'require'
     # @return [Array] generated import statement strings
-    def to_import_strings(declaration_keyword, max_line_length, tab)
+    def to_import_strings(declaration_keyword,
+                          max_line_length,
+                          tab,
+                          import_function)
       return [original_import_string] if original_import_string
 
       if declaration_keyword == 'import'
@@ -134,12 +146,18 @@ module ImportJS
 
         if default_variable
           strings <<
-            default_import_string(declaration_keyword, max_line_length, tab)
+            default_import_string(declaration_keyword,
+                                  max_line_length,
+                                  tab,
+                                  import_function)
         end
 
         if destructured?
           strings <<
-            destructured_import_string(declaration_keyword, max_line_length, tab)
+            destructured_import_string(declaration_keyword,
+                                       max_line_length,
+                                       tab,
+                                       import_function)
         end
 
         strings
@@ -172,18 +190,23 @@ module ImportJS
     end
 
     # @param declaration_keyword [String] e.g. 'import'
+    # @param import_function [String] e.g. 'require'
     # @return [Array]
-    def equals_and_value(declaration_keyword)
+    def equals_and_value(declaration_keyword, import_function)
       return ['from', "'#{path}';"] if declaration_keyword == 'import'
-      ['=', "require('#{path}');"]
+      ['=', "#{import_function}('#{path}');"]
     end
 
     # @param declaration_keyword [String]
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
+    # @param import_function [String] e.g. 'require'
     # @return [String] import statement, wrapped at max line length if necessary
-    def default_import_string(declaration_keyword, max_line_length, tab)
-      equals, value = equals_and_value(declaration_keyword)
+    def default_import_string(declaration_keyword,
+                              max_line_length,
+                              tab,
+                              import_function = nil)
+      equals, value = equals_and_value(declaration_keyword, import_function)
       line = "#{declaration_keyword} #{default_variable} #{equals} #{value}"
       return line unless line_too_long?(line, max_line_length)
 
@@ -194,8 +217,11 @@ module ImportJS
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
-    def destructured_import_string(declaration_keyword, max_line_length, tab)
-      equals, value = equals_and_value(declaration_keyword)
+    def destructured_import_string(declaration_keyword,
+                                   max_line_length,
+                                   tab,
+                                   import_function = nil)
+      equals, value = equals_and_value(declaration_keyword, import_function)
       if declaration_keyword == 'import' && default_variable
         prefix = "#{default_variable}, "
       end

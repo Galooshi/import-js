@@ -502,7 +502,29 @@ import foo from 'bar/foo';
 import zoo from 'foo/zoo';
 
 foo
-        EOS
+          EOS
+        end
+
+        context 'when there are unconventional imports in the list' do
+          # e.g. added through using the `import_function` configuration option
+          let(:text) { <<-EOS.strip }
+const sko = customImportFunction('sko');
+import zoo from 'foo/zoo';
+import bar from 'foo/bar';
+
+foo
+          EOS
+
+          it 'adds the import and sorts the entire list' do
+            expect(subject).to eq(<<-EOS.strip)
+const sko = customImportFunction('sko');
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+import zoo from 'foo/zoo';
+
+foo
+            EOS
+          end
         end
       end
 
@@ -1251,6 +1273,43 @@ memoize
                 EOS
               end
             end
+          end
+        end
+      end
+
+      context 'with a custom `import_function`' do
+        let(:existing_files) { ['bar/foo.js'] }
+
+        context 'and `declaration_keyword=import`' do
+          let(:configuration) do
+            {
+              'import_function' => 'myRequire',
+              'declaration_keyword' => 'import'
+            }
+          end
+
+          it 'does nothing special' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'and `declaration_keyword=const`' do
+          let(:configuration) do
+            {
+              'import_function' => 'myRequire',
+              'declaration_keyword' => 'const'
+            }
+          end
+          it 'uses the custom import function instead of "require"' do
+            expect(subject).to eq(<<-EOS.strip)
+const foo = myRequire('bar/foo');
+
+foo
+            EOS
           end
         end
       end

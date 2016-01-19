@@ -216,6 +216,19 @@ let Foo = require('foo'); // "declaration_keyword": "let"
 const Foo = require('foo'); // "declaration_keyword": "const"
 ```
 
+### `import_function`
+
+*Note: this only applies if you are using `var`, `let`, or `const` as
+`declaration_keyword`.*
+
+The default value for this configuration option is `"require"`, which is [the
+standard CommonJS function name used for
+importing](http://wiki.commonjs.org/wiki/Modules/1.1).
+
+```json
+"import_function": "myCustomRequireFunction"
+```
+
 ### `strip_file_extensions`
 
 An array that controls what file extensions are stripped out from the resulting
