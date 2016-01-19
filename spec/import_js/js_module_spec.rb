@@ -7,7 +7,7 @@ describe ImportJS::JSModule do
   let(:strip_file_extensions) { ['.js'] }
 
   subject do
-    described_class.new(
+    described_class.construct(
       lookup_path: lookup_path,
       relative_file_path: relative_file_path,
       strip_file_extensions: strip_file_extensions,

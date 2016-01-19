@@ -3,11 +3,10 @@ require 'pathname'
 module ImportJS
   # Class that represents a js module found in the file system
   class JSModule
-    attr_reader :import_path
-    attr_reader :lookup_path
-    attr_reader :file_path
-    attr_reader :main_file
-    attr_reader :skip
+    attr_accessor :import_path
+    attr_accessor :lookup_path
+    attr_accessor :file_path
+    attr_accessor :main_file
     attr_accessor :is_destructured
 
     # @param lookup_path [String] the lookup path in which this module was found
@@ -17,57 +16,80 @@ module ImportJS
     #   e.g. ['.js', '.jsx']
     # @param make_relative_to [String|nil] a path to a different file which the
     #   resulting import path should be relative to.
-    def initialize(lookup_path: nil,
-                   relative_file_path: nil,
-                   strip_file_extensions: nil,
-                   make_relative_to: nil)
-      @lookup_path = lookup_path
-      @file_path = relative_file_path
+    def self.construct(lookup_path: nil,
+                       relative_file_path: nil,
+                       strip_file_extensions: nil,
+                       make_relative_to: nil)
+      js_module = new
+      js_module.lookup_path = normalize_path(lookup_path)
+      js_module.file_path = normalize_path(relative_file_path)
 
-      if @lookup_path && @lookup_path.start_with?('.')
-        @lookup_path = @lookup_path.sub(/^\.\/?/, '')
-        @file_path = @file_path.sub(/^\.\/?/, '')
+      import_path, main_file = resolve_import_path_and_main(
+        js_module.file_path, strip_file_extensions)
+
+      return unless import_path
+
+      import_path = import_path.sub(
+        /^#{Regexp.escape(js_module.lookup_path)}\//, '')
+
+      js_module.import_path = import_path
+      js_module.main_file = main_file
+      js_module.make_relative_to(make_relative_to) if make_relative_to
+      js_module
+    end
+
+    # @param path [String]
+    # @return [String]
+    def self.normalize_path(path)
+      return unless path
+      path.sub(/^\.\/?/, '')
+    end
+
+    # @param file_path [String]
+    # @param strip_file_extensions [Boolean]
+    # @return [String, String]
+    def self.resolve_import_path_and_main(file_path, strip_file_extensions)
+      if file_path.end_with? '/package.json'
+        main_file = JSON.parse(File.read(file_path))['main']
+        return [nil, nil] unless main_file
+        match = file_path.match(/(.*)\/package\.json/)
+        return match[1], main_file
       end
 
-      if @file_path.end_with? '/package.json'
-        @main_file = JSON.parse(File.read(@file_path))['main']
-        match = @file_path.match(/(.*)\/package\.json/)
-        @import_path = match[1]
-        @skip = !@main_file
-      elsif @file_path.match(%r{/index\.js[^/]*$})
-        match = @file_path.match(/(.*)\/(index\.js.*)/)
-        @main_file = match[2]
-        @import_path = match[1]
-      else
-        @import_path = @file_path
-        strip_file_extensions.each do |ext|
-          if @import_path.end_with?(ext)
-            @import_path = @import_path[0...-ext.length]
-            break
-          end
+      if file_path.match(%r{/index\.js[^/]*$})
+        match = file_path.match(/(.*)\/(index\.js.*)/)
+        return match[1], match[2]
+      end
+
+      import_path = file_path
+      strip_file_extensions.each do |ext|
+        if import_path.end_with?(ext)
+          import_path = import_path[0...-ext.length]
+          break
         end
       end
+      [import_path, nil]
+    end
 
-      if @lookup_path
-        @import_path.sub!(/^#{Regexp.escape(@lookup_path)}\//, '')
-        if make_relative_to
-          make_import_path_relative_to(make_relative_to)
-        end
-      end
+    # @param import_path [String]
+    def initialize(import_path: nil)
+      self.import_path = import_path
     end
 
     # @param make_relative_to [String]
-    def make_import_path_relative_to(make_relative_to)
+    def make_relative_to(make_relative_to)
+      return unless lookup_path
       # First, strip out any absolute path up until the current directory
       make_relative_to = make_relative_to.sub(Dir.pwd + "\/", '')
 
       # Ignore if the file to relate to is part of a different lookup_path
-      return unless make_relative_to.start_with? @lookup_path
+      return unless make_relative_to.start_with? lookup_path
 
       # Strip out the lookup_path
-      make_relative_to.sub!(/^#{Regexp.escape(@lookup_path)}\//, '')
+      make_relative_to = make_relative_to.sub(
+        /^#{Regexp.escape(lookup_path)}\//, '')
 
-      path = Pathname.new(@import_path).relative_path_from(
+      path = Pathname.new(import_path).relative_path_from(
         Pathname.new(File.dirname(make_relative_to))
       ).to_s
 
@@ -75,7 +97,7 @@ module ImportJS
         # `Pathname.relative_path_from` will not add "./" automatically
         path = './' + path
       end
-      @import_path = path
+      self.import_path = path
     end
 
     # @return [String] a readable description of the module

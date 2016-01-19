@@ -274,16 +274,13 @@ module ImportJS
             next if @config.get('excludes').any? do |glob_pattern|
               File.fnmatch(glob_pattern, f)
             end
-            js_module = ImportJS::JSModule.new(
+            ImportJS::JSModule.construct(
               lookup_path: lookup_path,
               relative_file_path: f,
               strip_file_extensions: @config.get('strip_file_extensions'),
               make_relative_to: @config.get('use_relative_paths') &&
                                 path_to_current_file
             )
-
-            next if js_module.skip
-            js_module
           end.compact
         )
       end
@@ -296,12 +293,11 @@ module ImportJS
            ignore_prefixes.any? do |prefix|
              dep.sub(/^#{prefix}/, '') =~ dep_matcher
            end
-          js_module = ImportJS::JSModule.new(
+          js_module = ImportJS::JSModule.construct(
             lookup_path: 'node_modules',
             relative_file_path: "node_modules/#{dep}/package.json",
             strip_file_extensions: [])
-          next if js_module.skip
-          matched_modules << js_module
+          matched_modules << js_module if js_module
         end
       end
 
