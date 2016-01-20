@@ -15,6 +15,8 @@ describe ImportJS::Configuration do
       end
 
       before do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:load_config).and_return({})
         allow_any_instance_of(ImportJS::Configuration).to receive(:load_config).with(
           './.importjs.json').and_return(configuration)
       end
@@ -53,6 +55,46 @@ describe ImportJS::Configuration do
             expect(subject.get('declaration_keyword')).to eq('let')
             expect(subject.get('aliases')).to eq('foo' => 'bar')
             expect(subject.get('import_function')).to eq('require')
+          end
+        end
+      end
+
+      context 'with `local_configs` inside the main config file' do
+        let(:path_to_current_file) { File.join(Dir.pwd, 'goo', 'gar', 'gaz.js') }
+        let(:pattern) { 'goo/**' }
+        let(:configuration) do
+          {
+            'declaration_keyword' => 'let',
+            'local_configs' => [{
+              'pattern' => 'goo/**',
+              'declaration_keyword' => 'var'
+            }]
+          }
+        end
+
+        context 'when the file being edited matches the pattern' do
+          it 'uses the local configuration' do
+            expect(subject.get('declaration_keyword')).to eq('var')
+          end
+
+          it 'falls back to global config for keys not present in local config' do
+            expect(subject.get('import_function')).to eq('require')
+          end
+        end
+
+        context 'when the file being edited does not match the pattern' do
+          let(:path_to_current_file) { 'foo/far/gar.js' }
+
+          it 'uses the global configuration' do
+            expect(subject.get('declaration_keyword')).to eq('let')
+          end
+        end
+
+        context 'when the path to the local file does not have the full path' do
+          let(:path_to_current_file) { 'goo/gar/gaz.js' }
+
+          it 'applies the local configuration' do
+            expect(subject.get('declaration_keyword')).to eq('var')
           end
         end
       end

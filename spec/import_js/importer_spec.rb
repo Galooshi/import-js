@@ -1578,6 +1578,49 @@ foo
           end
         end
       end
+
+      context 'with `local_configs`' do
+        let(:pattern) { 'foo/**' }
+        let(:existing_files) { ['bar/foo.jsx'] }
+        let(:configuration) do
+          {
+            'local_configs' => [{
+              'pattern' => pattern,
+              'declaration_keyword' => 'var'
+            }]
+          }
+        end
+        before do
+          allow_any_instance_of(ImportJS::VIMEditor)
+            .to receive(:path_to_current_file)
+            .and_return('foo/bar.js')
+        end
+
+        let(:text) { 'foo' }
+        let(:word) { 'foo' }
+
+        context 'when the pattern matches the file being edited' do
+          it 'uses local config' do
+            expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
+            EOS
+          end
+        end
+
+        context 'when the pattern does not match the file being edited' do
+          let(:pattern) { 'car/**' }
+
+          it 'uses global config' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+      end
     end
   end
 

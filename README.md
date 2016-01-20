@@ -274,10 +274,31 @@ example, a variable named `validator` would match a package named
 ## Local configuration
 
 If different directory trees within your project have different importing
-needs, local configuration can come in handy. You add local configuration by
-creating an `importjs.json` file in a folder descending from the project root.
-When configuration is resolved, import-js will walk up the directory tree,
-merging configuration as it's discovered.
+needs, local configuration can come in handy. One way to add local
+configuration is by creating an `importjs.json` file in a folder descending
+from the project root.  When configuration is resolved, import-js will walk up
+the directory tree, merging configuration as it's discovered.
+
+Alternatively, you can specify local configuration in a `local_configs` array
+in the main (or local for that matter) `.importjs.json` file.
+
+```json
+"local_configs": [
+  {
+    "pattern": "app/**",
+    "declaration_keyword": "const"
+  },
+  {
+    "pattern": "tests/**",
+    "declaration_keyword": "var"
+  },
+]
+```
+
+The `pattern` must be a glob pattern supported by [Ruby's `File.fnmatch`
+method](http://ruby-doc.org/core-2.3.0/File.html#method-c-fnmatch). The path to
+the file you are currently editing (relative to the project root) will be used
+when matching.
 
 ## Contributing
 

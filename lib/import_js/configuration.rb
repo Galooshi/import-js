@@ -11,6 +11,7 @@ module ImportJS
     'excludes' => [],
     'ignore_package_prefixes' => [],
     'import_function' => 'require',
+    'local_configs' => [],
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx'],
     'use_relative_paths' => false
@@ -19,9 +20,9 @@ module ImportJS
   # Class that initializes configuration from a .importjs.json file
   class Configuration
     def initialize(path_to_current_file)
-      path_to_current_file = normalize_path(path_to_current_file)
+      @path_to_current_file = normalize_path(path_to_current_file)
       config = {}
-      Pathname.new(File.dirname(path_to_current_file)).descend do |path|
+      Pathname.new(File.dirname(@path_to_current_file)).descend do |path|
         config.merge!(load_config(File.join(path, CONFIG_FILE)))
       end
       @config = DEFAULT_CONFIG.merge(config)
@@ -29,14 +30,18 @@ module ImportJS
 
     # @return [Object] a configuration value
     def get(key)
-      @config[key]
+      config = @config['local_configs'].find do |local_config|
+        File.fnmatch(normalize_path(local_config['pattern']),
+                     @path_to_current_file)
+      end || @config
+      config[key] || @config[key]
     end
 
     # @param variable_name [String]
     # @param path_to_current_file [String?]
     # @return [ImportJS::JSModule?]
     def resolve_alias(variable_name, path_to_current_file)
-      path = @config['aliases'][variable_name]
+      path = get('aliases')[variable_name]
       return resolve_destructured_alias(variable_name) unless path
 
       path = path['path'] if path.is_a? Hash
@@ -46,11 +51,10 @@ module ImportJS
                         File.basename(path_to_current_file, '.*'))
       end
       ImportJS::JSModule.new(import_path: path)
-
     end
 
     def resolve_destructured_alias(variable_name)
-      @config['aliases'].each do |_, path|
+      get('aliases').each do |_, path|
         next if path.is_a? String
         if (path['destructure'] || []).include?(variable_name)
           js_module = ImportJS::JSModule.new(import_path: path['path'])
