@@ -18,13 +18,13 @@ module ImportJS
 
   # Class that initializes configuration from a .importjs.json file
   class Configuration
-    def initialize
-      @config = DEFAULT_CONFIG.merge(load_config)
-    end
-
-    def refresh
-      return if @config_time == config_file_last_modified
-      @config = DEFAULT_CONFIG.merge(load_config)
+    def initialize(path_to_current_file)
+      path_to_current_file = normalize_path(path_to_current_file)
+      config = {}
+      Pathname.new(File.dirname(path_to_current_file)).descend do |path|
+        config.merge!(load_config(File.join(path, CONFIG_FILE)))
+      end
+      @config = DEFAULT_CONFIG.merge(config)
     end
 
     # @return [Object] a configuration value
@@ -76,15 +76,18 @@ module ImportJS
 
     private
 
+    # @param file [File]
     # @return [Hash]
-    def load_config
-      @config_time = config_file_last_modified
-      File.exist?(CONFIG_FILE) ? JSON.parse(File.read(CONFIG_FILE)) : {}
+    def load_config(file)
+      return {} unless File.exist?(file)
+      JSON.parse(File.read(file))
     end
 
-    # @return [Time?]
-    def config_file_last_modified
-      File.exist?(CONFIG_FILE) ? File.mtime(CONFIG_FILE) : nil
+    def normalize_path(path)
+      return '.' unless path
+      path = path.sub(/^#{Regexp.escape(Dir.pwd)}/, '.')
+      path = "./#{path}" unless path.start_with? '.'
+      path
     end
   end
 end

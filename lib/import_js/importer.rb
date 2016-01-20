@@ -4,14 +4,13 @@ require 'open3'
 module ImportJS
   class Importer
     def initialize(editor = ImportJS::VIMEditor.new)
-      @config = ImportJS::Configuration.new
       @editor = editor
     end
 
     # Finds variable under the cursor to import. By default, this is bound to
     # `<Leader>j`.
     def import
-      @config.refresh
+      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       variable_name = @editor.current_word
       if variable_name.empty?
         message(<<-EOS.split.join(' '))
@@ -37,7 +36,7 @@ module ImportJS
     end
 
     def goto
-      @config.refresh
+      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       @timing = { start: Time.now }
       variable_name = @editor.current_word
       js_modules = find_js_modules(variable_name)
@@ -49,7 +48,7 @@ module ImportJS
 
     # Removes unused imports and adds imports for undefined variables
     def fix_imports
-      @config.refresh
+      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       eslint_result = run_eslint_command
       undefined_variables = eslint_result.map do |line|
         /(["'])([^"']+)\1 is not defined/.match(line) do |match_data|

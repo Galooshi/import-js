@@ -81,7 +81,7 @@ describe ImportJS::Importer do
     allow_any_instance_of(ImportJS::VIMEditor)
       .to receive(:available_columns).and_return(100)
     allow_any_instance_of(ImportJS::VIMEditor)
-      .to receive(:path_to_current_file).and_return(nil)
+      .to receive(:path_to_current_file).and_return(File.join(@tmp_dir, 'test.js'))
 
     existing_files.each do |file|
       full_path = File.join(@tmp_dir, file)

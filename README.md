@@ -271,6 +271,14 @@ When package dependencies are matched, these prefixes will be ignored. As an
 example, a variable named `validator` would match a package named
 `my-company-validator`.
 
+## Local configuration
+
+If different directory trees within your project have different importing
+needs, local configuration can come in handy. You add local configuration by
+creating an `importjs.json` file in a folder descending from the project root.
+When configuration is resolved, import-js will walk up the directory tree,
+merging configuration as it's discovered.
+
 ## Contributing
 
 See the
