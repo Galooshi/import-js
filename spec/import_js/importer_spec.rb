@@ -67,13 +67,13 @@ describe ImportJS::Importer do
   let(:text) { 'foo' } # start with a simple buffer
   let(:existing_files) { [] } # start with a simple buffer
   let(:package_json_content) { nil }
-  let(:lookup_paths) { [@tmp_dir] }
+  let(:lookup_paths) { [File.basename(@tmp_dir)] }
 
   before do
     VIM.current_word = word
     VIM::Buffer.current_buffer = text
 
-    @tmp_dir = Dir.mktmpdir
+    @tmp_dir = Dir.mktmpdir(nil, Dir.pwd)
     allow_any_instance_of(ImportJS::Configuration)
       .to receive(:get).and_call_original
     allow_any_instance_of(ImportJS::Configuration)
