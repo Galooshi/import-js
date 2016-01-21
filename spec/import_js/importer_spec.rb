@@ -1621,18 +1621,27 @@ foo
 
         context 'with an applies_from pattern' do
           let(:from_pattern) { "#{File.basename(@tmp_dir)}/bar/**" }
+          let(:path_to_current_file) { "#{File.basename(@tmp_dir)}/foo/bar.js" }
           let(:configuration) do
             [{
               'applies_from' => from_pattern,
               'declaration_keyword' => 'var',
-              'import_function' => 'quack'
+              'import_function' => 'quack',
+              'use_relative_paths' => true,
+              'strip_file_extensions' => [],
             }]
+          end
+
+          before do
+            allow_any_instance_of(ImportJS::VIMEditor)
+              .to receive(:path_to_current_file)
+              .and_return(path_to_current_file)
           end
 
           context 'that matches the path of the file being imported' do
             it 'uses local config' do
               expect(subject).to eq(<<-EOS.strip)
-var foo = quack('bar/foo');
+var foo = quack('../bar/foo.jsx');
 
 foo
               EOS

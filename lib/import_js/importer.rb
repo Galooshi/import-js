@@ -277,9 +277,11 @@ module ImportJS
             ImportJS::JSModule.construct(
               lookup_path: lookup_path,
               relative_file_path: f,
-              strip_file_extensions: @config.get('strip_file_extensions'),
-              make_relative_to: @config.get('use_relative_paths') &&
-                                path_to_current_file
+              strip_file_extensions:
+                @config.get('strip_file_extensions', from_file: f),
+              make_relative_to:
+                @config.get('use_relative_paths', from_file: f) &&
+                path_to_current_file
             )
           end.compact
         )

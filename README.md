@@ -312,10 +312,12 @@ When using `applies_from` only a subset of configurations are supported:
 
 - `declaration_keyword`
 - `import_function`
+- `strip_file_extensions`
+- `use_relative_paths`
 
 The first matching configuration containing the configuration key will be used.
-It is therefore a good idea to put a catch-all configuration at the bottom
-(like in the example above).
+Because of that, it's a good idea to put a catch-all configuration at the
+bottom (like in the example above).
 
 ## Contributing
 
