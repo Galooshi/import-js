@@ -229,6 +229,17 @@ importing](http://wiki.commonjs.org/wiki/Modules/1.1).
 "import_function": "myCustomRequireFunction"
 ```
 
+### `strip_from_path`
+
+This option is used to trim imports by removing a slice of the path. The main
+rationale for using this option is if you have a custom `import_function` that
+has different logic than the default `require` and `import from` behavior.
+
+```json
+"strip_from_path": "app/assets/",
+"import_function": "requireFromAppAssets"
+```
+
 ### `strip_file_extensions`
 
 An array that controls what file extensions are stripped out from the resulting

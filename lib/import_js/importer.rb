@@ -281,7 +281,9 @@ module ImportJS
                 @config.get('strip_file_extensions', from_file: f),
               make_relative_to:
                 @config.get('use_relative_paths', from_file: f) &&
-                path_to_current_file
+                path_to_current_file,
+              strip_from_path:
+                @config.get('strip_from_path', from_file: f)
             )
           end.compact
         )

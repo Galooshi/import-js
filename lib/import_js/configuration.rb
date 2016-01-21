@@ -13,6 +13,7 @@ module ImportJS
     'import_function' => 'require',
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx'],
+    'strip_from_path' => nil,
     'use_relative_paths' => false
   }
 

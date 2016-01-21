@@ -19,7 +19,8 @@ module ImportJS
     def self.construct(lookup_path: nil,
                        relative_file_path: nil,
                        strip_file_extensions: nil,
-                       make_relative_to: nil)
+                       make_relative_to: nil,
+                       strip_from_path: nil)
       js_module = new
       js_module.lookup_path = normalize_path(lookup_path)
       js_module.file_path = normalize_path(relative_file_path)
@@ -32,7 +33,12 @@ module ImportJS
       import_path = import_path.sub(
         /^#{Regexp.escape(js_module.lookup_path)}\//, '')
 
-      js_module.import_path = import_path
+      if strip_from_path
+        js_module.import_path =
+          import_path.sub(/^#{Regexp.escape(strip_from_path)}/, '')
+      else
+        js_module.import_path = import_path
+      end
       js_module.main_file = main_file
       js_module.make_relative_to(make_relative_to) if make_relative_to
       js_module
