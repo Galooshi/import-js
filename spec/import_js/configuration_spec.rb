@@ -16,7 +16,7 @@ describe ImportJS::Configuration do
 
       before do
         allow_any_instance_of(ImportJS::Configuration)
-          .to receive(:load_config).and_return({})
+          .to receive(:load_config).and_return(nil)
         allow_any_instance_of(ImportJS::Configuration).to receive(:load_config).with(
           './.importjs.json').and_return(configuration)
       end
@@ -57,28 +57,48 @@ describe ImportJS::Configuration do
             expect(subject.get('import_function')).to eq('require')
           end
         end
+
+        context 'when the local config is an array' do
+          let(:local_configuration) do
+            [{
+              'declaration_keyword' => 'let'
+            }]
+          end
+
+          it 'merges the two configurations plus the default one' do
+            expect(subject.get('declaration_keyword')).to eq('let')
+            expect(subject.get('aliases')).to eq('foo' => 'bar')
+            expect(subject.get('import_function')).to eq('require')
+          end
+        end
       end
 
-      context 'with `local_configs` inside the main config file' do
+      context 'when there are multiple configs in the .importjs.json file' do
         let(:path_to_current_file) { File.join(Dir.pwd, 'goo', 'gar', 'gaz.js') }
-        let(:pattern) { 'goo/**' }
         let(:configuration) do
-          {
-            'declaration_keyword' => 'let',
-            'local_configs' => [{
-              'pattern' => 'goo/**',
+          [
+            {
+              'applies_to' => 'goo/**',
               'declaration_keyword' => 'var'
-            }]
-          }
+            },
+            {
+              'declaration_keyword' => 'let',
+              'import_function' => 'foobar'
+            }
+          ]
         end
 
-        context 'when the file being edited matches the pattern' do
+        context 'when the file being edited matches applies_to' do
           it 'uses the local configuration' do
             expect(subject.get('declaration_keyword')).to eq('var')
           end
 
-          it 'falls back to global config for keys not present in local config' do
-            expect(subject.get('import_function')).to eq('require')
+          it 'falls back to global config if key is missing from local config' do
+            expect(subject.get('import_function')).to eq('foobar')
+          end
+
+          it 'falls back to default config if key is completely missing' do
+            expect(subject.get('eslint_executable')).to eq('eslint')
           end
         end
 

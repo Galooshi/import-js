@@ -1579,16 +1579,14 @@ foo
         end
       end
 
-      context 'with `local_configs`' do
+      context 'with local configuration defined in the main config file' do
         let(:pattern) { 'foo/**' }
         let(:existing_files) { ['bar/foo.jsx'] }
         let(:configuration) do
-          {
-            'local_configs' => [{
-              'pattern' => pattern,
-              'declaration_keyword' => 'var'
-            }]
-          }
+          [{
+            'applies_to' => pattern,
+            'declaration_keyword' => 'var'
+          }]
         end
         before do
           allow_any_instance_of(ImportJS::VIMEditor)
@@ -1612,7 +1610,7 @@ foo
         context 'when the pattern does not match the file being edited' do
           let(:pattern) { 'car/**' }
 
-          it 'uses global config' do
+          it 'falls back to default config' do
             expect(subject).to eq(<<-EOS.strip)
 import foo from 'bar/foo';
 
