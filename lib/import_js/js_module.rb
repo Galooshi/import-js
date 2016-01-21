@@ -108,8 +108,9 @@ module ImportJS
     end
 
     # @param variable_name [String]
+    # @param config [ImportJS::Configuration]
     # @return [ImportJS::ImportStatement]
-    def to_import_statement(variable_name)
+    def to_import_statement(variable_name, config)
       ImportJS::ImportStatement.new.tap do |statement|
         if is_destructured
           statement.inject_destructured_variable(variable_name)
@@ -117,6 +118,10 @@ module ImportJS
           statement.default_variable = variable_name
         end
         statement.path = import_path
+        statement.declaration_keyword = config.get('declaration_keyword',
+                                                   from_file: file_path)
+        statement.import_function = config.get('import_function',
+                                               from_file: file_path)
       end
     end
   end

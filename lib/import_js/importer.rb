@@ -140,13 +140,17 @@ module ImportJS
       import = imports.find { |import| import.path == js_module.import_path }
 
       if import
+        import.declaration_keyword = @config.get(
+          'declaration_keyword', from_file: js_module.file_path)
+        import.import_function = @config.get(
+          'import_function', from_file: js_module.file_path)
         if js_module.is_destructured
           import.inject_destructured_variable(variable_name)
         else
           import.set_default_variable(variable_name)
         end
       else
-        imports.unshift(js_module.to_import_statement(variable_name))
+        imports.unshift(js_module.to_import_statement(variable_name, @config))
       end
 
       # Remove duplicate import statements
@@ -165,11 +169,7 @@ module ImportJS
 
       # Generate import strings
       import_strings = new_imports.map do |import|
-        import.to_import_strings(
-          @config.get('declaration_keyword'),
-          @editor.max_line_length,
-          @editor.tab,
-          @config.get('import_function'))
+        import.to_import_strings(@editor.max_line_length, @editor.tab)
       end.flatten.sort
 
       # Find old import strings so we can compare with the new import strings

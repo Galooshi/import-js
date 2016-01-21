@@ -1618,6 +1618,39 @@ foo
             EOS
           end
         end
+
+        context 'with an applies_from pattern' do
+          let(:from_pattern) { "#{File.basename(@tmp_dir)}/bar/**" }
+          let(:configuration) do
+            [{
+              'applies_from' => from_pattern,
+              'declaration_keyword' => 'var',
+              'import_function' => 'quack'
+            }]
+          end
+
+          context 'that matches the path of the file being imported' do
+            it 'uses local config' do
+              expect(subject).to eq(<<-EOS.strip)
+var foo = quack('bar/foo');
+
+foo
+              EOS
+            end
+          end
+
+          context 'that does not match the file being imported' do
+            let(:from_pattern) { 'foo/**' }
+
+            it 'falls back to default config' do
+              expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+              EOS
+            end
+          end
+        end
       end
     end
   end

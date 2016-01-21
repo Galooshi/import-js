@@ -29,11 +29,13 @@ module ImportJS
     end
 
     # @return [Object] a configuration value
-    def get(key)
+    def get(key, from_file: nil)
       @configs.find do |config|
         applies_to = config['applies_to'] || '*'
+        applies_from = config['applies_from'] || '*'
         next unless config.has_key?(key)
-        File.fnmatch(normalize_path(applies_to), @path_to_current_file)
+        File.fnmatch(normalize_path(applies_to), @path_to_current_file) &&
+          File.fnmatch(normalize_path(applies_from), normalize_path(from_file))
       end[key]
     end
 

@@ -290,7 +290,7 @@ pattern.
     "declaration_keyword": "const"
   },
   {
-    "applies_to": "tests/**",
+    "applies_from": "tests/**",
     "declaration_keyword": "var"
   },
   {
@@ -299,14 +299,23 @@ pattern.
 ]
 ```
 
-The `applies_to` pattern must be a glob pattern supported by [Ruby's
-`File.fnmatch`
-method](http://ruby-doc.org/core-2.3.0/File.html#method-c-fnmatch). If the
-`applies_to` pattern is omitted, the default (`*`) is used. When resolving
-configuration, the path to the file you are currently editing (relative to the
-project root) will be used when matching. The first matching configuration
-holding the key will be used. It is therefore a good idea to put a catch-all
-configuration at the bottom.
+Use glob patterns supported by [Ruby's `File.fnmatch`
+method](http://ruby-doc.org/core-2.3.0/File.html#method-c-fnmatch) for the
+`applies_to` and `applies_from` values. If any of the patterns are omitted, the
+default catch-all pattern (`*`) is used. The difference between the two
+patterns is that `applies_to` is matched with the file you are currently
+editing (relative to the project root). The `applies_from` pattern is matched
+with the file you are currently importing (also relative to the project root)
+will be used when matching.
+
+When using `applies_from` only a subset of configurations are supported:
+
+- `declaration_keyword`
+- `import_function`
+
+The first matching configuration containing the configuration key will be used.
+It is therefore a good idea to put a catch-all configuration at the bottom
+(like in the example above).
 
 ## Contributing
 

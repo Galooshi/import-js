@@ -118,6 +118,45 @@ describe ImportJS::Configuration do
           end
         end
       end
+
+      context 'when a config has an applies_from pattern' do
+        let(:path_to_current_file) { 'goo/gar/gaz.js' }
+        let(:from_file) { 'from/hello.js' }
+        let(:configuration) do
+          [
+            {
+              'applies_to' => 'goo/**',
+              'applies_from' => 'from/**',
+              'declaration_keyword' => 'var'
+            }
+          ]
+        end
+
+        context 'when the from_file matches applies_from' do
+          it 'uses the local configuration' do
+            expect(subject.get('declaration_keyword',
+                               from_file: from_file)).to eq('var')
+          end
+
+          context 'when the current file does not match' do
+            let(:path_to_current_file) { 'too/bar.js' }
+
+            it 'falls back to default config' do
+              expect(subject.get('declaration_keyword',
+                                 from_file: from_file)).to eq('import')
+            end
+          end
+        end
+
+        context 'when the from_file does not match applies_from' do
+          let(:from_file) { 'goo/far.js' }
+
+          it 'falls back to default config' do
+            expect(subject.get('declaration_keyword',
+                               from_file: from_file)).to eq('import')
+          end
+        end
+      end
     end
 
     describe 'without a configuration file' do

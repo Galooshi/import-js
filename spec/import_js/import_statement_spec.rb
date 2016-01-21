@@ -139,7 +139,9 @@ describe ImportJS::ImportStatement do
           end
 
           it 'can reconstruct using `to_import_strings`' do
-            expect(statement.to_import_strings('const', 80, ' ', 'require'))
+            statement.declaration_keyword = 'const'
+            statement.import_function = 'require'
+            expect(statement.to_import_strings(80, ' '))
               .to eq(["const { bar, foo } = require('foo');"])
           end
 
@@ -376,8 +378,9 @@ describe ImportJS::ImportStatement do
     end
 
     subject do
-      import_statement.to_import_strings(
-        declaration_keyword, max_line_length, tab, import_function)
+      import_statement.declaration_keyword = declaration_keyword
+      import_statement.import_function = import_function
+      import_statement.to_import_strings(max_line_length, tab)
     end
 
     context 'with import declaration keyword' do
