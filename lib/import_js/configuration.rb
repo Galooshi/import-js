@@ -22,10 +22,8 @@ module ImportJS
     def initialize(path_to_current_file)
       @path_to_current_file = normalize_path(path_to_current_file)
       @configs = []
-      Pathname.new(File.dirname(@path_to_current_file)).ascend do |path|
-        local_config = load_config(File.join(path, CONFIG_FILE))
-        @configs.concat([local_config].flatten) if local_config
-      end
+      user_config = load_config(CONFIG_FILE)
+      @configs.concat([user_config].flatten) if user_config
       @configs << DEFAULT_CONFIG
     end
 

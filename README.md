@@ -284,15 +284,10 @@ example, a variable named `validator` would match a package named
 
 ## Local configuration
 
-If different directory trees within your project have different importing
-needs, local configuration can come in handy. One way to add local
-configuration is by creating an `.importjs.json` file in a folder descending
-from the project root.  When configuration is resolved, import-js will walk up
-the directory tree, merging configuration as it's discovered.
-
-You can also apply configuration selectively by turning the configuration file
-into an array of configurations, each with a corresponding `applies_to` glob
-pattern.
+You can dynamically apply configuration to different directory trees within
+your project by turning the `.importjs.json` file into an array of
+configuration objects. Each configuration specifies what part of the tree it
+applies to through the `applies_to` and `applies_from` options.
 
 ```json
 [
@@ -324,6 +319,7 @@ When using `applies_from` only a subset of configurations are supported:
 - `declaration_keyword`
 - `import_function`
 - `strip_file_extensions`
+- `strip_from_path`
 - `use_relative_paths`
 
 The first matching configuration containing the configuration key will be used.
