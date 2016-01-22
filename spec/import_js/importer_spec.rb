@@ -67,13 +67,13 @@ describe ImportJS::Importer do
   let(:text) { 'foo' } # start with a simple buffer
   let(:existing_files) { [] } # start with a simple buffer
   let(:package_json_content) { nil }
-  let(:lookup_paths) { [@tmp_dir] }
+  let(:lookup_paths) { [File.basename(@tmp_dir)] }
 
   before do
     VIM.current_word = word
     VIM::Buffer.current_buffer = text
 
-    @tmp_dir = Dir.mktmpdir
+    @tmp_dir = Dir.mktmpdir(nil, Dir.pwd)
     allow_any_instance_of(ImportJS::Configuration)
       .to receive(:get).and_call_original
     allow_any_instance_of(ImportJS::Configuration)
@@ -81,7 +81,7 @@ describe ImportJS::Importer do
     allow_any_instance_of(ImportJS::VIMEditor)
       .to receive(:available_columns).and_return(100)
     allow_any_instance_of(ImportJS::VIMEditor)
-      .to receive(:path_to_current_file).and_return(nil)
+      .to receive(:path_to_current_file).and_return(File.join(@tmp_dir, 'test.js'))
 
     existing_files.each do |file|
       full_path = File.join(@tmp_dir, file)
@@ -502,7 +502,29 @@ import foo from 'bar/foo';
 import zoo from 'foo/zoo';
 
 foo
-        EOS
+          EOS
+        end
+
+        context 'when there are unconventional imports in the list' do
+          # e.g. added through using the `import_function` configuration option
+          let(:text) { <<-EOS.strip }
+const sko = customImportFunction('sko');
+import zoo from 'foo/zoo';
+import bar from 'foo/bar';
+
+foo
+          EOS
+
+          it 'adds the import and sorts the entire list' do
+            expect(subject).to eq(<<-EOS.strip)
+const sko = customImportFunction('sko');
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+import zoo from 'foo/zoo';
+
+foo
+            EOS
+          end
         end
       end
 
@@ -1255,6 +1277,43 @@ memoize
         end
       end
 
+      context 'with a custom `import_function`' do
+        let(:existing_files) { ['bar/foo.js'] }
+
+        context 'and `declaration_keyword=import`' do
+          let(:configuration) do
+            {
+              'import_function' => 'myRequire',
+              'declaration_keyword' => 'import'
+            }
+          end
+
+          it 'does nothing special' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'and `declaration_keyword=const`' do
+          let(:configuration) do
+            {
+              'import_function' => 'myRequire',
+              'declaration_keyword' => 'const'
+            }
+          end
+          it 'uses the custom import function instead of "require"' do
+            expect(subject).to eq(<<-EOS.strip)
+const foo = myRequire('bar/foo');
+
+foo
+            EOS
+          end
+        end
+      end
+
       context 'when strip_file_extensions is empty' do
         let(:existing_files) { ['bar/foo.js'] }
         let(:configuration) do
@@ -1516,6 +1575,101 @@ import foo from 'bar/foo';
 
 foo
             EOS
+          end
+        end
+      end
+
+      context 'with local configuration defined in the main config file' do
+        let(:pattern) { 'foo/**' }
+        let(:existing_files) { ['bar/foo.jsx'] }
+        let(:configuration) do
+          [{
+            'applies_to' => pattern,
+            'declaration_keyword' => 'var'
+          }]
+        end
+        before do
+          allow_any_instance_of(ImportJS::VIMEditor)
+            .to receive(:path_to_current_file)
+            .and_return('foo/bar.js')
+        end
+
+        let(:text) { 'foo' }
+        let(:word) { 'foo' }
+
+        context 'when the pattern matches the file being edited' do
+          it 'uses local config' do
+            expect(subject).to eq(<<-EOS.strip)
+var foo = require('bar/foo');
+
+foo
+            EOS
+          end
+        end
+
+        context 'when the pattern does not match the file being edited' do
+          let(:pattern) { 'car/**' }
+
+          it 'falls back to default config' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'with an applies_from pattern' do
+          let(:from_pattern) { "#{File.basename(@tmp_dir)}/bar/**" }
+          let(:path_to_current_file) { "#{File.basename(@tmp_dir)}/foo/bar.js" }
+          let(:configuration) do
+            [{
+              'applies_from' => from_pattern,
+              'declaration_keyword' => 'var',
+              'import_function' => 'quack',
+              'use_relative_paths' => true,
+              'strip_file_extensions' => [],
+            }]
+          end
+
+          before do
+            allow_any_instance_of(ImportJS::VIMEditor)
+              .to receive(:path_to_current_file)
+              .and_return(path_to_current_file)
+          end
+
+          context 'that matches the path of the file being imported' do
+            it 'uses local config' do
+              expect(subject).to eq(<<-EOS.strip)
+var foo = quack('../bar/foo.jsx');
+
+foo
+              EOS
+            end
+
+            context 'when using `.` as lookup_path' do
+              let(:lookup_paths) { ['.'] }
+
+              it 'uses local config' do
+                expect(subject).to eq(<<-EOS.strip)
+var foo = quack('../bar/foo.jsx');
+
+foo
+                EOS
+              end
+            end
+          end
+
+          context 'that does not match the file being imported' do
+            let(:from_pattern) { 'foo/**' }
+
+            it 'falls back to default config' do
+              expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+              EOS
+            end
           end
         end
       end

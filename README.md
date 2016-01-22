@@ -216,6 +216,30 @@ let Foo = require('foo'); // "declaration_keyword": "let"
 const Foo = require('foo'); // "declaration_keyword": "const"
 ```
 
+### `import_function`
+
+*Note: this only applies if you are using `var`, `let`, or `const` as
+`declaration_keyword`.*
+
+The default value for this configuration option is `"require"`, which is [the
+standard CommonJS function name used for
+importing](http://wiki.commonjs.org/wiki/Modules/1.1).
+
+```json
+"import_function": "myCustomRequireFunction"
+```
+
+### `strip_from_path`
+
+This option is used to trim imports by removing a slice of the path. The main
+rationale for using this option is if you have a custom `import_function` that
+has different logic than the default `require` and `import from` behavior.
+
+```json
+"strip_from_path": "app/assets/",
+"import_function": "requireFromAppAssets"
+```
+
 ### `strip_file_extensions`
 
 An array that controls what file extensions are stripped out from the resulting
@@ -257,6 +281,54 @@ package prefix, you can set the `ignore_package_prefixes` configuration option.
 When package dependencies are matched, these prefixes will be ignored. As an
 example, a variable named `validator` would match a package named
 `my-company-validator`.
+
+## Local configuration
+
+You can dynamically apply configuration to different directory trees within
+your project by turning the `.importjs.json` file into an array of
+configuration objects. Each configuration specifies what part of the tree it
+applies to through the `applies_to` and `applies_from` options.
+
+```json
+[
+  {
+    "applies_to": "app/**",
+    "declaration_keyword": "import",
+    "use_relative_paths": true
+  },
+  {
+    "applies_to": "app/**",
+    "declaration_keyword": "const"
+  },
+  {
+    "applies_from": "tests/**",
+    "applies_to": "app/**",
+    "declaration_keyword": "var",
+    "import_function": "mockRequire",
+    "use_relative_paths": false
+  },
+]
+```
+
+Use glob patterns supported by [Ruby's `File.fnmatch`
+method](http://ruby-doc.org/core-2.3.0/File.html#method-c-fnmatch) for the
+`applies_to` and `applies_from` values. If any of the patterns are omitted, the
+default catch-all pattern (`*`) is used. The difference between the two
+patterns is that `applies_to` is matched with the file you are currently
+editing (relative to the project root). The `applies_from` pattern is matched
+with the file you are currently importing (also relative to the project root)
+will be used when matching.
+
+Put more specific configuration at the bottom of the configuration file and the
+default, catch-all configuration at the top.
+
+When using `applies_from` only a subset of configurations are supported:
+
+- `declaration_keyword`
+- `import_function`
+- `strip_file_extensions`
+- `strip_from_path`
+- `use_relative_paths`
 
 ## Contributing
 

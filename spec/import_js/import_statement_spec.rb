@@ -90,6 +90,15 @@ describe ImportJS::ImportStatement do
         end
       end
 
+      context 'and it is using a custom `import_function`' do
+        let(:string) { "const foo = customRequire('foo');" }
+
+        it 'returns a valid ImportStatement instance' do
+          expect(subject.assignment).to eq('foo')
+          expect(subject.path).to eq('foo')
+        end
+      end
+
       context 'and it has a destructured assignment' do
         let(:string) { "const { foo } = require('foo');" }
 
@@ -130,7 +139,9 @@ describe ImportJS::ImportStatement do
           end
 
           it 'can reconstruct using `to_import_strings`' do
-            expect(statement.to_import_strings('const', 80, ' '))
+            statement.declaration_keyword = 'const'
+            statement.import_function = 'require'
+            expect(statement.to_import_strings(80, ' '))
               .to eq(["const { bar, foo } = require('foo');"])
           end
 
@@ -347,6 +358,7 @@ describe ImportJS::ImportStatement do
 
   describe '#to_import_strings' do
     let(:import_statement) { described_class.new }
+    let(:import_function) { 'require' }
     let(:path) { 'path' }
     let(:default_variable) { nil }
     let(:destructured_variables) { nil }
@@ -366,8 +378,9 @@ describe ImportJS::ImportStatement do
     end
 
     subject do
-      import_statement.to_import_strings(
-        declaration_keyword, max_line_length, tab)
+      import_statement.declaration_keyword = declaration_keyword
+      import_statement.import_function = import_function
+      import_statement.to_import_strings(max_line_length, tab)
     end
 
     context 'with import declaration keyword' do
@@ -376,6 +389,13 @@ describe ImportJS::ImportStatement do
       context 'with a default variable' do
         let(:default_variable) { 'foo' }
         it { should eq(["import foo from 'path';"]) }
+
+        context 'with `import_function`' do
+          let(:import_function) { 'myCustomRequire' }
+
+          # `import_function` only applies to const/let/var
+          it { should eq(["import foo from 'path';"]) }
+        end
 
         context 'when longer than max line length' do
           let(:default_variable) { 'ReallyReallyReallyReallyLong' }
@@ -423,6 +443,11 @@ describe ImportJS::ImportStatement do
         let(:default_variable) { 'foo' }
         it { should eq(["const foo = require('path');"]) }
 
+        context 'with `import_function`' do
+          let(:import_function) { 'myCustomRequire' }
+          it { should eq(["const foo = myCustomRequire('path');"]) }
+        end
+
         context 'when longer than max line length' do
           let(:default_variable) { 'ReallyReallyReallyReallyLong' }
           let(:path) { 'also_very_long_for_some_reason' }
@@ -440,6 +465,11 @@ describe ImportJS::ImportStatement do
         let(:destructured_variables) { ['foo', 'bar'] }
         it { should eq(["const { foo, bar } = require('path');"]) }
 
+        context 'with `import_function`' do
+          let(:import_function) { 'myCustomRequire' }
+          it { should eq(["const { foo, bar } = myCustomRequire('path');"]) }
+        end
+
         context 'when longer than max line length' do
           let(:destructured_variables) { ['foo', 'bar', 'baz', 'fizz', 'buzz'] }
           let(:path) { 'also_very_long_for_some_reason' }
@@ -456,6 +486,16 @@ describe ImportJS::ImportStatement do
             "const foo = require('path');",
             "const { bar, baz } = require('path');",
           ])
+        end
+
+        context 'with `import_function`' do
+          let(:import_function) { 'myCustomRequire' }
+          it do
+            should eq([
+              "const foo = myCustomRequire('path');",
+              "const { bar, baz } = myCustomRequire('path');",
+            ])
+          end
         end
 
         context 'when longer than max line length' do

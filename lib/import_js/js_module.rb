@@ -19,7 +19,8 @@ module ImportJS
     def self.construct(lookup_path: nil,
                        relative_file_path: nil,
                        strip_file_extensions: nil,
-                       make_relative_to: nil)
+                       make_relative_to: nil,
+                       strip_from_path: nil)
       js_module = new
       js_module.lookup_path = normalize_path(lookup_path)
       js_module.file_path = normalize_path(relative_file_path)
@@ -35,6 +36,7 @@ module ImportJS
       js_module.import_path = import_path
       js_module.main_file = main_file
       js_module.make_relative_to(make_relative_to) if make_relative_to
+      js_module.strip_from_path(strip_from_path) unless make_relative_to
       js_module
     end
 
@@ -100,6 +102,12 @@ module ImportJS
       self.import_path = path
     end
 
+    # @param prefix [String]
+    def strip_from_path(prefix)
+      return unless prefix
+      self.import_path = import_path.sub(/^#{Regexp.escape(prefix)}/, '')
+    end
+
     # @return [String] a readable description of the module
     def display_name
       parts = [import_path]
@@ -108,8 +116,9 @@ module ImportJS
     end
 
     # @param variable_name [String]
+    # @param config [ImportJS::Configuration]
     # @return [ImportJS::ImportStatement]
-    def to_import_statement(variable_name)
+    def to_import_statement(variable_name, config)
       ImportJS::ImportStatement.new.tap do |statement|
         if is_destructured
           statement.inject_destructured_variable(variable_name)
@@ -117,6 +126,10 @@ module ImportJS
           statement.default_variable = variable_name
         end
         statement.path = import_path
+        statement.declaration_keyword = config.get('declaration_keyword',
+                                                   from_file: file_path)
+        statement.import_function = config.get('import_function',
+                                               from_file: file_path)
       end
     end
   end

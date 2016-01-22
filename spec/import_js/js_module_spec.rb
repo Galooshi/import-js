@@ -5,13 +5,15 @@ describe ImportJS::JSModule do
   let(:relative_file_path) { 'app/lib/foo.js' }
   let(:make_relative_to) { nil }
   let(:strip_file_extensions) { ['.js'] }
+  let(:strip_from_path) { nil }
 
   subject do
     described_class.construct(
       lookup_path: lookup_path,
       relative_file_path: relative_file_path,
       strip_file_extensions: strip_file_extensions,
-      make_relative_to: make_relative_to
+      make_relative_to: make_relative_to,
+      strip_from_path: strip_from_path
     )
   end
 
@@ -72,6 +74,40 @@ describe ImportJS::JSModule do
         let(:relative_file_path) { 'lib/foo.web.js' }
 
         it 'strips the file extension' do
+          expect(subject.import_path).to eq('lib/foo')
+        end
+      end
+    end
+
+    context 'when using `strip_from_path`' do
+      let(:strip_from_path) { 'lib/' }
+
+      context 'and the import path starts with that string' do
+        it 'strips out the string' do
+          expect(subject.import_path).to eq('foo')
+        end
+
+        context 'when not ending in a slash' do
+          let(:strip_from_path) { 'lib' }
+
+          it 'strips out the string' do
+            expect(subject.import_path).to eq('/foo')
+          end
+        end
+
+        context 'when used in combination with `make_relative_to`' do
+          let(:make_relative_to) { 'app/assets/bar.js' }
+
+          it 'does not strip out the string' do
+            expect(subject.import_path).to eq('../lib/foo')
+          end
+        end
+      end
+
+      context 'and the import path does not start with that string' do
+        let(:strip_from_path) { 'foo' }
+
+        it 'leaves the import path untouched' do
           expect(subject.import_path).to eq('lib/foo')
         end
       end

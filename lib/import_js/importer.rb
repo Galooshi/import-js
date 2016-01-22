@@ -4,14 +4,13 @@ require 'open3'
 module ImportJS
   class Importer
     def initialize(editor = ImportJS::VIMEditor.new)
-      @config = ImportJS::Configuration.new
       @editor = editor
     end
 
     # Finds variable under the cursor to import. By default, this is bound to
     # `<Leader>j`.
     def import
-      @config.refresh
+      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       variable_name = @editor.current_word
       if variable_name.empty?
         message(<<-EOS.split.join(' '))
@@ -37,7 +36,7 @@ module ImportJS
     end
 
     def goto
-      @config.refresh
+      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       @timing = { start: Time.now }
       variable_name = @editor.current_word
       js_modules = find_js_modules(variable_name)
@@ -49,7 +48,7 @@ module ImportJS
 
     # Removes unused imports and adds imports for undefined variables
     def fix_imports
-      @config.refresh
+      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       eslint_result = run_eslint_command
       undefined_variables = eslint_result.map do |line|
         /(["'])([^"']+)\1 is not defined/.match(line) do |match_data|
@@ -141,13 +140,17 @@ module ImportJS
       import = imports.find { |import| import.path == js_module.import_path }
 
       if import
+        import.declaration_keyword = @config.get(
+          'declaration_keyword', from_file: js_module.file_path)
+        import.import_function = @config.get(
+          'import_function', from_file: js_module.file_path)
         if js_module.is_destructured
           import.inject_destructured_variable(variable_name)
         else
           import.set_default_variable(variable_name)
         end
       else
-        imports.unshift(js_module.to_import_statement(variable_name))
+        imports.unshift(js_module.to_import_statement(variable_name, @config))
       end
 
       # Remove duplicate import statements
@@ -166,10 +169,7 @@ module ImportJS
 
       # Generate import strings
       import_strings = new_imports.map do |import|
-        import.to_import_strings(
-          @config.get('declaration_keyword'),
-          @editor.max_line_length,
-          @editor.tab)
+        import.to_import_strings(@editor.max_line_length, @editor.tab)
       end.flatten.sort
 
       # Find old import strings so we can compare with the new import strings
@@ -277,9 +277,13 @@ module ImportJS
             ImportJS::JSModule.construct(
               lookup_path: lookup_path,
               relative_file_path: f,
-              strip_file_extensions: @config.get('strip_file_extensions'),
-              make_relative_to: @config.get('use_relative_paths') &&
-                                path_to_current_file
+              strip_file_extensions:
+                @config.get('strip_file_extensions', from_file: f),
+              make_relative_to:
+                @config.get('use_relative_paths', from_file: f) &&
+                path_to_current_file,
+              strip_from_path:
+                @config.get('strip_from_path', from_file: f)
             )
           end.compact
         )

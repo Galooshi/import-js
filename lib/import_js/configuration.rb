@@ -10,32 +10,39 @@ module ImportJS
     'eslint_executable' => 'eslint',
     'excludes' => [],
     'ignore_package_prefixes' => [],
+    'import_function' => 'require',
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx'],
+    'strip_from_path' => nil,
     'use_relative_paths' => false
   }
 
   # Class that initializes configuration from a .importjs.json file
   class Configuration
-    def initialize
-      @config = DEFAULT_CONFIG.merge(load_config)
-    end
-
-    def refresh
-      return if @config_time == config_file_last_modified
-      @config = DEFAULT_CONFIG.merge(load_config)
+    def initialize(path_to_current_file)
+      @path_to_current_file = normalize_path(path_to_current_file)
+      @configs = []
+      user_config = load_config(CONFIG_FILE)
+      @configs.concat([user_config].flatten.reverse) if user_config
+      @configs << DEFAULT_CONFIG
     end
 
     # @return [Object] a configuration value
-    def get(key)
-      @config[key]
+    def get(key, from_file: nil)
+      @configs.find do |config|
+        applies_to = config['applies_to'] || '*'
+        applies_from = config['applies_from'] || '*'
+        next unless config.has_key?(key)
+        File.fnmatch(normalize_path(applies_to), @path_to_current_file) &&
+          File.fnmatch(normalize_path(applies_from), normalize_path(from_file))
+      end[key]
     end
 
     # @param variable_name [String]
     # @param path_to_current_file [String?]
     # @return [ImportJS::JSModule?]
     def resolve_alias(variable_name, path_to_current_file)
-      path = @config['aliases'][variable_name]
+      path = get('aliases')[variable_name]
       return resolve_destructured_alias(variable_name) unless path
 
       path = path['path'] if path.is_a? Hash
@@ -45,11 +52,10 @@ module ImportJS
                         File.basename(path_to_current_file, '.*'))
       end
       ImportJS::JSModule.new(import_path: path)
-
     end
 
     def resolve_destructured_alias(variable_name)
-      @config['aliases'].each do |_, path|
+      get('aliases').each do |_, path|
         next if path.is_a? String
         if (path['destructure'] || []).include?(variable_name)
           js_module = ImportJS::JSModule.new(import_path: path['path'])
@@ -75,15 +81,20 @@ module ImportJS
 
     private
 
+    # @param file [File]
     # @return [Hash]
-    def load_config
-      @config_time = config_file_last_modified
-      File.exist?(CONFIG_FILE) ? JSON.parse(File.read(CONFIG_FILE)) : {}
+    def load_config(file)
+      return unless File.exist?(file)
+      JSON.parse(File.read(file))
     end
 
-    # @return [Time?]
-    def config_file_last_modified
-      File.exist?(CONFIG_FILE) ? File.mtime(CONFIG_FILE) : nil
+    # @param path [String]
+    # @return [String]
+    def normalize_path(path)
+      return './' unless path
+      path = path.sub(/^#{Regexp.escape(Dir.pwd)}/, '.')
+      path = "./#{path}" unless path.start_with?('.')
+      path
     end
   end
 end

@@ -2,54 +2,112 @@ require 'spec_helper'
 require 'json'
 
 describe ImportJS::Configuration do
-  subject   { described_class.new }
-
-  describe '.refresh' do
-    let(:configuration) do
-      {
-        'aliases' => { 'foo' => 'bar' }
-      }
-    end
-
-    let(:time) { Time.new }
-
-    before do
-      allow(File).to receive(:exist?).with('.importjs.json').and_return(true)
-      allow(File).to receive(:read).and_return nil
-      allow(File).to receive(:mtime).and_return time
-      allow(JSON).to receive(:parse).and_return(configuration)
-      subject
-    end
-
-    it 'does not read the file again if it has not changed' do
-      expect(File).to receive(:read).exactly(0).times
-      subject.refresh
-    end
-
-    it 'reads the file again if it has changed' do
-      allow(File).to receive(:mtime).and_return time + 1
-      expect(File).to receive(:read).once
-      subject.refresh
-    end
-  end
+  let(:path_to_current_file) { '' }
+  subject { described_class.new(path_to_current_file) }
 
   describe '.get' do
     describe 'with a configuration file' do
       let(:configuration) do
         {
-          'aliases' => { 'foo' => 'bar' }
+          'aliases' => { 'foo' => 'bar' },
+          'declaration_keyword' => 'const'
         }
       end
 
       before do
-        allow(File).to receive(:exist?).with('.importjs.json').and_return(true)
-        allow(File).to receive(:read).and_return nil
-        allow(File).to receive(:mtime).and_return nil
-        allow(JSON).to receive(:parse).and_return(configuration)
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:load_config).and_return(nil)
+        allow_any_instance_of(ImportJS::Configuration).to receive(:load_config).with(
+          '.importjs.json').and_return(configuration)
       end
 
       it 'returns the configured value for the key' do
         expect(subject.get('aliases')).to eq('foo' => 'bar')
+      end
+
+      context 'when there are multiple configs in the .importjs.json file' do
+        let(:path_to_current_file) { File.join(Dir.pwd, 'goo', 'gar', 'gaz.js') }
+        let(:configuration) do
+          [
+            {
+              'declaration_keyword' => 'let',
+              'import_function' => 'foobar'
+            },
+            {
+              'applies_to' => 'goo/**',
+              'declaration_keyword' => 'var'
+            },
+          ]
+        end
+
+        context 'when the file being edited matches applies_to' do
+          it 'uses the local configuration' do
+            expect(subject.get('declaration_keyword')).to eq('var')
+          end
+
+          it 'falls back to global config if key is missing from local config' do
+            expect(subject.get('import_function')).to eq('foobar')
+          end
+
+          it 'falls back to default config if key is completely missing' do
+            expect(subject.get('eslint_executable')).to eq('eslint')
+          end
+        end
+
+        context 'when the file being edited does not match the pattern' do
+          let(:path_to_current_file) { 'foo/far/gar.js' }
+
+          it 'uses the global configuration' do
+            expect(subject.get('declaration_keyword')).to eq('let')
+          end
+        end
+
+        context 'when the path to the local file does not have the full path' do
+          let(:path_to_current_file) { 'goo/gar/gaz.js' }
+
+          it 'applies the local configuration' do
+            expect(subject.get('declaration_keyword')).to eq('var')
+          end
+        end
+      end
+
+      context 'when a config has an applies_from pattern' do
+        let(:path_to_current_file) { 'goo/gar/gaz.js' }
+        let(:from_file) { 'from/hello.js' }
+        let(:configuration) do
+          [
+            {
+              'applies_to' => 'goo/**',
+              'applies_from' => 'from/**',
+              'declaration_keyword' => 'var'
+            }
+          ]
+        end
+
+        context 'when the from_file matches applies_from' do
+          it 'uses the local configuration' do
+            expect(subject.get('declaration_keyword',
+                               from_file: from_file)).to eq('var')
+          end
+
+          context 'when the current file does not match' do
+            let(:path_to_current_file) { 'too/bar.js' }
+
+            it 'falls back to default config' do
+              expect(subject.get('declaration_keyword',
+                                 from_file: from_file)).to eq('import')
+            end
+          end
+        end
+
+        context 'when the from_file does not match applies_from' do
+          let(:from_file) { 'goo/far.js' }
+
+          it 'falls back to default config' do
+            expect(subject.get('declaration_keyword',
+                               from_file: from_file)).to eq('import')
+          end
+        end
       end
     end
 
