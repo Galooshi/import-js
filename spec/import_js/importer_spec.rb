@@ -1646,6 +1646,18 @@ var foo = quack('../bar/foo.jsx');
 foo
               EOS
             end
+
+            context 'when using `.` as lookup_path' do
+              let(:lookup_paths) { ['.'] }
+
+              it 'uses local config' do
+                expect(subject).to eq(<<-EOS.strip)
+var foo = quack('../bar/foo.jsx');
+
+foo
+                EOS
+              end
+            end
           end
 
           context 'that does not match the file being imported' do
