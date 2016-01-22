@@ -86,6 +86,22 @@ describe ImportJS::JSModule do
         it 'strips out the string' do
           expect(subject.import_path).to eq('foo')
         end
+
+        context 'when not ending in a slash' do
+          let(:strip_from_path) { 'lib' }
+
+          it 'strips out the string' do
+            expect(subject.import_path).to eq('/foo')
+          end
+        end
+
+        context 'when used in combination with `make_relative_to`' do
+          let(:make_relative_to) { 'app/assets/bar.js' }
+
+          it 'does not strip out the string' do
+            expect(subject.import_path).to eq('../lib/foo')
+          end
+        end
       end
 
       context 'and the import path does not start with that string' do

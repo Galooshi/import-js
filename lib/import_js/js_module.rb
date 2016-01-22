@@ -33,14 +33,10 @@ module ImportJS
       import_path = import_path.sub(
         /^#{Regexp.escape(js_module.lookup_path)}\//, '')
 
-      if strip_from_path
-        js_module.import_path =
-          import_path.sub(/^#{Regexp.escape(strip_from_path)}/, '')
-      else
-        js_module.import_path = import_path
-      end
+      js_module.import_path = import_path
       js_module.main_file = main_file
       js_module.make_relative_to(make_relative_to) if make_relative_to
+      js_module.strip_from_path(strip_from_path) unless make_relative_to
       js_module
     end
 
@@ -104,6 +100,12 @@ module ImportJS
         path = './' + path
       end
       self.import_path = path
+    end
+
+    # @param prefix [String]
+    def strip_from_path(prefix)
+      return unless prefix
+      self.import_path = import_path.sub(/^#{Regexp.escape(prefix)}/, '')
     end
 
     # @return [String] a readable description of the module
