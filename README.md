@@ -293,14 +293,19 @@ applies to through the `applies_to` and `applies_from` options.
 [
   {
     "applies_to": "app/**",
+    "declaration_keyword": "import",
+    "use_relative_paths": true
+  },
+  {
+    "applies_to": "app/**",
     "declaration_keyword": "const"
   },
   {
     "applies_from": "tests/**",
-    "declaration_keyword": "var"
-  },
-  {
-    "declaration_keyword": "import"
+    "applies_to": "app/**",
+    "declaration_keyword": "var",
+    "import_function": "mockRequire",
+    "use_relative_paths": false
   },
 ]
 ```
@@ -314,6 +319,9 @@ editing (relative to the project root). The `applies_from` pattern is matched
 with the file you are currently importing (also relative to the project root)
 will be used when matching.
 
+Put more specific configuration at the bottom of the configuration file and the
+default, catch-all configuration at the top.
+
 When using `applies_from` only a subset of configurations are supported:
 
 - `declaration_keyword`
@@ -321,10 +329,6 @@ When using `applies_from` only a subset of configurations are supported:
 - `strip_file_extensions`
 - `strip_from_path`
 - `use_relative_paths`
-
-The first matching configuration containing the configuration key will be used.
-Because of that, it's a good idea to put a catch-all configuration at the
-bottom (like in the example above).
 
 ## Contributing
 

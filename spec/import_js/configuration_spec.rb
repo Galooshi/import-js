@@ -30,13 +30,13 @@ describe ImportJS::Configuration do
         let(:configuration) do
           [
             {
+              'declaration_keyword' => 'let',
+              'import_function' => 'foobar'
+            },
+            {
               'applies_to' => 'goo/**',
               'declaration_keyword' => 'var'
             },
-            {
-              'declaration_keyword' => 'let',
-              'import_function' => 'foobar'
-            }
           ]
         end
 

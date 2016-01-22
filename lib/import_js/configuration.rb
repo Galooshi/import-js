@@ -23,7 +23,7 @@ module ImportJS
       @path_to_current_file = normalize_path(path_to_current_file)
       @configs = []
       user_config = load_config(CONFIG_FILE)
-      @configs.concat([user_config].flatten) if user_config
+      @configs.concat([user_config].flatten.reverse) if user_config
       @configs << DEFAULT_CONFIG
     end
 
