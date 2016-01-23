@@ -211,11 +211,11 @@ module ImportJS
 
       # Skip over things at the top, like "use strict" and comments.
       inside_multi_line_comment = false
-      (0...total_lines).each do |line_number|
-        line = @editor.read_line(line_number + 1)
+      (0...total_lines).each do |line_index|
+        line = @editor.read_line(line_index + 1)
 
         if inside_multi_line_comment || line =~ REGEX_MULTI_LINE_COMMENT_START
-          result[:imports_start_at] = line_number + 1
+          result[:imports_start_at] = line_index + 1
           inside_multi_line_comment = if line =~ REGEX_MULTI_LINE_COMMENT_END
                                         false
                                       else
@@ -227,7 +227,7 @@ module ImportJS
         if line =~ REGEX_USE_STRICT ||
             line =~ REGEX_SINGLE_LINE_COMMENT ||
             line =~ REGEX_WHITESPACE_ONLY
-          result[:imports_start_at] = line_number + 1
+          result[:imports_start_at] = line_index + 1
           next
         end
 
@@ -236,8 +236,8 @@ module ImportJS
 
       # Find block of lines that might be imports.
       potential_import_lines = []
-      (result[:imports_start_at]...total_lines).each do |line_number|
-        line = @editor.read_line(line_number + 1)
+      (result[:imports_start_at]...total_lines).each do |line_index|
+        line = @editor.read_line(line_index + 1)
         break if line.strip.empty?
         potential_import_lines << line
       end
