@@ -3,6 +3,8 @@ require 'open3'
 
 module ImportJS
   class Importer
+    REGEX_USE_STRICT = /(['"])use strict\1;?/
+
     def initialize(editor = ImportJS::VIMEditor.new)
       @editor = editor
     end
@@ -209,7 +211,7 @@ module ImportJS
         imports_start_at: 0
       }
 
-      if potential_import_lines[0] =~ /(['"])use strict\1;?/
+      if potential_import_lines[0] =~ REGEX_USE_STRICT
         result[:imports_start_at] = 1
         potential_import_lines.shift
       end
