@@ -216,6 +216,17 @@ let Foo = require('foo'); // "declaration_keyword": "let"
 const Foo = require('foo'); // "declaration_keyword": "const"
 ```
 
+### `import_dev_dependencies`
+
+Import-js will look for package dependencies listed in `package.json` when
+importing. By default, only modules listed under `dependencies` and
+`peerDependencies` will be used. By setting `import_dev_dependencies` to
+`true`, `devDependencies` will also be taken into account.
+
+```json
+"import_dev_dependencies": true
+```
+
 ### `import_function`
 
 *Note: this only applies if you are using `var`, `let`, or `const` as
