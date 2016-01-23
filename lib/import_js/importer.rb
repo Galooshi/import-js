@@ -199,34 +199,30 @@ module ImportJS
 
     # @return [Hash]
     def find_current_imports
-      potential_import_lines = []
-      @editor.count_lines.times do |n|
-        line = @editor.read_line(n + 1)
-        break if line.strip.empty?
-        potential_import_lines << line
-      end
-
+      total_lines = @editor.count_lines
       result = {
         imports: [],
         newline_count: 0,
         imports_start_at: 0
       }
 
-      # Try to find where the imports should start. We want to skip over things
-      # like "use strict".
-      skip_lines = potential_import_lines.each_with_index.select do |line, _|
-        line =~ REGEX_USE_STRICT || line =~ REGEX_SINGLE_LINE_COMMENT
+      # Skip over things at the top, like "use strict" and comments.
+      (0...total_lines).each do |line_number|
+        line = @editor.read_line(line_number + 1)
+
+        unless line =~ REGEX_USE_STRICT || line =~ REGEX_SINGLE_LINE_COMMENT
+          break
+        end
+
+        result[:imports_start_at] = line_number + 1
       end
 
-      unless skip_lines.empty?
-        # Lines to skip were found, so skip to the last one.
-        # TODO: when adding comments, this should only skip to the end of
-        # consecutive skip lines to prevent skipping to a comment in the middle
-        # of an import block.
-        _, start_at = skip_lines.last
-        start_at += 1
-        result[:imports_start_at] = start_at
-        potential_import_lines.shift(start_at)
+      # Find block of lines that might be imports.
+      potential_import_lines = []
+      (result[:imports_start_at]...total_lines).each do |line_number|
+        line = @editor.read_line(line_number + 1)
+        break if line.strip.empty?
+        potential_import_lines << line
       end
 
       # We need to put the potential imports back into a blob in order to scan
