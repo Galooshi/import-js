@@ -5,6 +5,8 @@ module ImportJS
   class Importer
     REGEX_USE_STRICT = /(['"])use strict\1;?/
     REGEX_SINGLE_LINE_COMMENT = %r{\A\s*//}
+    REGEX_MULTI_LINE_COMMENT_START= %r{\A\s*/\*}
+    REGEX_MULTI_LINE_COMMENT_END= %r{\*/}
     REGEX_WHITESPACE_ONLY = /\A\s*\Z/
 
     def initialize(editor = ImportJS::VIMEditor.new)
@@ -208,16 +210,28 @@ module ImportJS
       }
 
       # Skip over things at the top, like "use strict" and comments.
+      inside_multi_line_comment = false
       (0...total_lines).each do |line_number|
         line = @editor.read_line(line_number + 1)
 
-        unless line =~ REGEX_USE_STRICT ||
-            line =~ REGEX_SINGLE_LINE_COMMENT ||
-            line =~ REGEX_WHITESPACE_ONLY
-          break
+        if inside_multi_line_comment || line =~ REGEX_MULTI_LINE_COMMENT_START
+          result[:imports_start_at] = line_number + 1
+          inside_multi_line_comment = if line =~ REGEX_MULTI_LINE_COMMENT_END
+                                        false
+                                      else
+                                        true
+                                      end
+          next
         end
 
-        result[:imports_start_at] = line_number + 1
+        if line =~ REGEX_USE_STRICT ||
+            line =~ REGEX_SINGLE_LINE_COMMENT ||
+            line =~ REGEX_WHITESPACE_ONLY
+          result[:imports_start_at] = line_number + 1
+          next
+        end
+
+        break
       end
 
       # Find block of lines that might be imports.
