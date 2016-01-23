@@ -190,6 +190,7 @@ foo
           it 'adds the import below' do
             expect(subject).to eq(<<-EOS.strip)
 'use strict';
+
 import foo from 'bar/foo';
 
 foo
@@ -209,6 +210,7 @@ foo
             expect(subject).to eq(<<-EOS.strip)
 'use strict';
 'use strict';
+
 import foo from 'bar/foo';
 
 foo
@@ -226,6 +228,7 @@ foo
           it 'adds the import below' do
             expect(subject).to eq(<<-EOS.strip)
 // One-line comment
+
 import foo from 'bar/foo';
 
 foo
@@ -245,6 +248,29 @@ foo
             expect(subject).to eq(<<-EOS.strip)
 // One-line comment
 // Another one-line comment
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when multiple one-line comments and empty lines are at the top of the file' do
+          let(:text) { <<-EOS.strip }
+// One-line comment
+
+// Another one-line comment
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+// One-line comment
+
+// Another one-line comment
+
 import foo from 'bar/foo';
 
 foo
@@ -429,6 +455,7 @@ foo
           it 'adds the import below' do
             expect(subject).to eq(<<-EOS.strip)
 "use strict";
+
 import foo from 'bar/foo';
 
 foo

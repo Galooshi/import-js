@@ -5,6 +5,7 @@ module ImportJS
   class Importer
     REGEX_USE_STRICT = /(['"])use strict\1;?/
     REGEX_SINGLE_LINE_COMMENT = %r{\A\s*//}
+    REGEX_WHITESPACE_ONLY = /\A\s*\Z/
 
     def initialize(editor = ImportJS::VIMEditor.new)
       @editor = editor
@@ -210,7 +211,9 @@ module ImportJS
       (0...total_lines).each do |line_number|
         line = @editor.read_line(line_number + 1)
 
-        unless line =~ REGEX_USE_STRICT || line =~ REGEX_SINGLE_LINE_COMMENT
+        unless line =~ REGEX_USE_STRICT ||
+            line =~ REGEX_SINGLE_LINE_COMMENT ||
+            line =~ REGEX_WHITESPACE_ONLY
           break
         end
 
