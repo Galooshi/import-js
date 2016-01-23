@@ -3,6 +3,12 @@ require 'open3'
 
 module ImportJS
   class Importer
+    REGEX_USE_STRICT = /(['"])use strict\1;?/
+    REGEX_SINGLE_LINE_COMMENT = %r{\A\s*//}
+    REGEX_MULTI_LINE_COMMENT_START= %r{\A\s*/\*}
+    REGEX_MULTI_LINE_COMMENT_END= %r{\*/}
+    REGEX_WHITESPACE_ONLY = /\A\s*\Z/
+
     def initialize(editor = ImportJS::VIMEditor.new)
       @editor = editor
     end
@@ -196,22 +202,44 @@ module ImportJS
 
     # @return [Hash]
     def find_current_imports
-      potential_import_lines = []
-      @editor.count_lines.times do |n|
-        line = @editor.read_line(n + 1)
-        break if line.strip.empty?
-        potential_import_lines << line
-      end
-
+      total_lines = @editor.count_lines
       result = {
         imports: [],
         newline_count: 0,
         imports_start_at: 0
       }
 
-      if potential_import_lines[0] =~ /(['"])use strict\1;?/
-        result[:imports_start_at] = 1
-        potential_import_lines.shift
+      # Skip over things at the top, like "use strict" and comments.
+      inside_multi_line_comment = false
+      (0...total_lines).each do |line_index|
+        line = @editor.read_line(line_index + 1)
+
+        if inside_multi_line_comment || line =~ REGEX_MULTI_LINE_COMMENT_START
+          result[:imports_start_at] = line_index + 1
+          inside_multi_line_comment = if line =~ REGEX_MULTI_LINE_COMMENT_END
+                                        false
+                                      else
+                                        true
+                                      end
+          next
+        end
+
+        if line =~ REGEX_USE_STRICT ||
+            line =~ REGEX_SINGLE_LINE_COMMENT ||
+            line =~ REGEX_WHITESPACE_ONLY
+          result[:imports_start_at] = line_index + 1
+          next
+        end
+
+        break
+      end
+
+      # Find block of lines that might be imports.
+      potential_import_lines = []
+      (result[:imports_start_at]...total_lines).each do |line_index|
+        line = @editor.read_line(line_index + 1)
+        break if line.strip.empty?
+        potential_import_lines << line
       end
 
       # We need to put the potential imports back into a blob in order to scan

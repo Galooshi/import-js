@@ -190,6 +190,171 @@ foo
           it 'adds the import below' do
             expect(subject).to eq(<<-EOS.strip)
 'use strict';
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context "when 'use strict' is at the top of the file twice" do
+          let(:text) { <<-EOS.strip }
+'use strict';
+'use strict';
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+'use strict';
+'use strict';
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when a one-line comment is at the top of the file' do
+          let(:text) { <<-EOS.strip }
+// One-line comment
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+// One-line comment
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when multiple one-line comments are at the top of the file' do
+          let(:text) { <<-EOS.strip }
+// One-line comment
+// Another one-line comment
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+// One-line comment
+// Another one-line comment
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when multiple one-line comments and empty lines are at the top of the file' do
+          let(:text) { <<-EOS.strip }
+// One-line comment
+
+// Another one-line comment
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+// One-line comment
+
+// Another one-line comment
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when a multi-line comment is at the top of the file' do
+          let(:text) { <<-EOS.strip }
+/* Multi-line comment */
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+/* Multi-line comment */
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when a multi-line comment that spans multiple lines is at the top of the file' do
+          let(:text) { <<-EOS.strip }
+/*
+  Multi-line comment
+  that spans multiple lines
+*/
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+/*
+  Multi-line comment
+  that spans multiple lines
+*/
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when a one-line and multi-line comment are at the top of the file' do
+          let(:text) { <<-EOS.strip }
+// One-line comment
+/* Multi-line comment */
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+// One-line comment
+/* Multi-line comment */
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context "when comments and 'use strict' are at the top of the file" do
+          let(:text) { <<-EOS.strip }
+'use strict';
+// One-line comment
+/* Multi-line comment */
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+'use strict';
+// One-line comment
+/* Multi-line comment */
+
 import foo from 'bar/foo';
 
 foo
@@ -374,6 +539,7 @@ foo
           it 'adds the import below' do
             expect(subject).to eq(<<-EOS.strip)
 "use strict";
+
 import foo from 'bar/foo';
 
 foo
