@@ -197,6 +197,25 @@ foo
           end
         end
 
+        context "when 'use strict' is at the top of the file twice" do
+          let(:text) { <<-EOS.strip }
+'use strict';
+'use strict';
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+'use strict';
+'use strict';
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
         context 'when the variable name matches last folder+filename' do
           let(:existing_files) { ['sko/bar/foo.jsx'] }
           let(:word) { 'barFoo' }

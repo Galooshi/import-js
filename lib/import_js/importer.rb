@@ -211,9 +211,21 @@ module ImportJS
         imports_start_at: 0
       }
 
-      if potential_import_lines[0] =~ REGEX_USE_STRICT
-        result[:imports_start_at] = 1
-        potential_import_lines.shift
+      # Try to find where the imports should start. We want to skip over things
+      # like "use strict".
+      skip_lines = potential_import_lines.each_with_index.select do |line, _|
+        line =~ REGEX_USE_STRICT
+      end
+
+      unless skip_lines.empty?
+        # Lines to skip were found, so skip to the last one.
+        # TODO: when adding comments, this should only skip to the end of
+        # consecutive skip lines to prevent skipping to a comment in the middle
+        # of an import block.
+        _, start_at = skip_lines.last
+        start_at += 1
+        result[:imports_start_at] = start_at
+        potential_import_lines.shift(start_at)
       end
 
       # We need to put the potential imports back into a blob in order to scan
