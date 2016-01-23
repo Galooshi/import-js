@@ -216,6 +216,42 @@ foo
           end
         end
 
+        context 'when a one-line comment is at the top of the file' do
+          let(:text) { <<-EOS.strip }
+// One-line comment
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+// One-line comment
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when multiple one-line comments are at the top of the file' do
+          let(:text) { <<-EOS.strip }
+// One-line comment
+// Another one-line comment
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+// One-line comment
+// Another one-line comment
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
         context 'when the variable name matches last folder+filename' do
           let(:existing_files) { ['sko/bar/foo.jsx'] }
           let(:word) { 'barFoo' }

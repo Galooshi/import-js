@@ -4,6 +4,7 @@ require 'open3'
 module ImportJS
   class Importer
     REGEX_USE_STRICT = /(['"])use strict\1;?/
+    REGEX_SINGLE_LINE_COMMENT = %r{\A\s*//}
 
     def initialize(editor = ImportJS::VIMEditor.new)
       @editor = editor
@@ -214,7 +215,7 @@ module ImportJS
       # Try to find where the imports should start. We want to skip over things
       # like "use strict".
       skip_lines = potential_import_lines.each_with_index.select do |line, _|
-        line =~ REGEX_USE_STRICT
+        line =~ REGEX_USE_STRICT || line =~ REGEX_SINGLE_LINE_COMMENT
       end
 
       unless skip_lines.empty?
