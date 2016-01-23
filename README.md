@@ -81,7 +81,9 @@ option](#eslint_executable).
 If you're using React, import-js will automatically import `React` for you, but
 only if you have
 [eslint-plugin-react](https://github.com/yannickcr/eslint-plugin-react)
-installed and enabled in your `.eslintrc` configuration file.
+installed and the
+[`react-in-jsx-scope`](https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/react-in-jsx-scope.md)
+rule enabled in your `.eslintrc` configuration file.
 
 ## Experimental: Go to module
 
