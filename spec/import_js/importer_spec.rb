@@ -1991,6 +1991,40 @@ var a = foo + bar;
       end
     end
 
+    context 'when an implicit React import is missing' do
+      let(:text) { 'var a = <span/>;' }
+
+      let(:eslint_result) do
+        "stdin:3:11: 'React' must be in scope when using JSX\n"
+      end
+
+      context 'when react is not available' do
+        it 'leaves the buffer unchanged' do
+          expect(subject).to eq(<<-EOS.strip)
+var a = <span/>;
+          EOS
+        end
+      end
+
+      context 'when react is available' do
+        before do
+          allow_any_instance_of(ImportJS::Configuration)
+            .to receive(:package_dependencies).and_return(['react'])
+          allow(File).to receive(:read)
+            .with("node_modules/react/package.json")
+            .and_return('{ "main": "index.jsx" }')
+        end
+
+        it 'imports React' do
+          expect(subject).to eq(<<-EOS.strip)
+import React from 'react';
+
+var a = <span/>;
+          EOS
+        end
+      end
+    end
+
     context 'when no unused variables exist' do
       it 'leaves the buffer unchanged' do
         expect(subject).to eq(text)

@@ -75,7 +75,13 @@ automatically fix all imports. By hiting `<leader>i` (Vim), `(M-x)
 import-js-fix` (Emacs), or choose `ImportJS: fix all imports` (Sublime), all
 your undefined variables will be resolved, and all your unused imports will be
 removed. By default, import-js expects a global `eslint` command to be
-available.
+available, but you can change that with the [`eslint_executable` configuration
+option](#eslint_executable).
+
+If you're using React, import-js will automatically import `React` for you, but
+only if you have
+[eslint-plugin-react](https://github.com/yannickcr/eslint-plugin-react)
+installed and enabled in your `.eslintrc` configuration file.
 
 ## Experimental: Go to module
 
