@@ -70,13 +70,11 @@ module ImportJS
     def package_dependencies
       return [] unless File.exist?('package.json')
 
-      package = JSON.parse(File.read('package.json'))
-      dependencies = package['dependencies'] ?
-        package['dependencies'].keys : []
-      peer_dependencies = package['peerDependencies'] ?
-        package['peerDependencies'].keys : []
-
-      dependencies.concat(peer_dependencies)
+      keys = %w( dependencies peerDependencies )
+      package_json = JSON.parse(File.read('package.json'))
+      keys.map do |key|
+        package_json[key].keys if package_json[key]
+      end.compact.flatten
     end
 
     private
