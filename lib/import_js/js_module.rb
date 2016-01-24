@@ -48,7 +48,7 @@ module ImportJS
     end
 
     # @param file_path [String]
-    # @param strip_file_extensions [Boolean]
+    # @param strip_file_extensions [Array]
     # @return [String, String]
     def self.resolve_import_path_and_main(file_path, strip_file_extensions)
       if file_path.end_with? '/package.json'
