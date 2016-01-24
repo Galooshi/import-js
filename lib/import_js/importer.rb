@@ -50,22 +50,40 @@ module ImportJS
       @editor.open_file(js_module.file_path) if js_module
     end
 
+    REGEX_ESLINT_RESULT = /
+      (?<quote>["'])              # <quote> opening quote
+      (?<variable_name>[^\1]+)    # <variable_name>
+      \k<quote>
+      \s
+      (?<type>                    # <type>
+       is\sdefined\sbut\snever\sused         # is defined but never used
+       |
+       is\snot\sdefined                      # is not defined
+       |
+       must\sbe\sin\sscope\swhen\susing\sJSX # must be in scope when using JSX
+      )
+    /x
+
     # Removes unused imports and adds imports for undefined variables
     def fix_imports
       @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       eslint_result = run_eslint_command
-      undefined_variables = eslint_result.map do |line|
-        next 'React' if line =~ /'React' must be in scope when using JSX/
-        /(["'])([^"']+)\1 is not defined/.match(line) do |match_data|
-          match_data[2]
-        end
-      end.compact.uniq
 
-      unused_variables = eslint_result.map do |line|
-        /"([^"]+)" is defined but never used/.match(line) do |match_data|
-          match_data[1]
+      unused_variables = []
+      undefined_variables = []
+
+      eslint_result.each do |line|
+        match = REGEX_ESLINT_RESULT.match(line)
+        next unless match
+        if match[:type] == 'is defined but never used'
+          unused_variables << match[:variable_name]
+        else
+          undefined_variables << match[:variable_name]
         end
-      end.compact.uniq
+      end
+
+      unused_variables.uniq!
+      undefined_variables.uniq!
 
       old_imports = find_current_imports
       new_imports = old_imports[:imports].reject do |import_statement|
@@ -172,27 +190,33 @@ module ImportJS
       imports.uniq!(&:to_normalized)
     end
 
+    # @param new_imports [Array<ImportJS::ImportStatement>]
+    # @return [String]
+    def generate_import_strings(new_imports)
+      new_imports.map do |import|
+        import.to_import_strings(@editor.max_line_length, @editor.tab)
+      end.flatten.sort
+    end
+
     # @param old_imports_lines [Number]
     # @param new_imports [Array<ImportJS::ImportStatement>]
     # @param imports_start_at [Number]
     def replace_imports(old_imports_lines, new_imports, imports_start_at)
-      # Ensure that there is a blank line after the block of all imports
       imports_end_at = old_imports_lines + imports_start_at
+
+      # Ensure that there is a blank line after the block of all imports
       if old_imports_lines + new_imports.length > 0 &&
          !@editor.read_line(imports_end_at + 1).strip.empty?
         @editor.append_line(imports_end_at, '')
       end
 
-      # Generate import strings
-      import_strings = new_imports.map do |import|
-        import.to_import_strings(@editor.max_line_length, @editor.tab)
-      end.flatten.sort
+      import_strings = generate_import_strings(new_imports)
 
       # Find old import strings so we can compare with the new import strings
       # and see if anything has changed.
       old_import_strings = []
-      old_imports_lines.times do |line|
-        old_import_strings << @editor.read_line(1 + line + imports_start_at)
+      (imports_start_at...imports_end_at).each do |line_index|
+        old_import_strings << @editor.read_line(line_index + 1)
       end
 
       # If nothing has changed, bail to prevent unnecessarily dirtying the
@@ -205,27 +229,21 @@ module ImportJS
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
         import_string.split("\n").reverse_each do |line|
-          @editor.append_line(0 + imports_start_at, line)
+          @editor.append_line(imports_start_at, line)
         end
       end
     end
 
-    # @return [Hash]
-    def find_current_imports
-      total_lines = @editor.count_lines
-      result = {
-        imports: [],
-        newline_count: 0,
-        imports_start_at: 0,
-      }
+    def find_imports_start_line_index
+      imports_start_line_index = 0
 
       # Skip over things at the top, like "use strict" and comments.
       inside_multi_line_comment = false
-      (0...total_lines).each do |line_index|
+      (0...@editor.count_lines).each do |line_index|
         line = @editor.read_line(line_index + 1)
 
         if inside_multi_line_comment || line =~ REGEX_MULTI_LINE_COMMENT_START
-          result[:imports_start_at] = line_index + 1
+          imports_start_line_index = line_index + 1
           inside_multi_line_comment = if line =~ REGEX_MULTI_LINE_COMMENT_END
                                         false
                                       else
@@ -237,16 +255,27 @@ module ImportJS
         if line =~ REGEX_USE_STRICT ||
            line =~ REGEX_SINGLE_LINE_COMMENT ||
            line =~ REGEX_WHITESPACE_ONLY
-          result[:imports_start_at] = line_index + 1
+          imports_start_line_index = line_index + 1
           next
         end
 
         break
       end
 
+      imports_start_line_index
+    end
+
+    # @return [Hash]
+    def find_current_imports
+      result = {
+        imports: [],
+        newline_count: 0,
+        imports_start_at: find_imports_start_line_index,
+      }
+
       # Find block of lines that might be imports.
       potential_import_lines = []
-      (result[:imports_start_at]...total_lines).each do |line_index|
+      (result[:imports_start_at]...@editor.count_lines).each do |line_index|
         line = @editor.read_line(line_index + 1)
         break if line.strip.empty?
         potential_import_lines << line

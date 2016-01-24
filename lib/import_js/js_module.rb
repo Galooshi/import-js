@@ -48,7 +48,7 @@ module ImportJS
     end
 
     # @param file_path [String]
-    # @param strip_file_extensions [Boolean]
+    # @param strip_file_extensions [Array]
     # @return [String, String]
     def self.resolve_import_path_and_main(file_path, strip_file_extensions)
       if file_path.end_with? '/package.json'
@@ -58,18 +58,11 @@ module ImportJS
         return match[1], main_file
       end
 
-      if file_path =~ %r{/index\.js[^/]*$}
-        match = file_path.match(%r{(.*)/(index\.js.*)})
-        return match[1], match[2]
-      end
+      match = file_path.match(%r{(.*)/(index\.js[^/]*)$})
+      return match[1], match[2] if match
 
-      import_path = file_path
-      strip_file_extensions.each do |ext|
-        if import_path.end_with?(ext)
-          import_path = import_path[0...-ext.length]
-          break
-        end
-      end
+      extensions = strip_file_extensions.map { |str| Regexp.escape(str) }
+      import_path = file_path.sub(/(?:#{extensions.join('|')})$/, '')
       [import_path, nil]
     end
 
@@ -95,10 +88,9 @@ module ImportJS
         Pathname.new(File.dirname(make_relative_to))
       ).to_s
 
-      unless path.start_with?('.')
-        # `Pathname.relative_path_from` will not add "./" automatically
-        path = './' + path
-      end
+      # `Pathname.relative_path_from` will not add "./" automatically
+      path = './' + path unless path.start_with?('.')
+
       self.import_path = path
     end
 

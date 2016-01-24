@@ -2062,6 +2062,26 @@ bar
       end
     end
 
+    context 'when one unused import exists and eslint uses single quotes' do
+      let(:text) { <<-EOS.strip }
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+
+bar
+      EOS
+      let(:eslint_result) do
+        "stdin:1:4: 'foo' is defined but never used [Error/no-unused-vars]"
+      end
+
+      it 'removes that import' do
+        expect(subject).to eq(<<-EOS.strip)
+import bar from 'foo/bar';
+
+bar
+        EOS
+      end
+    end
+
     context 'when multiple unused imports exist' do
       let(:text) { <<-EOS.strip }
 import bar from 'foo/bar';
