@@ -262,7 +262,13 @@ module ImportJS
         break
       end
 
-      imports_start_line_index
+      # We don't want to skip over blocks that are only whitespace
+      (0...imports_start_line_index).each do |line_index|
+        line = @editor.read_line(line_index + 1)
+        return imports_start_line_index unless line.strip.empty?
+      end
+
+      0
     end
 
     # @return [Hash]
