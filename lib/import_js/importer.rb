@@ -229,7 +229,7 @@ module ImportJS
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
         import_string.split("\n").reverse_each do |line|
-          @editor.append_line(0 + imports_start_at, line)
+          @editor.append_line(imports_start_at, line)
         end
       end
     end
