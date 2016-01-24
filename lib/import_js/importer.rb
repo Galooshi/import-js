@@ -25,11 +25,14 @@ module ImportJS
         EOS
         return
       end
-      current_row, current_col = @editor.cursor
 
-      old_buffer_lines = @editor.count_lines
       js_module = find_one_js_module(variable_name)
       return unless js_module
+
+      # Save editor information before modifying the buffer so we can put the
+      # cursor in the correct spot after modifying the buffer.
+      current_row, current_col = @editor.cursor
+      old_buffer_lines = @editor.count_lines
 
       old_imports = find_current_imports
       inject_js_module(variable_name, js_module, old_imports[:imports])
@@ -38,6 +41,7 @@ module ImportJS
                       old_imports[:imports_start_at])
       lines_changed = @editor.count_lines - old_buffer_lines
       return unless lines_changed
+
       @editor.cursor = [current_row + lines_changed, current_col]
     end
 
