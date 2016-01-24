@@ -261,6 +261,42 @@ foo
           end
         end
 
+        context 'when just an empty line is at the top' do
+          let(:text) { <<-EOS.rstrip }
+
+foo
+          EOS
+
+          it 'does not preserve the empty line' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when an empty line precedes a comment' do
+          let(:text) { <<-EOS.rstrip }
+
+// One-line comment
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.rstrip)
+
+// One-line comment
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+
         context 'when one-line comments with empty lines are at the top' do
           let(:text) { <<-EOS.strip }
 // One-line comment
