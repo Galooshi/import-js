@@ -322,13 +322,16 @@ module ImportJS
       end
 
       # Find imports from package.json
-      ignore_prefixes = @config.get('ignore_package_prefixes')
-      dep_matcher = /^#{formatted_to_regex(variable_name)}$/
+      formatted_var_name = formatted_to_regex(variable_name)
+      ignore_prefixes = @config.get('ignore_package_prefixes').map do |prefix|
+        Regexp.escape(prefix)
+      end
+      ignore_prefixes_regex =
+        /^(?:#{ignore_prefixes.join('|')})#{formatted_var_name}$/
+      dep_regex = /^#{formatted_var_name}$/
+
       @config.package_dependencies.each do |dep|
-        if dep =~ dep_matcher ||
-           ignore_prefixes.any? do |prefix|
-             dep.sub(/^#{prefix}/, '') =~ dep_matcher
-           end
+        if dep =~ dep_regex || dep =~ ignore_prefixes_regex
           js_module = ImportJS::JSModule.construct(
             lookup_path: 'node_modules',
             relative_file_path: "node_modules/#{dep}/package.json",
