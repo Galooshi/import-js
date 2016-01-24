@@ -50,22 +50,40 @@ module ImportJS
       @editor.open_file(js_module.file_path) if js_module
     end
 
+    REGEX_ESLINT_RESULT = /
+      (?<quote>["'])              # <quote> opening quote
+      (?<variable_name>[^\1]+)    # <variable_name>
+      \k<quote>
+      \s
+      (?<type>                    # <type>
+       is\sdefined\sbut\snever\sused         # is defined but never used
+       |
+       is\snot\sdefined                      # is not defined
+       |
+       must\sbe\sin\sscope\swhen\susing\sJSX # must be in scope when using JSX
+      )
+    /x
+
     # Removes unused imports and adds imports for undefined variables
     def fix_imports
       @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       eslint_result = run_eslint_command
-      undefined_variables = eslint_result.map do |line|
-        next 'React' if line =~ /'React' must be in scope when using JSX/
-        /(["'])([^\1]+)\1 is not defined/.match(line) do |match_data|
-          match_data[2]
-        end
-      end.compact.uniq
 
-      unused_variables = eslint_result.map do |line|
-        /(["'])([^\1]+)\1 is defined but never used/.match(line) do |match_data|
-          match_data[2]
+      unused_variables = []
+      undefined_variables = []
+
+      eslint_result.each do |line|
+        match = REGEX_ESLINT_RESULT.match(line)
+        next unless match
+        if match[:type] == 'is defined but never used'
+          unused_variables << match[:variable_name]
+        else
+          undefined_variables << match[:variable_name]
         end
-      end.compact.uniq
+      end
+
+      unused_variables.uniq!
+      undefined_variables.uniq!
 
       old_imports = find_current_imports
       new_imports = old_imports[:imports].reject do |import_statement|
