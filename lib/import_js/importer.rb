@@ -190,6 +190,14 @@ module ImportJS
       imports.uniq!(&:to_normalized)
     end
 
+    # @param new_imports [Array<ImportJS::ImportStatement>]
+    # @return [String]
+    def generate_import_strings(new_imports)
+      new_imports.map do |import|
+        import.to_import_strings(@editor.max_line_length, @editor.tab)
+      end.flatten.sort
+    end
+
     # @param old_imports_lines [Number]
     # @param new_imports [Array<ImportJS::ImportStatement>]
     # @param imports_start_at [Number]
@@ -201,10 +209,7 @@ module ImportJS
         @editor.append_line(imports_end_at, '')
       end
 
-      # Generate import strings
-      import_strings = new_imports.map do |import|
-        import.to_import_strings(@editor.max_line_length, @editor.tab)
-      end.flatten.sort
+      import_strings = generate_import_strings(new_imports)
 
       # Find old import strings so we can compare with the new import strings
       # and see if anything has changed.
