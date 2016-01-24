@@ -29,20 +29,13 @@ module ImportJS
       js_module = find_one_js_module(variable_name)
       return unless js_module
 
-      # Save editor information before modifying the buffer so we can put the
-      # cursor in the correct spot after modifying the buffer.
-      current_row, current_col = @editor.cursor
-      old_buffer_lines = @editor.count_lines
-
-      old_imports = find_current_imports
-      inject_js_module(variable_name, js_module, old_imports[:imports])
-      replace_imports(old_imports[:newline_count],
-                      old_imports[:imports],
-                      old_imports[:imports_start_at])
-      lines_changed = @editor.count_lines - old_buffer_lines
-      return unless lines_changed
-
-      @editor.cursor = [current_row + lines_changed, current_col]
+      maintain_cursor_position do
+        old_imports = find_current_imports
+        inject_js_module(variable_name, js_module, old_imports[:imports])
+        replace_imports(old_imports[:newline_count],
+                        old_imports[:imports],
+                        old_imports[:imports_start_at])
+      end
     end
 
     def goto
@@ -426,6 +419,24 @@ module ImportJS
     # @return [String]
     def timing
       "(#{(@timing[:end] - @timing[:start]).round(2)}s)"
+    end
+
+    def maintain_cursor_position
+      # Save editor information before modifying the buffer so we can put the
+      # cursor in the correct spot after modifying the buffer.
+      current_row, current_col = @editor.cursor
+      old_buffer_lines = @editor.count_lines
+
+      # Yield to a block that will potentially modify the buffer.
+      yield
+
+      # Check to see if lines were added or removed.
+      lines_changed = @editor.count_lines - old_buffer_lines
+      return unless lines_changed
+
+      # Lines were added or removed, so we want to adjust the cursor position to
+      # match.
+      @editor.cursor = [current_row + lines_changed, current_col]
     end
   end
 end
