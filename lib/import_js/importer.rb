@@ -25,28 +25,26 @@ module ImportJS
         EOS
         return
       end
-      current_row, current_col = @editor.cursor
 
-      old_buffer_lines = @editor.count_lines
       js_module = find_one_js_module(variable_name)
       return unless js_module
 
-      old_imports = find_current_imports
-      inject_js_module(variable_name, js_module, old_imports[:imports])
-      replace_imports(old_imports[:newline_count],
-                      old_imports[:imports],
-                      old_imports[:imports_start_at])
-      lines_changed = @editor.count_lines - old_buffer_lines
-      return unless lines_changed
-      @editor.cursor = [current_row + lines_changed, current_col]
+      maintain_cursor_position do
+        old_imports = find_current_imports
+        inject_js_module(variable_name, js_module, old_imports[:imports])
+        replace_imports(old_imports[:newline_count],
+                        old_imports[:imports],
+                        old_imports[:imports_start_at])
+      end
     end
 
     def goto
       @config = ImportJS::Configuration.new(@editor.path_to_current_file)
-      @timing = { start: Time.now }
-      variable_name = @editor.current_word
-      js_modules = find_js_modules(variable_name)
-      @timing[:end] = Time.now
+      js_modules = []
+      time do
+        variable_name = @editor.current_word
+        js_modules = find_js_modules(variable_name)
+      end
       return if js_modules.empty?
       js_module = resolve_one_js_module(js_modules, variable_name)
       @editor.open_file(js_module.file_path) if js_module
@@ -93,6 +91,20 @@ module ImportJS
       @editor.message("ImportJS: #{str}")
     end
 
+    ESLINT_STDOUT_ERROR_REGEXES = [
+      /Parsing error: /,
+      /Unrecoverable syntax error/,
+      /<text>:0:0: Cannot find module '.*'/,
+    ].freeze
+
+    ESLINT_STDERR_ERROR_REGEXES = [
+      /SyntaxError: /,
+      /eslint: command not found/,
+      /Cannot read config package: /,
+      /Cannot find module '.*'/,
+      /No such file or directory/,
+    ].freeze
+
     # @return [Array<String>] the output from eslint, line by line
     def run_eslint_command
       command = %W[
@@ -106,17 +118,11 @@ module ImportJS
       out, err = Open3.capture3(command,
                                 stdin_data: @editor.current_file_content)
 
-      if out =~ /Parsing error: / ||
-         out =~ /Unrecoverable syntax error/ ||
-         out =~ /<text>:0:0: Cannot find module '.*'/
+      if ESLINT_STDOUT_ERROR_REGEXES.any? { |regex| out =~ regex }
         fail ImportJS::ParseError.new, out
       end
 
-      if err =~ /SyntaxError: / ||
-         err =~ /eslint: command not found/ ||
-         err =~ /Cannot read config package: / ||
-         err =~ /Cannot find module '.*'/ ||
-         err =~ /No such file or directory/
+      if ESLINT_STDERR_ERROR_REGEXES.any? { |regex| err =~ regex }
         fail ImportJS::ParseError.new, err
       end
 
@@ -126,9 +132,10 @@ module ImportJS
     # @param variable_name [String]
     # @return [ImportJS::JSModule?]
     def find_one_js_module(variable_name)
-      @timing = { start: Time.now }
-      js_modules = find_js_modules(variable_name)
-      @timing[:end] = Time.now
+      js_modules = []
+      time do
+        js_modules = find_js_modules(variable_name)
+      end
       if js_modules.empty?
         message(
           "No JS module to import for variable `#{variable_name}` #{timing}")
@@ -322,19 +329,19 @@ module ImportJS
       end
 
       # Find imports from package.json
+      ignore_prefixes = @config.get('ignore_package_prefixes').map do |prefix|
+        Regexp.escape(prefix)
+      end
+      dep_regex = /^(?:#{ignore_prefixes.join('|')})?#{formatted_var_name}$/
+
       @config.package_dependencies.each do |dep|
-        ignore_prefixes = @config.get('ignore_package_prefixes')
-        dep_matcher = /^#{formatted_to_regex(variable_name)}$/
-        if dep =~ dep_matcher ||
-           ignore_prefixes.any? do |prefix|
-             dep.sub(/^#{prefix}/, '') =~ dep_matcher
-           end
-          js_module = ImportJS::JSModule.construct(
-            lookup_path: 'node_modules',
-            relative_file_path: "node_modules/#{dep}/package.json",
-            strip_file_extensions: [])
-          matched_modules << js_module if js_module
-        end
+        next unless dep =~ dep_regex
+
+        js_module = ImportJS::JSModule.construct(
+          lookup_path: 'node_modules',
+          relative_file_path: "node_modules/#{dep}/package.json",
+          strip_file_extensions: [])
+        matched_modules << js_module if js_module
       end
 
       # If you have overlapping lookup paths, you might end up seeing the same
@@ -410,9 +417,34 @@ module ImportJS
         .downcase
     end
 
+    def time
+      timing = { start: Time.now }
+      yield
+      timing[:end] = Time.now
+      @timing = timing
+    end
+
     # @return [String]
     def timing
       "(#{(@timing[:end] - @timing[:start]).round(2)}s)"
+    end
+
+    def maintain_cursor_position
+      # Save editor information before modifying the buffer so we can put the
+      # cursor in the correct spot after modifying the buffer.
+      current_row, current_col = @editor.cursor
+      old_buffer_lines = @editor.count_lines
+
+      # Yield to a block that will potentially modify the buffer.
+      yield
+
+      # Check to see if lines were added or removed.
+      lines_changed = @editor.count_lines - old_buffer_lines
+      return unless lines_changed
+
+      # Lines were added or removed, so we want to adjust the cursor position to
+      # match.
+      @editor.cursor = [current_row + lines_changed, current_col]
     end
   end
 end
