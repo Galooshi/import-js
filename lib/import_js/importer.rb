@@ -331,13 +331,13 @@ module ImportJS
       dep_regex = /^#{formatted_var_name}$/
 
       @config.package_dependencies.each do |dep|
-        if dep =~ dep_regex || dep =~ ignore_prefixes_regex
-          js_module = ImportJS::JSModule.construct(
-            lookup_path: 'node_modules',
-            relative_file_path: "node_modules/#{dep}/package.json",
-            strip_file_extensions: [])
-          matched_modules << js_module if js_module
-        end
+        next unless dep =~ dep_regex || dep =~ ignore_prefixes_regex
+
+        js_module = ImportJS::JSModule.construct(
+          lookup_path: 'node_modules',
+          relative_file_path: "node_modules/#{dep}/package.json",
+          strip_file_extensions: [])
+        matched_modules << js_module if js_module
       end
 
       # If you have overlapping lookup paths, you might end up seeing the same
