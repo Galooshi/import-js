@@ -322,7 +322,6 @@ module ImportJS
       end
 
       # Find imports from package.json
-      formatted_var_name = formatted_to_regex(variable_name)
       ignore_prefixes = @config.get('ignore_package_prefixes').map do |prefix|
         Regexp.escape(prefix)
       end
