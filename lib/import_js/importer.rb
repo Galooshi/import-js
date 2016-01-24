@@ -56,7 +56,7 @@ module ImportJS
       eslint_result = run_eslint_command
       undefined_variables = eslint_result.map do |line|
         next 'React' if line =~ /'React' must be in scope when using JSX/
-        /(["'])([^"']+)\1 is not defined/.match(line) do |match_data|
+        /(["'])([^\1]+)\1 is not defined/.match(line) do |match_data|
           match_data[2]
         end
       end.compact.uniq
