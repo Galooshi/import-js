@@ -61,13 +61,8 @@ module ImportJS
       match = file_path.match(%r{(.*)/(index\.js[^/]*)$})
       return match[1], match[2] if match
 
-      import_path = file_path
-      strip_file_extensions.each do |ext|
-        if import_path.end_with?(ext)
-          import_path = import_path[0...-ext.length]
-          break
-        end
-      end
+      extensions = strip_file_extensions.map { |str| Regexp.escape(str) }
+      import_path = file_path.sub(/(?:#{extensions.join('|')})$/, '')
       [import_path, nil]
     end
 
