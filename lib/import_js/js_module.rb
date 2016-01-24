@@ -58,10 +58,8 @@ module ImportJS
         return match[1], main_file
       end
 
-      if file_path =~ %r{/index\.js[^/]*$}
-        match = file_path.match(%r{(.*)/(index\.js.*)})
-        return match[1], match[2]
-      end
+      match = file_path.match(%r{(.*)/(index\.js[^/]*)$})
+      return match[1], match[2] if match
 
       import_path = file_path
       strip_file_extensions.each do |ext|
