@@ -143,13 +143,11 @@ module ImportJS
         strings = []
 
         if default_variable
-          strings <<
-            default_import_string(max_line_length, tab)
+          strings << default_import_string(max_line_length, tab)
         end
 
         if destructured?
-          strings <<
-            destructured_import_string(max_line_length, tab)
+          strings << destructured_import_string(max_line_length, tab)
         end
 
         strings
