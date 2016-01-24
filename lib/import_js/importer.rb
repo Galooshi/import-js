@@ -356,8 +356,15 @@ module ImportJS
     # @return [String]
     def resolve_one_js_module(js_modules, variable_name)
       if js_modules.length == 1
-        message("Imported `#{js_modules.first.display_name}` #{timing}")
-        return js_modules.first
+        js_module = js_modules.first
+        js_module_name = js_module.display_name
+        imported = if js_module.is_destructured
+                     "`#{variable_name}` from `#{js_module_name}`"
+                   else
+                     "`#{js_module_name}`"
+                   end
+        message("Imported #{imported} #{timing}")
+        return js_module
       end
 
       selected_index = @editor.ask_for_selection(
