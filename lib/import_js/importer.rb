@@ -357,13 +357,14 @@ module ImportJS
     def resolve_one_js_module(js_modules, variable_name)
       if js_modules.length == 1
         js_module = js_modules.first
+        js_module_name = js_module.display_name
         imported = if js_module.is_destructured
-                     "`#{variable_name}` from `#{js_module.display_name}`"
+                     "`#{variable_name}` from `#{js_module_name}`"
                    else
-                     "`#{js_module.display_name}`"
+                     "`#{js_module_name}`"
                    end
         message("Imported #{imported} #{timing}")
-        return js_modules.first
+        return js_module
       end
 
       selected_index = @editor.ask_for_selection(
