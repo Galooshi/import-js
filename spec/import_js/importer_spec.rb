@@ -1222,7 +1222,7 @@ memoize
 
           it 'displays a message about the imported module' do
             expect(VIM.last_command_message).to start_with(
-              'ImportJS: Imported `underscore`')
+              'ImportJS: Imported `memoize` from `underscore`')
           end
 
           context 'when the default import exists for the same module' do

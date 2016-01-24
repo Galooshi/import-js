@@ -356,7 +356,13 @@ module ImportJS
     # @return [String]
     def resolve_one_js_module(js_modules, variable_name)
       if js_modules.length == 1
-        message("Imported `#{js_modules.first.display_name}` #{timing}")
+        js_module = js_modules.first
+        imported = if js_module.is_destructured
+                     "`#{variable_name}` from `#{js_module.display_name}`"
+                   else
+                     "`#{js_module.display_name}`"
+                   end
+        message("Imported #{imported} #{timing}")
         return js_modules.first
       end
 
