@@ -43,10 +43,11 @@ module ImportJS
 
     def goto
       @config = ImportJS::Configuration.new(@editor.path_to_current_file)
-      @timing = { start: Time.now }
-      variable_name = @editor.current_word
-      js_modules = find_js_modules(variable_name)
-      @timing[:end] = Time.now
+      js_modules = []
+      time do
+        variable_name = @editor.current_word
+        js_modules = find_js_modules(variable_name)
+      end
       return if js_modules.empty?
       js_module = resolve_one_js_module(js_modules, variable_name)
       @editor.open_file(js_module.file_path) if js_module
@@ -126,9 +127,10 @@ module ImportJS
     # @param variable_name [String]
     # @return [ImportJS::JSModule?]
     def find_one_js_module(variable_name)
-      @timing = { start: Time.now }
-      js_modules = find_js_modules(variable_name)
-      @timing[:end] = Time.now
+      js_modules = []
+      time do
+        js_modules = find_js_modules(variable_name)
+      end
       if js_modules.empty?
         message(
           "No JS module to import for variable `#{variable_name}` #{timing}")
@@ -408,6 +410,13 @@ module ImportJS
         .gsub(/([a-z\d])([A-Z])/, '\1' + split_pattern + '\2') # camelCase
         .tr('-_', split_pattern)
         .downcase
+    end
+
+    def time
+      timing = { start: Time.now }
+      yield
+      timing[:end] = Time.now
+      @timing = timing
     end
 
     # @return [String]
