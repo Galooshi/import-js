@@ -210,22 +210,16 @@ module ImportJS
       end
     end
 
-    # @return [Hash]
-    def find_current_imports
-      total_lines = @editor.count_lines
-      result = {
-        imports: [],
-        newline_count: 0,
-        imports_start_at: 0,
-      }
+    def find_imports_start_line_index
+      imports_start_line_index = 0
 
       # Skip over things at the top, like "use strict" and comments.
       inside_multi_line_comment = false
-      (0...total_lines).each do |line_index|
+      (0...@editor.count_lines).each do |line_index|
         line = @editor.read_line(line_index + 1)
 
         if inside_multi_line_comment || line =~ REGEX_MULTI_LINE_COMMENT_START
-          result[:imports_start_at] = line_index + 1
+          imports_start_line_index = line_index + 1
           inside_multi_line_comment = if line =~ REGEX_MULTI_LINE_COMMENT_END
                                         false
                                       else
@@ -237,16 +231,27 @@ module ImportJS
         if line =~ REGEX_USE_STRICT ||
            line =~ REGEX_SINGLE_LINE_COMMENT ||
            line =~ REGEX_WHITESPACE_ONLY
-          result[:imports_start_at] = line_index + 1
+          imports_start_line_index = line_index + 1
           next
         end
 
         break
       end
 
+      imports_start_line_index
+    end
+
+    # @return [Hash]
+    def find_current_imports
+      result = {
+        imports: [],
+        newline_count: 0,
+        imports_start_at: find_imports_start_line_index,
+      }
+
       # Find block of lines that might be imports.
       potential_import_lines = []
-      (result[:imports_start_at]...total_lines).each do |line_index|
+      (result[:imports_start_at]...@editor.count_lines).each do |line_index|
         line = @editor.read_line(line_index + 1)
         break if line.strip.empty?
         potential_import_lines << line
