@@ -1220,6 +1220,11 @@ memoize
             EOS
           end
 
+          it 'displays a message about the imported module' do
+            expect(VIM.last_command_message).to start_with(
+              'ImportJS: Imported `underscore`')
+          end
+
           context 'when the default import exists for the same module' do
             let(:text) { <<-EOS.strip }
 var _ = require('underscore');
