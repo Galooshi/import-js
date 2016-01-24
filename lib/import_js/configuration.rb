@@ -10,6 +10,7 @@ module ImportJS
     'eslint_executable' => 'eslint',
     'excludes' => [],
     'ignore_package_prefixes' => [],
+    'import_dev_dependencies' => false,
     'import_function' => 'require',
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx'],
@@ -70,13 +71,12 @@ module ImportJS
     def package_dependencies
       return [] unless File.exist?('package.json')
 
-      package = JSON.parse(File.read('package.json'))
-      dependencies = package['dependencies'] ?
-        package['dependencies'].keys : []
-      peer_dependencies = package['peerDependencies'] ?
-        package['peerDependencies'].keys : []
-
-      dependencies.concat(peer_dependencies)
+      keys = %w( dependencies peerDependencies )
+      keys << 'devDependencies' if get('import_dev_dependencies')
+      package_json = JSON.parse(File.read('package.json'))
+      keys.map do |key|
+        package_json[key].keys if package_json[key]
+      end.compact.flatten
     end
 
     private

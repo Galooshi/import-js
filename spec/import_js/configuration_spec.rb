@@ -188,6 +188,17 @@ describe ImportJS::Configuration do
         it 'leaves out the devDependencies' do
           expect(subject.package_dependencies).to eq(['foo'])
         end
+
+        context 'when `import_dev_dependencies` is true' do
+          before do
+            allow_any_instance_of(ImportJS::Configuration)
+              .to receive(:get).with('import_dev_dependencies').and_return(true)
+          end
+
+          it 'returns devDependencies as well' do
+            expect(subject.package_dependencies).to eq(['foo', 'bar'])
+          end
+        end
       end
     end
 
