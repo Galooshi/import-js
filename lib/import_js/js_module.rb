@@ -88,10 +88,9 @@ module ImportJS
         Pathname.new(File.dirname(make_relative_to))
       ).to_s
 
-      unless path.start_with?('.')
-        # `Pathname.relative_path_from` will not add "./" automatically
-        path = './' + path
-      end
+      # `Pathname.relative_path_from` will not add "./" automatically
+      path = './' + path unless path.start_with?('.')
+
       self.import_path = path
     end
 
