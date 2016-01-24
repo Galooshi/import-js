@@ -326,12 +326,10 @@ module ImportJS
       ignore_prefixes = @config.get('ignore_package_prefixes').map do |prefix|
         Regexp.escape(prefix)
       end
-      ignore_prefixes_regex =
-        /^(?:#{ignore_prefixes.join('|')})#{formatted_var_name}$/
-      dep_regex = /^#{formatted_var_name}$/
+      dep_regex = /^(?:#{ignore_prefixes.join('|')})?#{formatted_var_name}$/
 
       @config.package_dependencies.each do |dep|
-        next unless dep =~ dep_regex || dep =~ ignore_prefixes_regex
+        next unless dep =~ dep_regex
 
         js_module = ImportJS::JSModule.construct(
           lookup_path: 'node_modules',
