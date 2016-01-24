@@ -91,6 +91,20 @@ module ImportJS
       @editor.message("ImportJS: #{str}")
     end
 
+    ESLINT_STDOUT_ERROR_REGEXES = [
+      /Parsing error: /,
+      /Unrecoverable syntax error/,
+      /<text>:0:0: Cannot find module '.*'/,
+    ].freeze
+
+    ESLINT_STDERR_ERROR_REGEXES = [
+      /SyntaxError: /,
+      /eslint: command not found/,
+      /Cannot read config package: /,
+      /Cannot find module '.*'/,
+      /No such file or directory/,
+    ].freeze
+
     # @return [Array<String>] the output from eslint, line by line
     def run_eslint_command
       command = %W[
@@ -104,17 +118,11 @@ module ImportJS
       out, err = Open3.capture3(command,
                                 stdin_data: @editor.current_file_content)
 
-      if out =~ /Parsing error: / ||
-         out =~ /Unrecoverable syntax error/ ||
-         out =~ /<text>:0:0: Cannot find module '.*'/
+      if ESLINT_STDOUT_ERROR_REGEXES.any? { |regex| out =~ regex }
         fail ImportJS::ParseError.new, out
       end
 
-      if err =~ /SyntaxError: / ||
-         err =~ /eslint: command not found/ ||
-         err =~ /Cannot read config package: / ||
-         err =~ /Cannot find module '.*'/ ||
-         err =~ /No such file or directory/
+      if ESLINT_STDERR_ERROR_REGEXES.any? { |regex| err =~ regex }
         fail ImportJS::ParseError.new, err
       end
 
