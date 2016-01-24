@@ -145,13 +145,13 @@ module ImportJS
     # @param name [String]
     # @return [Number?]
     def get_number(name)
-      exists?(name) ? VIM.evaluate("#{name}").to_i : nil
+      exists?(name) ? VIM.evaluate(name).to_i : nil
     end
 
     # @param name [String]
     # @return [Boolean?]
     def get_bool(name)
-      exists?(name) ? VIM.evaluate("#{name}").to_i != 0 : nil
+      exists?(name) ? VIM.evaluate(name).to_i != 0 : nil
     end
 
     # @return [Boolean?]

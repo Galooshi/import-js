@@ -23,7 +23,7 @@ class MockVimBuffer
   def count
     @buffer_lines.length
   end
-  alias_method :length, :count
+  alias length count
 
   # @param one_indexed_n [Number] line number
   # @return [String] a line from the buffer

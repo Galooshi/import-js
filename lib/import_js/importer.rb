@@ -5,8 +5,8 @@ module ImportJS
   class Importer
     REGEX_USE_STRICT = /(['"])use strict\1;?/
     REGEX_SINGLE_LINE_COMMENT = %r{\A\s*//}
-    REGEX_MULTI_LINE_COMMENT_START= %r{\A\s*/\*}
-    REGEX_MULTI_LINE_COMMENT_END= %r{\*/}
+    REGEX_MULTI_LINE_COMMENT_START = %r{\A\s*/\*}
+    REGEX_MULTI_LINE_COMMENT_END = %r{\*/}
     REGEX_WHITESPACE_ONLY = /\A\s*\Z/
 
     def initialize(editor = ImportJS::VIMEditor.new)
@@ -78,9 +78,8 @@ module ImportJS
       end
 
       undefined_variables.each do |variable|
-        if js_module = find_one_js_module(variable)
-          inject_js_module(variable, js_module, new_imports)
-        end
+        js_module = find_one_js_module(variable)
+        inject_js_module(variable, js_module, new_imports) if js_module
       end
 
       replace_imports(old_imports[:newline_count],
@@ -144,7 +143,9 @@ module ImportJS
     # @param js_module [ImportJS::JSModule]
     # @param imports [Array<ImportJS::ImportStatement>]
     def inject_js_module(variable_name, js_module, imports)
-      import = imports.find { |import| import.path == js_module.import_path }
+      import = imports.find do |an_import|
+        an_import.path == js_module.import_path
+      end
 
       if import
         import.declaration_keyword = @config.get(
@@ -169,9 +170,10 @@ module ImportJS
     # @param imports_start_at [Number]
     def replace_imports(old_imports_lines, new_imports, imports_start_at)
       # Ensure that there is a blank line after the block of all imports
+      imports_end_at = old_imports_lines + imports_start_at
       if old_imports_lines + new_imports.length > 0 &&
-         !@editor.read_line(old_imports_lines + imports_start_at + 1).strip.empty?
-        @editor.append_line(old_imports_lines + imports_start_at, '')
+         !@editor.read_line(imports_end_at + 1).strip.empty?
+        @editor.append_line(imports_end_at, '')
       end
 
       # Generate import strings
@@ -207,7 +209,7 @@ module ImportJS
       result = {
         imports: [],
         newline_count: 0,
-        imports_start_at: 0
+        imports_start_at: 0,
       }
 
       # Skip over things at the top, like "use strict" and comments.
@@ -226,8 +228,8 @@ module ImportJS
         end
 
         if line =~ REGEX_USE_STRICT ||
-            line =~ REGEX_SINGLE_LINE_COMMENT ||
-            line =~ REGEX_WHITESPACE_ONLY
+           line =~ REGEX_SINGLE_LINE_COMMENT ||
+           line =~ REGEX_WHITESPACE_ONLY
           result[:imports_start_at] = line_index + 1
           next
         end
@@ -273,19 +275,20 @@ module ImportJS
     # @return [Array]
     def find_js_modules(variable_name)
       path_to_current_file = @editor.path_to_current_file
-      if alias_module = @config.resolve_alias(variable_name,
-                                              path_to_current_file)
-        return [alias_module]
-      end
+
+      alias_module = @config.resolve_alias(variable_name, path_to_current_file)
+      return [alias_module] if alias_module
+
+      formatted_var_name = formatted_to_regex(variable_name)
       egrep_command =
-        "egrep -i \"(/|^)#{formatted_to_regex(variable_name)}(/index)?(/package)?\.js.*\""
+        "egrep -i \"(/|^)#{formatted_var_name}(/index)?(/package)?\.js.*\""
       matched_modules = []
       @config.get('lookup_paths').each do |lookup_path|
         if lookup_path == ''
           # If lookup_path is an empty string, the `find` command will not work
           # as desired so we bail early.
           fail ImportJS::FindError.new,
-            "lookup path cannot be empty (#{lookup_path.inspect})"
+               "lookup path cannot be empty (#{lookup_path.inspect})"
         end
 
         find_command = %W[
@@ -337,11 +340,13 @@ module ImportJS
       # If you have overlapping lookup paths, you might end up seeing the same
       # module to import twice. In order to dedupe these, we remove the module
       # with the longest path
-      matched_modules.sort do |a, b|
+      matched_modules.sort! do |a, b|
         a.import_path.length <=> b.import_path.length
-      end.uniq do |m|
+      end
+      matched_modules.uniq! do |m|
         m.lookup_path + '/' + m.import_path
-      end.sort do |a, b|
+      end
+      matched_modules.sort! do |a, b|
         a.display_name <=> b.display_name
       end
     end

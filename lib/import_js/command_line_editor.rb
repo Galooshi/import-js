@@ -1,4 +1,5 @@
 module ImportJS
+  # This is the implementation of command line integration in Import-JS.
   class CommandLineEditor
     def initialize(lines, opts)
       @lines = lines
@@ -24,20 +25,14 @@ module ImportJS
       @goto = file_path
     end
 
-    # @return [String]
-    def goto
-      @goto
-    end
+    attr_reader :goto
 
     # @param str [String]
     def message(str)
       @messages << str
     end
 
-    # @return [Array]
-    def ask_for_selections
-      @ask_for_selections
-    end
+    attr_reader :ask_for_selections
 
     # @return [String]
     def current_file_content
@@ -110,7 +105,7 @@ module ImportJS
       else
         @ask_for_selections << {
           word: word,
-          alternatives: alternatives
+          alternatives: alternatives,
         }
         nil
       end
