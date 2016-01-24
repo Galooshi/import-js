@@ -322,9 +322,9 @@ module ImportJS
       end
 
       # Find imports from package.json
+      ignore_prefixes = @config.get('ignore_package_prefixes')
+      dep_matcher = /^#{formatted_to_regex(variable_name)}$/
       @config.package_dependencies.each do |dep|
-        ignore_prefixes = @config.get('ignore_package_prefixes')
-        dep_matcher = /^#{formatted_to_regex(variable_name)}$/
         if dep =~ dep_matcher ||
            ignore_prefixes.any? do |prefix|
              dep.sub(/^#{prefix}/, '') =~ dep_matcher
