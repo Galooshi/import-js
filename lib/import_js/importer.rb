@@ -62,8 +62,8 @@ module ImportJS
       end.compact.uniq
 
       unused_variables = eslint_result.map do |line|
-        /"([^"]+)" is defined but never used/.match(line) do |match_data|
-          match_data[1]
+        /(["'])([^\1]+)\1 is defined but never used/.match(line) do |match_data|
+          match_data[2]
         end
       end.compact.uniq
 
