@@ -1,8 +1,9 @@
+# frozen_string_literal: true
 require 'json'
 require 'open3'
 
 module ImportJS
-  CONFIG_FILE = '.importjs.json'
+  CONFIG_FILE = '.importjs.json'.freeze
 
   DEFAULT_CONFIG = {
     'aliases' => {},
@@ -15,8 +16,8 @@ module ImportJS
     'lookup_paths' => ['.'],
     'strip_file_extensions' => ['.js', '.jsx'],
     'strip_from_path' => nil,
-    'use_relative_paths' => false
-  }
+    'use_relative_paths' => false,
+  }.freeze
 
   # Class that initializes configuration from a .importjs.json file
   class Configuration
@@ -33,7 +34,7 @@ module ImportJS
       @configs.find do |config|
         applies_to = config['applies_to'] || '*'
         applies_from = config['applies_from'] || '*'
-        next unless config.has_key?(key)
+        next unless config.key?(key)
         File.fnmatch(normalize_path(applies_to), @path_to_current_file) &&
           File.fnmatch(normalize_path(applies_from), normalize_path(from_file))
       end[key]
@@ -58,11 +59,11 @@ module ImportJS
     def resolve_destructured_alias(variable_name)
       get('aliases').each do |_, path|
         next if path.is_a? String
-        if (path['destructure'] || []).include?(variable_name)
-          js_module = ImportJS::JSModule.new(import_path: path['path'])
-          js_module.is_destructured = true
-          return js_module
-        end
+        next unless (path['destructure'] || []).include?(variable_name)
+
+        js_module = ImportJS::JSModule.new(import_path: path['path'])
+        js_module.is_destructured = true
+        return js_module
       end
       nil
     end
@@ -71,7 +72,7 @@ module ImportJS
     def package_dependencies
       return [] unless File.exist?('package.json')
 
-      keys = %w( dependencies peerDependencies )
+      keys = %w[dependencies peerDependencies]
       keys << 'devDependencies' if get('import_dev_dependencies')
       package_json = JSON.parse(File.read('package.json'))
       keys.map do |key|

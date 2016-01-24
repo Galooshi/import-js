@@ -10,15 +10,16 @@ describe ImportJS::Configuration do
       let(:configuration) do
         {
           'aliases' => { 'foo' => 'bar' },
-          'declaration_keyword' => 'const'
+          'declaration_keyword' => 'const',
         }
       end
 
       before do
         allow_any_instance_of(ImportJS::Configuration)
           .to receive(:load_config).and_return(nil)
-        allow_any_instance_of(ImportJS::Configuration).to receive(:load_config).with(
-          '.importjs.json').and_return(configuration)
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:load_config).with('.importjs.json')
+          .and_return(configuration)
       end
 
       it 'returns the configured value for the key' do
@@ -26,16 +27,19 @@ describe ImportJS::Configuration do
       end
 
       context 'when there are multiple configs in the .importjs.json file' do
-        let(:path_to_current_file) { File.join(Dir.pwd, 'goo', 'gar', 'gaz.js') }
+        let(:path_to_current_file) do
+          File.join(Dir.pwd, 'goo', 'gar', 'gaz.js')
+        end
+
         let(:configuration) do
           [
             {
               'declaration_keyword' => 'let',
-              'import_function' => 'foobar'
+              'import_function' => 'foobar',
             },
             {
               'applies_to' => 'goo/**',
-              'declaration_keyword' => 'var'
+              'declaration_keyword' => 'var',
             },
           ]
         end
@@ -45,7 +49,7 @@ describe ImportJS::Configuration do
             expect(subject.get('declaration_keyword')).to eq('var')
           end
 
-          it 'falls back to global config if key is missing from local config' do
+          it 'falls back to global config if key missing from local config' do
             expect(subject.get('import_function')).to eq('foobar')
           end
 
@@ -79,8 +83,8 @@ describe ImportJS::Configuration do
             {
               'applies_to' => 'goo/**',
               'applies_from' => 'from/**',
-              'declaration_keyword' => 'var'
-            }
+              'declaration_keyword' => 'var',
+            },
           ]
         end
 
@@ -146,13 +150,13 @@ describe ImportJS::Configuration do
           {
             'dependencies' => {
               'foo' => '1.0.0',
-              'bar' => '2.0.0'
-            }
+              'bar' => '2.0.0',
+            },
           }
         end
 
         it 'returns those dependencies' do
-          expect(subject.package_dependencies).to eq(['foo', 'bar'])
+          expect(subject.package_dependencies).to eq(%w[foo bar])
         end
       end
 
@@ -163,13 +167,13 @@ describe ImportJS::Configuration do
               'foo' => '1.0.0',
             },
             'peerDependencies' => {
-              'bar' => '2.0.0'
-            }
+              'bar' => '2.0.0',
+            },
           }
         end
 
         it 'returns combined dependencies' do
-          expect(subject.package_dependencies).to eq(['foo', 'bar'])
+          expect(subject.package_dependencies).to eq(%w[foo bar])
         end
       end
 
@@ -180,8 +184,8 @@ describe ImportJS::Configuration do
               'foo' => '1.0.0',
             },
             'devDependencies' => {
-              'bar' => '2.0.0'
-            }
+              'bar' => '2.0.0',
+            },
           }
         end
 
@@ -196,7 +200,7 @@ describe ImportJS::Configuration do
           end
 
           it 'returns devDependencies as well' do
-            expect(subject.package_dependencies).to eq(['foo', 'bar'])
+            expect(subject.package_dependencies).to eq(%w[foo bar])
           end
         end
       end

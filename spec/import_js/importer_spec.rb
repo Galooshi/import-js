@@ -81,7 +81,8 @@ describe ImportJS::Importer do
     allow_any_instance_of(ImportJS::VIMEditor)
       .to receive(:available_columns).and_return(100)
     allow_any_instance_of(ImportJS::VIMEditor)
-      .to receive(:path_to_current_file).and_return(File.join(@tmp_dir, 'test.js'))
+      .to receive(:path_to_current_file)
+      .and_return(File.join(@tmp_dir, 'test.js'))
 
     existing_files.each do |file|
       full_path = File.join(@tmp_dir, file)
@@ -136,7 +137,9 @@ describe ImportJS::Importer do
       it 'displays a message' do
         subject
         expect(VIM.last_command_message).to eq(
-          'ImportJS: No variable to import. Place your cursor on a variable, then try again.')
+          'ImportJS: No variable to import. Place your cursor on a variable, '\
+          'then try again.'
+        )
       end
 
       context 'when Vim is narrower than the message' do
@@ -148,7 +151,9 @@ describe ImportJS::Importer do
         it 'truncates the message' do
           subject
           expect(VIM.last_command_message).to eq(
-            'ImportJS: No variable to import. Place your cursor on a variable, then try aga…')
+            'ImportJS: No variable to import. Place your cursor on a '\
+            'variable, then try aga…'
+          )
         end
       end
     end
@@ -256,7 +261,7 @@ foo
           end
         end
 
-        context 'when multiple one-line comments and empty lines are at the top of the file' do
+        context 'when one-line comments with empty lines are at the top' do
           let(:text) { <<-EOS.strip }
 // One-line comment
 
@@ -296,7 +301,7 @@ foo
           end
         end
 
-        context 'when a multi-line comment that spans multiple lines is at the top of the file' do
+        context 'when a multi-line comment that spans lines is at the top' do
           let(:text) { <<-EOS.strip }
 /*
   Multi-line comment
@@ -320,7 +325,7 @@ foo
           end
         end
 
-        context 'when a one-line and multi-line comment are at the top of the file' do
+        context 'when both comment styles are at the top of the file' do
           let(:text) { <<-EOS.strip }
 // One-line comment
 /* Multi-line comment */
@@ -792,7 +797,7 @@ foo
           [
             'bar/foo.jsx',
             'zoo/foo.js',
-            'zoo/goo/Foo/index.js'
+            'zoo/goo/Foo/index.js',
           ]
         end
 
@@ -880,13 +885,13 @@ foo
           [
             'Foo/lib/foo.jsx',
             'Foo/package.json',
-            'zoo/foo.js'
+            'zoo/foo.js',
           ]
         end
 
         let(:package_json_content) do
           {
-            main: 'lib/foo.jsx'
+            main: 'lib/foo.jsx',
           }
         end
 
@@ -910,7 +915,7 @@ foo
       context 'when `main` points to a JS file' do
         let(:package_json_content) do
           {
-            main: 'build/main.js'
+            main: 'build/main.js',
           }
         end
 
@@ -928,7 +933,7 @@ foo
 
         let(:package_json_content) do
           {
-            main: 'index.js'
+            main: 'index.js',
           }
         end
 
@@ -1077,7 +1082,7 @@ foo
       context 'with aliases' do
         let(:configuration) do
           {
-            'aliases' => { '$' => 'jquery' }
+            'aliases' => { '$' => 'jquery' },
           }
         end
         let(:text) { '$' }
@@ -1100,7 +1105,7 @@ $
 
           let(:configuration) do
             {
-              'aliases' => { 'styles' => './{filename}.scss' }
+              'aliases' => { 'styles' => './{filename}.scss' },
             }
           end
           let(:text) { 'styles' }
@@ -1146,7 +1151,7 @@ styles
           # https://github.com/trotzig/import-js/issues/39
           let(:configuration) do
             {
-              'aliases' => { '$' => 'jquery/jquery' }
+              'aliases' => { '$' => 'jquery/jquery' },
             }
           end
 
@@ -1167,12 +1172,12 @@ $
             'aliases' => {
               '_' => {
                 'path' => 'underscore',
-                'destructure' => %w(
+                'destructure' => %w[
                   memoize
                   debounce
-                )
-              }
-            }
+                ],
+              },
+            },
           }
         end
         let(:text) { '_' }
@@ -1232,7 +1237,7 @@ memoize
             end
           end
 
-          context 'when the default import exists for the same module with other modules' do
+          context 'when the default is already imported for destructured var' do
             let(:text) { <<-EOS.strip }
 var _ = require('underscore');
 var foo = require('foo');
@@ -1311,12 +1316,12 @@ memoize
             'aliases' => {
               '_' => {
                 'path' => 'underscore',
-                'destructure' => %w(
+                'destructure' => %w[
                   memoize
                   debounce
-                )
-              }
-            }
+                ],
+              },
+            },
           }
         end
         let(:text) { '_' }
@@ -1450,7 +1455,7 @@ memoize
           let(:configuration) do
             {
               'import_function' => 'myRequire',
-              'declaration_keyword' => 'import'
+              'declaration_keyword' => 'import',
             }
           end
 
@@ -1467,7 +1472,7 @@ foo
           let(:configuration) do
             {
               'import_function' => 'myRequire',
-              'declaration_keyword' => 'const'
+              'declaration_keyword' => 'const',
             }
           end
           it 'uses the custom import function instead of "require"' do
@@ -1484,7 +1489,7 @@ foo
         let(:existing_files) { ['bar/foo.js'] }
         let(:configuration) do
           {
-            'strip_file_extensions' => []
+            'strip_file_extensions' => [],
           }
         end
 
@@ -1501,7 +1506,7 @@ foo
         let(:existing_files) { ['bar/foo/foo.js'] }
         let(:configuration) do
           {
-            'excludes' => ['**/foo/**']
+            'excludes' => ['**/foo/**'],
           }
         end
 
@@ -1526,14 +1531,14 @@ foo
 
         let(:configuration) do
           {
-            'declaration_keyword' => 'const'
+            'declaration_keyword' => 'const',
           }
         end
 
         context 'with a variable name that will resolve' do
           let(:existing_files) { ['bar/foo.jsx'] }
 
-          it 'adds an import to the top of the buffer using the declaration_keyword' do
+          it 'adds an import to the top using the declaration_keyword' do
             expect(subject).to eq(<<-EOS.strip)
 const foo = require('bar/foo');
 
@@ -1565,7 +1570,7 @@ var foo =
 foo
             EOS
 
-            it 'changes the `var` to declaration_keyword and removes the whitespace' do
+            it 'changes the `var` to declaration_keyword and removes space' do
               expect(subject).to eq(<<-EOS.strip)
 const foo = require('bar/foo');
 
@@ -1603,7 +1608,7 @@ foo
 
         let(:configuration) do
           {
-            'declaration_keyword' => 'import'
+            'declaration_keyword' => 'import',
           }
         end
 
@@ -1626,14 +1631,14 @@ foo
             end
           end
 
-          context 'when that variable is already imported using `var` and double quotes' do
+          context 'when that variable already exists with a different style' do
             let(:text) { <<-EOS.strip }
 var foo = require("bar/foo");
 
 foo
             EOS
 
-            it 'changes the `var` to declaration_keyword and doubles to singles' do
+            it 'changes `var` to declaration_keyword and doubles to singles' do
               expect(subject).to eq(<<-EOS.strip)
 import foo from 'bar/foo';
 
@@ -1642,7 +1647,7 @@ foo
             end
           end
 
-          context 'when that variable is already imported and has "from" in it' do
+          context 'when the imported variable has "from" in it' do
             let(:text) { <<-EOS.strip }
 var fromfoo = require('bar/fromfoo');
 
@@ -1667,7 +1672,7 @@ var foo =
 foo
             EOS
 
-            it 'changes the `var` to declaration_keyword and removes the whitespace' do
+            it 'changes the `var` to declaration_keyword and removes space' do
               expect(subject).to eq(<<-EOS.strip)
 import foo from 'bar/foo';
 
@@ -1716,7 +1721,7 @@ foo
 
         let(:configuration) do
           {
-            'use_relative_paths' => true
+            'use_relative_paths' => true,
           }
         end
 
@@ -1751,7 +1756,7 @@ foo
         let(:configuration) do
           [{
             'applies_to' => pattern,
-            'declaration_keyword' => 'var'
+            'declaration_keyword' => 'var',
           }]
         end
         before do
@@ -1908,7 +1913,7 @@ foo
     context 'when one undefined variable exists' do
       let(:existing_files) { ['bar/foo.jsx'] }
       let(:eslint_result) do
-        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]"
+        'stdin:3:11: "foo" is not defined. [Error/no-undef]'
       end
 
       it 'imports that variable' do
@@ -1937,8 +1942,9 @@ foo
 
       context 'when eslint returns other issues' do
         let(:eslint_result) do
-          "stdin:1:1: Use the function form of \"use strict\". [Error/strict]\n" \
-          "stdin:3:11: \"foo\" is not defined. [Error/no-undef]"
+          'stdin:1:1: Use the function form of "use strict". ' \
+          "[Error/strict]\n" \
+          'stdin:3:11: "foo" is not defined. [Error/no-undef]'
         end
 
         it 'still imports the import' do
@@ -1957,7 +1963,7 @@ foo
 
       let(:eslint_result) do
         "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
-        "stdin:3:11: \"bar\" is not defined. [Error/no-undef]"
+        'stdin:3:11: "bar" is not defined. [Error/no-undef]'
       end
 
       it 'imports all variables' do
@@ -1975,10 +1981,10 @@ var a = foo + bar;
       let(:text) { 'var a = foo + bar;' }
 
       let(:eslint_result) do
-        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" +
-        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" +
-        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" +
-        "stdin:3:11: \"bar\" is not defined. [Error/no-undef]"
+        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
+        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
+        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
+        'stdin:3:11: "bar" is not defined. [Error/no-undef]'
       end
 
       it 'imports all variables' do
@@ -2011,7 +2017,7 @@ var a = <span/>;
           allow_any_instance_of(ImportJS::Configuration)
             .to receive(:package_dependencies).and_return(['react'])
           allow(File).to receive(:read)
-            .with("node_modules/react/package.json")
+            .with('node_modules/react/package.json')
             .and_return('{ "main": "index.jsx" }')
         end
 
@@ -2039,7 +2045,7 @@ import foo from 'bar/foo';
 bar
       EOS
       let(:eslint_result) do
-        "stdin:1:4: \"foo\" is defined but never used [Error/no-unused-vars]"
+        'stdin:1:4: "foo" is defined but never used [Error/no-unused-vars]'
       end
 
       it 'removes that import' do
@@ -2061,8 +2067,9 @@ baz
       EOS
 
       let(:eslint_result) do
-        "stdin:3:11: \"foo\" is defined but never used [Error/no-unused-vars]\n" \
-        "stdin:3:11: \"bar\" is defined but never used [Error/no-unused-vars]"
+        'stdin:3:11: "foo" is defined but never used ' \
+        "[Error/no-unused-vars]\n" \
+        'stdin:3:11: "bar" is defined but never used [Error/no-unused-vars]'
       end
 
       it 'removes all unused imports' do
@@ -2083,8 +2090,9 @@ foo
       EOS
 
       let(:eslint_result) do
-        "stdin:3:11: \"bar\" is defined but never used [Error/no-unused-vars]\n" \
-        "stdin:3:11: \"foo\" is not defined. [Error/no-undef]"
+        'stdin:3:11: "bar" is defined but never used ' \
+        "[Error/no-unused-vars]\n" \
+        'stdin:3:11: "foo" is not defined. [Error/no-undef]'
       end
 
       it 'removes the unused import and adds the missing one' do
@@ -2104,7 +2112,8 @@ bar
       EOS
 
       let(:eslint_result) do
-        "stdin:3:11: \"foo\" is defined but never used [Error/no-unused-vars]\n" \
+        'stdin:3:11: "foo" is defined but never used ' \
+        "[Error/no-unused-vars]\n" \
       end
 
       it 'removes that variable from the destructured list' do
@@ -2125,7 +2134,8 @@ bar
       EOS
 
       let(:eslint_result) do
-        "stdin:3:11: \"foo\" is defined but never used [Error/no-unused-vars]\n" \
+        'stdin:3:11: "foo" is defined but never used ' \
+        "[Error/no-unused-vars]\n" \
       end
 
       it 'removes the whole import' do

@@ -41,7 +41,7 @@ describe ImportJS::ImportStatement do
             expect(subject.path).to eq('foo')
             expect(subject.destructured?).to be_truthy
             expect(subject.default_variable).to eq(nil)
-            expect(subject.destructured_variables).to eq(['foo', 'bar'])
+            expect(subject.destructured_variables).to eq(%w[foo bar])
           end
         end
       end
@@ -65,7 +65,7 @@ describe ImportJS::ImportStatement do
             expect(subject.path).to eq('foo')
             expect(subject.destructured?).to be_truthy
             expect(subject.default_variable).to eq('foo')
-            expect(subject.destructured_variables).to eq(['bar', 'baz'])
+            expect(subject.destructured_variables).to eq(%w[bar baz])
           end
         end
       end
@@ -118,7 +118,7 @@ describe ImportJS::ImportStatement do
             expect(subject.path).to eq('foo')
             expect(subject.destructured?).to be_truthy
             expect(subject.default_variable).to eq(nil)
-            expect(subject.destructured_variables).to eq(['foo', 'bar'])
+            expect(subject.destructured_variables).to eq(%w[foo bar])
           end
         end
 
@@ -135,7 +135,7 @@ describe ImportJS::ImportStatement do
           end
 
           it 'adds that variable and sorts the list' do
-            expect(statement.destructured_variables).to eq(['bar', 'foo'])
+            expect(statement.destructured_variables).to eq(%w[bar foo])
           end
 
           it 'can reconstruct using `to_import_strings`' do
@@ -342,7 +342,7 @@ describe ImportJS::ImportStatement do
       let(:new_destructured_variables) { ['bar'] }
 
       it 'uses the new destructured variables' do
-        expect(subject.destructured_variables).to eq(['bar', 'foo'])
+        expect(subject.destructured_variables).to eq(%w[bar foo])
       end
     end
 
@@ -411,27 +411,41 @@ describe ImportJS::ImportStatement do
       end
 
       context 'with destructured variables' do
-        let(:destructured_variables) { ['foo', 'bar'] }
+        let(:destructured_variables) { %w[foo bar] }
         it { should eq(["import { foo, bar } from 'path';"]) }
 
         context 'when longer than max line length' do
-          let(:destructured_variables) { ['foo', 'bar', 'baz', 'fizz', 'buzz'] }
+          let(:destructured_variables) { %w[foo bar baz fizz buzz] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
-          it { should eq(["import {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} from '#{path}';"]) }
+          it do
+            should eq(
+              [
+                "import {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} " \
+                "from '#{path}';",
+              ]
+            )
+          end
         end
       end
 
       context 'with default and destructured variables' do
         let(:default_variable) { 'foo' }
-        let(:destructured_variables) { ['bar', 'baz'] }
+        let(:destructured_variables) { %w[bar baz] }
         it { should eq(["import foo, { bar, baz } from 'path';"]) }
 
         context 'when longer than max line length' do
-          let(:destructured_variables) { ['bar', 'baz', 'fizz', 'buzz'] }
+          let(:destructured_variables) { %w[bar baz fizz buzz] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
-          it { should eq(["import foo, {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} from '#{path}';"]) }
+          it do
+            should eq(
+              [
+                "import foo, {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} " \
+                "from '#{path}';",
+              ]
+            )
+          end
         end
       end
     end
@@ -452,17 +466,21 @@ describe ImportJS::ImportStatement do
           let(:default_variable) { 'ReallyReallyReallyReallyLong' }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
-          it { should eq(["const #{default_variable} =\n  require('#{path}');"]) }
+          it do
+            should eq(["const #{default_variable} =\n  require('#{path}');"])
+          end
 
           context 'with different tab' do
             let(:tab) { "\t" }
-            it { should eq(["const #{default_variable} =\n\trequire('#{path}');"]) }
+            it do
+              should eq(["const #{default_variable} =\n\trequire('#{path}');"])
+            end
           end
         end
       end
 
       context 'with destructured variables' do
-        let(:destructured_variables) { ['foo', 'bar'] }
+        let(:destructured_variables) { %w[foo bar] }
         it { should eq(["const { foo, bar } = require('path');"]) }
 
         context 'with `import_function`' do
@@ -471,42 +489,56 @@ describe ImportJS::ImportStatement do
         end
 
         context 'when longer than max line length' do
-          let(:destructured_variables) { ['foo', 'bar', 'baz', 'fizz', 'buzz'] }
+          let(:destructured_variables) { %w[foo bar baz fizz buzz] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
-          it { should eq(["const {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = require('#{path}');"]) }
+          it do
+            should eq(
+              [
+                "const {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = " \
+                "require('#{path}');",
+              ]
+            )
+          end
         end
       end
 
       context 'with default and destructured variables' do
         let(:default_variable) { 'foo' }
-        let(:destructured_variables) { ['bar', 'baz'] }
+        let(:destructured_variables) { %w[bar baz] }
         it do
-          should eq([
-            "const foo = require('path');",
-            "const { bar, baz } = require('path');",
-          ])
+          should eq(
+            [
+              "const foo = require('path');",
+              "const { bar, baz } = require('path');",
+            ]
+          )
         end
 
         context 'with `import_function`' do
           let(:import_function) { 'myCustomRequire' }
           it do
-            should eq([
-              "const foo = myCustomRequire('path');",
-              "const { bar, baz } = myCustomRequire('path');",
-            ])
+            should eq(
+              [
+                "const foo = myCustomRequire('path');",
+                "const { bar, baz } = myCustomRequire('path');",
+              ]
+            )
           end
         end
 
         context 'when longer than max line length' do
-          let(:destructured_variables) { ['bar', 'baz', 'fizz', 'buzz'] }
+          let(:destructured_variables) { %w[bar baz fizz buzz] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
           it do
-            should eq([
-              "const foo =\n  require('#{path}');",
-              "const {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = require('#{path}');",
-            ])
+            should eq(
+              [
+                "const foo =\n  require('#{path}');",
+                "const {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = " \
+                "require('#{path}');",
+              ]
+            )
           end
         end
       end

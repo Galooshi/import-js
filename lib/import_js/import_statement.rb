@@ -4,9 +4,9 @@ module ImportJS
   # `let foo = myCustomRequire('foo');`
   # `import foo from 'foo';`
   class ImportStatement
-    REGEX_CONST_LET_VAR = %r{
+    REGEX_CONST_LET_VAR = /
       \A
-      (?<declaration_keyword>const|let|var)\s+ # <declaration_keyword> assignment
+      (?<declaration_keyword>const|let|var)\s+ # <declaration_keyword>
       (?<assignment>.+?)   # <assignment> variable assignment
       \s*=\s*
       (?<import_function>[^\(]+?)\( # <import_function> variable assignment
@@ -15,20 +15,20 @@ module ImportJS
         \k<quote>          # closing quote
       \);?
       \s*
-    }xm
+    /xm
 
-    REGEX_IMPORT = %r{
+    REGEX_IMPORT = /
       \A
-      (?<declaration_keyword>import)\s+ # <declaration_keyword> assignment
+      (?<declaration_keyword>import)\s+ # <declaration_keyword>
       (?<assignment>.*?) # <assignment> variable assignment
       \s+from\s+
       (?<quote>'|")      # <quote> opening quote
       (?<path>[^\2]+)    # <path> module path
       \k<quote>          # closing quote
       ;?\s*
-    }xm
+    /xm
 
-    REGEX_DESTRUCTURE = %r{
+    REGEX_DESTRUCTURE = /
       (?:                    # non-capturing group
         (?<default>.*?)      # <default> variable
         ,\s*
@@ -38,7 +38,7 @@ module ImportJS
         (?<destructured>.*)  # <destructured> variables
         \s*
       \}
-    }xm
+    /xm
 
     attr_accessor :assignment
     attr_accessor :declaration_keyword
@@ -67,7 +67,8 @@ module ImportJS
       if match.names.include? 'import_function'
         statement.import_function = match[:import_function]
       end
-      if dest_match = statement.assignment.match(REGEX_DESTRUCTURE)
+      dest_match = statement.assignment.match(REGEX_DESTRUCTURE)
+      if dest_match
         statement.default_variable = dest_match[:default]
         statement.destructured_variables =
           dest_match[:destructured].split(/,\s*/).map(&:strip)
@@ -207,7 +208,8 @@ module ImportJS
       end
 
       destructured = "{ #{destructured_variables.join(', ')} }"
-      line = "#{declaration_keyword} #{prefix}#{destructured} #{equals} #{value}"
+      line = "#{declaration_keyword} #{prefix}#{destructured} #{equals} " \
+        "#{value}"
       return line unless line_too_long?(line, max_line_length)
 
       destructured = "{\n#{tab}#{destructured_variables.join(",\n#{tab}")},\n}"
