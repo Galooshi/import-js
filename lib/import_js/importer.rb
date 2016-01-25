@@ -239,10 +239,12 @@ module ImportJS
 
       # Skip over things at the top, like "use strict" and comments.
       inside_multi_line_comment = false
+      matched_non_whitespace_line = false
       (0...@editor.count_lines).each do |line_index|
         line = @editor.read_line(line_index + 1)
 
         if inside_multi_line_comment || line =~ REGEX_MULTI_LINE_COMMENT_START
+          matched_non_whitespace_line = true
           imports_start_line_index = line_index + 1
           inside_multi_line_comment = if line =~ REGEX_MULTI_LINE_COMMENT_END
                                         false
@@ -252,9 +254,13 @@ module ImportJS
           next
         end
 
-        if line =~ REGEX_USE_STRICT ||
-           line =~ REGEX_SINGLE_LINE_COMMENT ||
-           line =~ REGEX_WHITESPACE_ONLY
+        if line =~ REGEX_USE_STRICT || line =~ REGEX_SINGLE_LINE_COMMENT
+          matched_non_whitespace_line = true
+          imports_start_line_index = line_index + 1
+          next
+        end
+
+        if line =~ REGEX_WHITESPACE_ONLY
           imports_start_line_index = line_index + 1
           next
         end
@@ -263,11 +269,7 @@ module ImportJS
       end
 
       # We don't want to skip over blocks that are only whitespace
-      (0...imports_start_line_index).each do |line_index|
-        line = @editor.read_line(line_index + 1)
-        return imports_start_line_index unless line.strip.empty?
-      end
-
+      return imports_start_line_index if matched_non_whitespace_line
       0
     end
 
