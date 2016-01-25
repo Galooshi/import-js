@@ -79,3 +79,10 @@ gem build import_js.gemspec && gem install --local import_js-__version__.gem
 ```
 
 Replace `__version__` with the bumped version number.
+
+## Code of conduct
+
+This project adheres to the [Open Code of Conduct][code-of-conduct]. By
+participating, you are expected to honor this code.
+
+[code-of-conduct]: http://todogroup.org/opencodeofconduct/#Import-JS/henric.trotzig@gmail.com
