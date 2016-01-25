@@ -320,6 +320,9 @@ module ImportJS
       alias_module = @config.resolve_alias(variable_name, path_to_current_file)
       return [alias_module] if alias_module
 
+      destructured_module = @config.resolve_destructured(variable_name)
+      return [destructured_module] if destructured_module
+
       formatted_var_name = formatted_to_regex(variable_name)
       egrep_command =
         "egrep -i \"(/|^)#{formatted_var_name}(/index)?(/package)?\.js.*\""

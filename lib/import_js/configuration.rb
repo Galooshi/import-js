@@ -8,6 +8,7 @@ module ImportJS
   DEFAULT_CONFIG = {
     'aliases' => {},
     'declaration_keyword' => 'import',
+    'destructures' => {},
     'eslint_executable' => 'eslint',
     'excludes' => [],
     'ignore_package_prefixes' => [],
@@ -45,7 +46,7 @@ module ImportJS
     # @return [ImportJS::JSModule?]
     def resolve_alias(variable_name, path_to_current_file)
       path = get('aliases')[variable_name]
-      return resolve_destructured_alias(variable_name) unless path
+      return unless path
 
       path = path['path'] if path.is_a? Hash
 
@@ -56,12 +57,13 @@ module ImportJS
       ImportJS::JSModule.new(import_path: path)
     end
 
-    def resolve_destructured_alias(variable_name)
-      get('aliases').each do |_, path|
-        next if path.is_a? String
-        next unless (path['destructure'] || []).include?(variable_name)
+    # @param variable_name [String]
+    # @return [ImportJS::JSModule?]
+    def resolve_destructured(variable_name)
+      get('destructures').each do |import_path, destructures|
+        next unless destructures.include?(variable_name)
 
-        js_module = ImportJS::JSModule.new(import_path: path['path'])
+        js_module = ImportJS::JSModule.new(import_path: import_path)
         js_module.is_destructured = true
         return js_module
       end
