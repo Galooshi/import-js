@@ -234,6 +234,7 @@ module ImportJS
       end
     end
 
+    # @return [Number]
     def find_imports_start_line_index
       imports_start_line_index = 0
 
