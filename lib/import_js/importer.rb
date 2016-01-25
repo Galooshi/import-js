@@ -190,10 +190,10 @@ module ImportJS
       imports.uniq!(&:to_normalized)
     end
 
-    # @param new_imports [Array<ImportJS::ImportStatement>]
+    # @param imports [Array<ImportJS::ImportStatement>]
     # @return [String]
-    def generate_import_strings(new_imports)
-      new_imports.map do |import|
+    def generate_import_strings(import_statements)
+      import_statements.map do |import|
         import.to_import_strings(@editor.max_line_length, @editor.tab)
       end.flatten.sort
     end
