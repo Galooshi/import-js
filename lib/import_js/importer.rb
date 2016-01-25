@@ -246,11 +246,7 @@ module ImportJS
         if inside_multi_line_comment || line =~ REGEX_MULTI_LINE_COMMENT_START
           matched_non_whitespace_line = true
           imports_start_line_index = line_index + 1
-          inside_multi_line_comment = if line =~ REGEX_MULTI_LINE_COMMENT_END
-                                        false
-                                      else
-                                        true
-                                      end
+          inside_multi_line_comment = !(line =~ REGEX_MULTI_LINE_COMMENT_END)
           next
         end
 
