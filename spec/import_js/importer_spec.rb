@@ -2245,6 +2245,22 @@ bar
       end
     end
 
+    context 'with a variable name that will resolve to a package dependency' do
+      before do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:package_dependencies).and_return(['foo'])
+        allow(File).to receive(:read)
+          .with('node_modules/foo/package.json')
+          .and_return('{ "main": "bar.jsx" }')
+      end
+
+      it 'opens the `main` file' do
+        expect_any_instance_of(ImportJS::VIMEditor).to receive(
+          :open_file).with('node_modules/foo/bar.jsx')
+        subject
+      end
+    end
+
     context 'with a variable name matching an alias' do
       let(:word) { 'styles' }
       before do
