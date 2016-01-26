@@ -2231,4 +2231,65 @@ bar
       end
     end
   end
+
+  describe '#goto' do
+    subject { described_class.new.goto }
+
+    context 'with a variable name that will resolve' do
+      let(:existing_files) { ['bar/foo.jsx'] }
+
+      it 'opens the file' do
+        expect_any_instance_of(ImportJS::VIMEditor).to receive(
+          :open_file).with("#{File.basename(@tmp_dir)}/bar/foo.jsx")
+        subject
+      end
+    end
+
+    context 'with a variable name that will resolve to a package dependency' do
+      before do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:package_dependencies).and_return(['foo'])
+        allow(File).to receive(:read)
+          .with('node_modules/foo/package.json')
+          .and_return('{ "main": "bar.jsx" }')
+      end
+
+      it 'opens the `main` file' do
+        expect_any_instance_of(ImportJS::VIMEditor).to receive(
+          :open_file).with('node_modules/foo/bar.jsx')
+        subject
+      end
+    end
+
+    context 'with a variable name matching an alias' do
+      let(:word) { 'styles' }
+      before do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to(receive(:load_config))
+          .and_return('aliases' => { 'styles' => aliaz })
+      end
+
+      context 'to a relative resource' do
+        let(:aliaz) { './index.scss' }
+
+        it 'opens the file relative to the file being edited' do
+          expect_any_instance_of(ImportJS::VIMEditor).to receive(
+            :open_file).with("#{@tmp_dir}/index.scss")
+          subject
+        end
+      end
+
+      context 'to an absolute resource' do
+        let(:aliaz) { 'stylez' }
+
+        it 'opens the alias path' do
+          # This won't work in most cases, but this is all the information we
+          # have available
+          expect_any_instance_of(ImportJS::VIMEditor).to receive(
+            :open_file).with('stylez')
+          subject
+        end
+      end
+    end
+  end
 end
