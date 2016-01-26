@@ -159,29 +159,6 @@ those, you can add them to the `aliases` configuration.
 }
 ```
 
-If you have a library that expose a single object that has a bunch of objects
-on it that you want to use, you can list those in a `destructure` array inside
-the alias (which then has to be turned into an object):
-
-```json
-"aliases": {
-  "$": "third-party-libs/jquery",
-  "_": {
-    "path": "third-party-libs/underscore",
-    "destructure": ["memoize", "debounce"]
-  }
-}
-```
-
-Imports then use [ES6 Destructuring Assigment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment),
-e.g.
-
-```javascript
-const { memoize } = require('underscore');
-
-memoize(() => { foo() });
-```
-
 Aliases can be made dynamic by using the `{filename}` string. This part of the
 alias will be replaced by the name of the file you are currently editing.
 
@@ -198,6 +175,40 @@ will for a file `foo/bar.js` result in
 ```javascript
 import styles from './bar.scss';
 ```
+
+
+### `destructures`
+
+If you have a module that expose a single object that has a bunch of objects on
+it that you want to use, you can add those to a `destructures` configuration
+option.
+
+```json
+"destructures": {
+  "underscore": [
+    "omit",
+    "debounce"
+  ],
+  "lib/utils": [
+    "escape",
+    "hasKey"
+  ]
+}
+```
+
+Imports then use [ES6 Destructuring Assigment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment),
+e.g.
+
+```javascript
+const { memoize } = require('underscore');
+
+memoize(() => { foo() });
+```
+
+The key used to describe the destructures should be a valid import path. This
+can be e.g. the name of a package found under `node_modules`, a path to a
+module you created yourself without the `lookup_path` prefix, or a relative
+import path.
 
 ### `declaration_keyword`
 

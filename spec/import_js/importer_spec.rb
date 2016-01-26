@@ -1201,18 +1201,41 @@ $
         end
       end
 
-      context 'alias with `var` and a destructure object' do
+      context 'with `destructure` object' do
+        let(:configuration) do
+          {
+            'destructures' => {
+              'lib/utils' => %w[
+                foo
+                bar
+              ],
+            },
+          }
+        end
+        let(:text) { 'foo' }
+        let(:word) { 'foo' }
+
+        it 'resolves that import in a destructured way' do
+          expect(subject).to eq(<<-EOS.strip)
+import { foo } from 'lib/utils';
+
+foo
+          EOS
+        end
+      end
+
+      context 'using `var`, `aliases` and a `destructure` object' do
         let(:configuration) do
           {
             'declaration_keyword' => 'var',
+            'destructures' => {
+              'underscore' => %w[
+                memoize
+                debounce
+              ],
+            },
             'aliases' => {
-              '_' => {
-                'path' => 'underscore',
-                'destructure' => %w[
-                  memoize
-                  debounce
-                ],
-              },
+              '_' => 'underscore',
             },
           }
         end
@@ -1350,18 +1373,18 @@ memoize
         end
       end
 
-      context 'alias with `import` and a destructure object' do
+      context 'alias with `import` and a `destructures` object' do
         let(:configuration) do
           {
             'declaration_keyword' => 'import',
+            'destructures' => {
+              'underscore' => %w[
+                memoize
+                debounce
+              ],
+            },
             'aliases' => {
-              '_' => {
-                'path' => 'underscore',
-                'destructure' => %w[
-                  memoize
-                  debounce
-                ],
-              },
+              '_' => 'underscore',
             },
           }
         end
