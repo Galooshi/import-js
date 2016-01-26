@@ -28,22 +28,22 @@ module ImportJS
       ;?\s*
     /xm
 
-    REGEX_DESTRUCTURE = /
-      (?:                    # non-capturing group
-        (?<default>.*?)      # <default> variable
+    REGEX_NAMED = /
+      (?:                # non-capturing group
+        (?<default>.*?)  # <default> default import
         ,\s*
       )?
       \{
         \s*
-        (?<destructured>.*)  # <destructured> variables
+        (?<named>.*)      # <named> named imports
         \s*
       \}
     /xm
 
     attr_accessor :assignment
     attr_accessor :declaration_keyword
-    attr_accessor :default_variable
-    attr_accessor :destructured_variables
+    attr_accessor :default_import
+    attr_accessor :named_imports
     attr_accessor :import_function
     attr_accessor :original_import_string # a cache of the parsed import string
     attr_accessor :path
@@ -67,54 +67,53 @@ module ImportJS
       if match.names.include? 'import_function'
         statement.import_function = match[:import_function]
       end
-      dest_match = statement.assignment.match(REGEX_DESTRUCTURE)
+      dest_match = statement.assignment.match(REGEX_NAMED)
       if dest_match
-        statement.default_variable = dest_match[:default]
-        statement.destructured_variables =
-          dest_match[:destructured].split(/,\s*/).map(&:strip)
+        statement.default_import = dest_match[:default]
+        statement.named_imports =
+          dest_match[:named].split(/,\s*/).map(&:strip)
       else
-        statement.default_variable = statement.assignment
+        statement.default_import = statement.assignment
       end
       statement
     end
 
-    # Sets the default_variable and clears the original import string cache.
+    # Sets the default_import and clears the original import string cache.
     # @param value [String]
-    def set_default_variable(value)
-      @default_variable = value
+    def set_default_import(value)
+      @default_import = value
       clear_import_string_cache
     end
 
-    # Injects a new variable into an already existing set of destructured
-    #   variables.
+    # Injects a new variable into an already existing set of named imports.
     # @param variable_name [String]
-    def inject_destructured_variable(variable_name)
-      @destructured_variables ||= []
-      destructured_variables << variable_name
-      destructured_variables.sort!.uniq!
+    def inject_named_import(variable_name)
+      @named_imports ||= []
+      named_imports << variable_name
+      named_imports.sort!.uniq!
 
       clear_import_string_cache
     end
 
-    # Deletes a variable from an already existing default variable or set of
-    #   destructured variables.
+    # Deletes a variable from an already existing default import or set of
+    #   named imports.
     # @param variable_name [String]
     def delete_variable(variable_name)
-      @default_variable = nil if default_variable == variable_name
-      @destructured_variables.delete(variable_name) if destructured?
+      @default_import = nil if default_import == variable_name
+      @named_imports.delete(variable_name) if named_imports?
 
       clear_import_string_cache
     end
 
-    # @return [Boolean] true if there are destructured variables
-    def destructured?
-      !destructured_variables.nil? && !destructured_variables.empty?
+    # @return [Boolean] true if there are named imports
+    def named_imports?
+      !named_imports.nil? && !named_imports.empty?
     end
 
-    # @return [Boolean] true if there is no default variable and there are no
-    #   destructured variables
+    # @return [Boolean] true if there is no default import and there are no
+    #   named imports
     def empty?
-      default_variable.nil? && !destructured?
+      default_import.nil? && !named_imports?
     end
 
     # @return [Array] an array that can be used in `uniq!` to dedupe equal
@@ -122,7 +121,7 @@ module ImportJS
     #   `const foo = require('foo');`
     #   `import foo from 'foo';`
     def to_normalized
-      [default_variable, destructured_variables, path]
+      [default_import, named_imports, path]
     end
 
     # @param max_line_length [Number] where to cap lines at
@@ -132,22 +131,22 @@ module ImportJS
       return [original_import_string] if original_import_string
 
       if declaration_keyword == 'import'
-        # ES2015 Modules (ESM) syntax can support default values and
-        # destructuring on the same line.
-        if destructured?
-          [destructured_import_string(max_line_length, tab)]
+        # ES2015 Modules (ESM) syntax can support default imports and
+        # named imports on the same line.
+        if named_imports?
+          [named_import_string(max_line_length, tab)]
         else
           [default_import_string(max_line_length, tab)]
         end
       else # const/let/var
         strings = []
 
-        if default_variable
+        if default_import
           strings << default_import_string(max_line_length, tab)
         end
 
-        if destructured?
-          strings << destructured_import_string(max_line_length, tab)
+        if named_imports?
+          strings << named_import_string(max_line_length, tab)
         end
 
         strings
@@ -157,15 +156,15 @@ module ImportJS
     # Merge another ImportStatement into this one.
     # @param import_statement [ImportJS::ImportStatement]
     def merge(import_statement)
-      if import_statement.default_variable
-        @default_variable = import_statement.default_variable
+      if import_statement.default_import
+        @default_import = import_statement.default_import
         clear_import_string_cache
       end
 
-      if import_statement.destructured?
-        @destructured_variables ||= []
-        @destructured_variables.concat(import_statement.destructured_variables)
-        @destructured_variables.sort!.uniq!
+      if import_statement.named_imports?
+        @named_imports ||= []
+        @named_imports.concat(import_statement.named_imports)
+        @named_imports.sort!.uniq!
         clear_import_string_cache
       end
     end
@@ -190,28 +189,28 @@ module ImportJS
     # @return [String] import statement, wrapped at max line length if necessary
     def default_import_string(max_line_length, tab)
       equals, value = equals_and_value
-      line = "#{declaration_keyword} #{default_variable} #{equals} #{value}"
+      line = "#{declaration_keyword} #{default_import} #{equals} #{value}"
       return line unless line_too_long?(line, max_line_length)
 
-      "#{declaration_keyword} #{default_variable} #{equals}\n#{tab}#{value}"
+      "#{declaration_keyword} #{default_import} #{equals}\n#{tab}#{value}"
     end
 
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [String] import statement, wrapped at max line length if necessary
-    def destructured_import_string(max_line_length, tab)
+    def named_import_string(max_line_length, tab)
       equals, value = equals_and_value
-      if declaration_keyword == 'import' && default_variable
-        prefix = "#{default_variable}, "
+      if declaration_keyword == 'import' && default_import
+        prefix = "#{default_import}, "
       end
 
-      destructured = "{ #{destructured_variables.join(', ')} }"
-      line = "#{declaration_keyword} #{prefix}#{destructured} #{equals} " \
+      named = "{ #{named_imports.join(', ')} }"
+      line = "#{declaration_keyword} #{prefix}#{named} #{equals} " \
         "#{value}"
       return line unless line_too_long?(line, max_line_length)
 
-      destructured = "{\n#{tab}#{destructured_variables.join(",\n#{tab}")},\n}"
-      "#{declaration_keyword} #{prefix}#{destructured} #{equals} #{value}"
+      named = "{\n#{tab}#{named_imports.join(",\n#{tab}")},\n}"
+      "#{declaration_keyword} #{prefix}#{named} #{equals} #{value}"
     end
 
     def clear_import_string_cache

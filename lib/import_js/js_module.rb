@@ -7,7 +7,7 @@ module ImportJS
     attr_accessor :lookup_path
     attr_accessor :file_path
     attr_accessor :main_file
-    attr_accessor :is_destructured
+    attr_accessor :has_named_exports
 
     # @param lookup_path [String] the lookup path in which this module was found
     # @param relative_file_path [String] a full path to the file, relative to
@@ -112,10 +112,10 @@ module ImportJS
     # @return [ImportJS::ImportStatement]
     def to_import_statement(variable_name, config)
       ImportJS::ImportStatement.new.tap do |statement|
-        if is_destructured
-          statement.inject_destructured_variable(variable_name)
+        if has_named_exports
+          statement.inject_named_import(variable_name)
         else
-          statement.default_variable = variable_name
+          statement.default_import = variable_name
         end
         statement.path = import_path
         statement.declaration_keyword = config.get('declaration_keyword',

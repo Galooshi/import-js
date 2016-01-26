@@ -177,10 +177,10 @@ module ImportJS
           'declaration_keyword', from_file: js_module.file_path)
         import.import_function = @config.get(
           'import_function', from_file: js_module.file_path)
-        if js_module.is_destructured
-          import.inject_destructured_variable(variable_name)
+        if js_module.has_named_exports
+          import.inject_named_import(variable_name)
         else
-          import.set_default_variable(variable_name)
+          import.set_default_import(variable_name)
         end
       else
         imports.unshift(js_module.to_import_statement(variable_name, @config))
@@ -298,7 +298,7 @@ module ImportJS
         break unless import_statement
 
         if imports[import_statement.path]
-          # Import already exists, so this line is likely one of a destructuring
+          # Import already exists, so this line is likely one of a named imports
           # pair. Combine it into the same ImportStatement.
           imports[import_statement.path].merge(import_statement)
         else
@@ -320,8 +320,8 @@ module ImportJS
       alias_module = @config.resolve_alias(variable_name, path_to_current_file)
       return [alias_module] if alias_module
 
-      destructured_module = @config.resolve_destructured(variable_name)
-      return [destructured_module] if destructured_module
+      named_imports_module = @config.resolve_named_exports(variable_name)
+      return [named_imports_module] if named_imports_module
 
       formatted_var_name = formatted_to_regex(variable_name)
       egrep_command =
@@ -402,7 +402,7 @@ module ImportJS
       if js_modules.length == 1
         js_module = js_modules.first
         js_module_name = js_module.display_name
-        imported = if js_module.is_destructured
+        imported = if js_module.has_named_exports
                      "`#{variable_name}` from `#{js_module_name}`"
                    else
                      "`#{js_module_name}`"

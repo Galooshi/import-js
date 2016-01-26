@@ -8,7 +8,7 @@ module ImportJS
   DEFAULT_CONFIG = {
     'aliases' => {},
     'declaration_keyword' => 'import',
-    'destructures' => {},
+    'named_exports' => {},
     'eslint_executable' => 'eslint',
     'excludes' => [],
     'ignore_package_prefixes' => [],
@@ -59,12 +59,12 @@ module ImportJS
 
     # @param variable_name [String]
     # @return [ImportJS::JSModule?]
-    def resolve_destructured(variable_name)
-      get('destructures').each do |import_path, destructures|
-        next unless destructures.include?(variable_name)
+    def resolve_named_exports(variable_name)
+      get('named_exports').each do |import_path, named_exports|
+        next unless named_exports.include?(variable_name)
 
         js_module = ImportJS::JSModule.new(import_path: import_path)
-        js_module.is_destructured = true
+        js_module.has_named_exports = true
         return js_module
       end
       nil

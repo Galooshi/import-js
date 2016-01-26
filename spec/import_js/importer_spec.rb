@@ -1201,10 +1201,10 @@ $
         end
       end
 
-      context 'with `destructure` object' do
+      context 'with `named_exports` object' do
         let(:configuration) do
           {
-            'destructures' => {
+            'named_exports' => {
               'lib/utils' => %w[
                 foo
                 bar
@@ -1215,7 +1215,7 @@ $
         let(:text) { 'foo' }
         let(:word) { 'foo' }
 
-        it 'resolves that import in a destructured way' do
+        it 'resolves that import using named imports' do
           expect(subject).to eq(<<-EOS.strip)
 import { foo } from 'lib/utils';
 
@@ -1224,11 +1224,11 @@ foo
         end
       end
 
-      context 'using `var`, `aliases` and a `destructure` object' do
+      context 'using `var`, `aliases` and a `named_exports` object' do
         let(:configuration) do
           {
             'declaration_keyword' => 'var',
-            'destructures' => {
+            'named_exports' => {
               'underscore' => %w[
                 memoize
                 debounce
@@ -1250,7 +1250,7 @@ _
         EOS
         end
 
-        context 'when a destructured import exists for the same module' do
+        context 'when a named import exists for the same module' do
           let(:text) { <<-EOS.strip }
 var { memoize } = require('underscore');
 
@@ -1267,11 +1267,11 @@ _
           end
         end
 
-        context 'when importing a destructured object' do
+        context 'when importing a named export' do
           let(:text) { 'memoize' }
           let(:word) { 'memoize' }
 
-          it 'resolves that import in a destructured way' do
+          it 'resolves that import using destructuring' do
             expect(subject).to eq(<<-EOS.strip)
 var { memoize } = require('underscore');
 
@@ -1373,11 +1373,11 @@ memoize
         end
       end
 
-      context 'alias with `import` and a `destructures` object' do
+      context 'alias with `import` and a `named_exports` object' do
         let(:configuration) do
           {
             'declaration_keyword' => 'import',
-            'destructures' => {
+            'named_exports' => {
               'underscore' => %w[
                 memoize
                 debounce
@@ -1391,7 +1391,7 @@ memoize
         let(:text) { '_' }
         let(:word) { '_' }
 
-        it 'resolves the main alias without destructuring' do
+        it 'resolves the main alias without a named import' do
           expect(subject).to eq(<<-EOS.strip)
 import _ from 'underscore';
 
@@ -1399,7 +1399,7 @@ _
         EOS
         end
 
-        context 'when a destructured import exists for the same module' do
+        context 'when a named import exists for the same module' do
           let(:text) { <<-EOS.strip }
 import { memoize } from 'underscore';
 
@@ -1415,11 +1415,11 @@ _
           end
         end
 
-        context 'when importing a destructured object' do
+        context 'when importing a named export' do
           let(:text) { 'memoize' }
           let(:word) { 'memoize' }
 
-          it 'resolves that import in a destructured way' do
+          it 'uses a named import' do
             expect(subject).to eq(<<-EOS.strip)
 import { memoize } from 'underscore';
 
@@ -1446,14 +1446,14 @@ memoize
             end
           end
 
-          context 'when other destructured imports exist for the same module' do
+          context 'when other named imports exist for the same module' do
             let(:text) { <<-EOS.strip }
 import { xyz, debounce } from 'underscore';
 
 memoize
             EOS
 
-            it 'combines the destructured import and sorts items' do
+            it 'combines the named import and sorts items' do
               expect(subject).to eq(<<-EOS.strip)
 import { debounce, memoize, xyz } from 'underscore';
 
@@ -1461,7 +1461,7 @@ memoize
               EOS
             end
 
-            context 'when the module is already in the destructured object' do
+            context 'when the module is already in the named imports' do
               let(:text) { <<-EOS.strip }
 import { debounce, memoize, xyz } from 'underscore';
 
@@ -1485,7 +1485,7 @@ import _ from 'underscore';
 memoize
             EOS
 
-            it 'adds the destructured import' do
+            it 'adds the named import' do
               expect(subject).to eq(<<-EOS.strip)
 import _, { memoize } from 'underscore';
 
@@ -1493,7 +1493,7 @@ memoize
               EOS
             end
 
-            context 'when the module is already in the destructured object' do
+            context 'when the module is already in the named import' do
               let(:text) { <<-EOS.strip }
 import _, { memoize } from 'underscore';
 
@@ -2188,7 +2188,7 @@ foo
       end
     end
 
-    context 'when a destructured import has an unused variable' do
+    context 'when a named import has an unused variable' do
       let(:text) { <<-EOS.strip }
 import { bar, foo } from 'baz';
 
@@ -2200,7 +2200,7 @@ bar
         "[Error/no-unused-vars]\n" \
       end
 
-      it 'removes that variable from the destructured list' do
+      it 'removes that variable from the named imports list' do
         expect(subject).to eq(<<-EOS.strip)
 import { bar } from 'baz';
 
@@ -2209,7 +2209,7 @@ bar
       end
     end
 
-    context 'when the last import is removed from a destructured import' do
+    context 'when the last import is removed from a named import' do
       let(:text) { <<-EOS.strip }
 import bar from 'bar';
 import { foo } from 'baz';
