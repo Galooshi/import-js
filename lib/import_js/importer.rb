@@ -41,8 +41,8 @@ module ImportJS
     def goto
       @config = ImportJS::Configuration.new(@editor.path_to_current_file)
       js_modules = []
+      variable_name = @editor.current_word
       time do
-        variable_name = @editor.current_word
         js_modules = find_js_modules(variable_name)
       end
       return if js_modules.empty?

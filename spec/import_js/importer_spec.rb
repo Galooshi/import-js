@@ -2231,4 +2231,17 @@ bar
       end
     end
   end
+
+  describe '#goto' do
+    let(:existing_files) { ['bar/foo.jsx'] }
+    subject { described_class.new.goto }
+
+    context 'with a variable name that will resolve' do
+      it 'opens the file' do
+        expect_any_instance_of(ImportJS::VIMEditor).to receive(
+          :open_file).with("#{File.basename(@tmp_dir)}/bar/foo.jsx")
+        subject
+      end
+    end
+  end
 end
