@@ -197,7 +197,16 @@ option.
 }
 ```
 
-Imports then use [ES6 Destructuring Assigment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment),
+Imports that use the `import` declaration keyword then use [named imports syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import),
+e.g.
+
+```javascript
+import { memoize } from 'underscore';
+
+memoize(() => { foo() });
+```
+
+and imports that use `const`, `let`, or `var` use [ES2015 Destructuring Assigment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment),
 e.g.
 
 ```javascript
