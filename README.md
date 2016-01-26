@@ -177,15 +177,15 @@ import styles from './bar.scss';
 ```
 
 
-### `destructures`
+### `named_exports`
 
 If you have a ES2015 module that exports multiple things (named exports), or a
 CommonJS module that exports an object with properties on it that you want to
-destructure when importing, you can add those to a `destructures` configuration
+destructure when importing, you can add those to a `named_exports` configuration
 option.
 
 ```json
-"destructures": {
+"named_exports": {
   "underscore": [
     "omit",
     "debounce"
@@ -215,7 +215,7 @@ const { memoize } = require('underscore');
 memoize(() => { foo() });
 ```
 
-The key used to describe the destructures should be a valid import path. This
+The key used to describe the named exports should be a valid import path. This
 can be e.g. the name of a package found under `node_modules`, a path to a
 module you created yourself without the `lookup_path` prefix, or a relative
 import path.

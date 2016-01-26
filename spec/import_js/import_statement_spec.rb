@@ -22,15 +22,15 @@ describe ImportJS::ImportStatement do
         end
       end
 
-      context 'and it has a destructured assignment' do
+      context 'and it uses named imports' do
         let(:string) { "import { foo } from 'foo';" }
 
         it 'returns a valid ImportStatement instance' do
           expect(subject.assignment).to eq('{ foo }')
           expect(subject.path).to eq('foo')
-          expect(subject.destructured?).to be_truthy
-          expect(subject.default_variable).to eq(nil)
-          expect(subject.destructured_variables).to eq(['foo'])
+          expect(subject.named_imports?).to be_truthy
+          expect(subject.default_import).to eq(nil)
+          expect(subject.named_imports).to eq(['foo'])
         end
 
         context 'and it has line breaks' do
@@ -39,22 +39,22 @@ describe ImportJS::ImportStatement do
           it 'returns a valid ImportStatement instance' do
             expect(subject.assignment).to eq("{\n  foo,\n  bar,\n}")
             expect(subject.path).to eq('foo')
-            expect(subject.destructured?).to be_truthy
-            expect(subject.default_variable).to eq(nil)
-            expect(subject.destructured_variables).to eq(%w[foo bar])
+            expect(subject.named_imports?).to be_truthy
+            expect(subject.default_import).to eq(nil)
+            expect(subject.named_imports).to eq(%w[foo bar])
           end
         end
       end
 
-      context 'and it has default and a destructured assignment' do
+      context 'and it has default and a named import' do
         let(:string) { "import foo, { bar } from 'foo';" }
 
         it 'returns a valid ImportStatement instance' do
           expect(subject.assignment).to eq('foo, { bar }')
           expect(subject.path).to eq('foo')
-          expect(subject.destructured?).to be_truthy
-          expect(subject.default_variable).to eq('foo')
-          expect(subject.destructured_variables).to eq(['bar'])
+          expect(subject.named_imports?).to be_truthy
+          expect(subject.default_import).to eq('foo')
+          expect(subject.named_imports).to eq(['bar'])
         end
 
         context 'and it has line breaks' do
@@ -63,9 +63,9 @@ describe ImportJS::ImportStatement do
           it 'returns a valid ImportStatement instance' do
             expect(subject.assignment).to eq("foo, {\n  bar,\n  baz,\n}")
             expect(subject.path).to eq('foo')
-            expect(subject.destructured?).to be_truthy
-            expect(subject.default_variable).to eq('foo')
-            expect(subject.destructured_variables).to eq(%w[bar baz])
+            expect(subject.named_imports?).to be_truthy
+            expect(subject.default_import).to eq('foo')
+            expect(subject.named_imports).to eq(%w[bar baz])
           end
         end
       end
@@ -85,8 +85,8 @@ describe ImportJS::ImportStatement do
           expect(subject.path).to eq('foo')
         end
 
-        it 'is not destructured' do
-          expect(subject.destructured?).to be_falsy
+        it 'is not named_imports?' do
+          expect(subject.named_imports?).to be_falsy
         end
       end
 
@@ -105,9 +105,9 @@ describe ImportJS::ImportStatement do
         it 'returns a valid ImportStatement instance' do
           expect(subject.assignment).to eq('{ foo }')
           expect(subject.path).to eq('foo')
-          expect(subject.destructured?).to be_truthy
-          expect(subject.default_variable).to eq(nil)
-          expect(subject.destructured_variables).to eq(['foo'])
+          expect(subject.named_imports?).to be_truthy
+          expect(subject.default_import).to eq(nil)
+          expect(subject.named_imports).to eq(['foo'])
         end
 
         context 'and it has line breaks' do
@@ -116,26 +116,26 @@ describe ImportJS::ImportStatement do
           it 'returns a valid ImportStatement instance' do
             expect(subject.assignment).to eq("{\n  foo,\n  bar,\n}")
             expect(subject.path).to eq('foo')
-            expect(subject.destructured?).to be_truthy
-            expect(subject.default_variable).to eq(nil)
-            expect(subject.destructured_variables).to eq(%w[foo bar])
+            expect(subject.named_imports?).to be_truthy
+            expect(subject.default_import).to eq(nil)
+            expect(subject.named_imports).to eq(%w[foo bar])
           end
         end
 
-        context 'injecting a new destructured variable' do
+        context 'injecting a new named import' do
           let(:injected_variable) { 'bar' }
           let(:statement) do
             statement = subject
-            statement.inject_destructured_variable(injected_variable)
+            statement.inject_named_import(injected_variable)
             statement
           end
 
-          it 'does not add a default_variable' do
-            expect(statement.default_variable).to eq(nil)
+          it 'does not add a default_import' do
+            expect(statement.default_import).to eq(nil)
           end
 
           it 'adds that variable and sorts the list' do
-            expect(statement.destructured_variables).to eq(%w[bar foo])
+            expect(statement.named_imports).to eq(%w[bar foo])
           end
 
           it 'can reconstruct using `to_import_strings`' do
@@ -148,12 +148,12 @@ describe ImportJS::ImportStatement do
           context 'injecting a variable that is already in the list' do
             let(:injected_variable) { 'foo' }
 
-            it 'does not add a default variable' do
-              expect(statement.default_variable).to eq(nil)
+            it 'does not add a default import' do
+              expect(statement.default_import).to eq(nil)
             end
 
             it 'does not add a duplicate' do
-              expect(statement.destructured_variables).to eq(['foo'])
+              expect(statement.named_imports).to eq(['foo'])
             end
           end
         end
@@ -169,96 +169,96 @@ describe ImportJS::ImportStatement do
     end
   end
 
-  describe '#destructured?' do
+  describe '#named_imports?' do
     let(:import_statement) { described_class.new }
-    let(:default_variable) { nil }
-    let(:destructured_variables) { nil }
+    let(:default_import) { nil }
+    let(:named_imports) { nil }
 
     before do
-      unless default_variable.nil?
-        import_statement.default_variable = default_variable
+      unless default_import.nil?
+        import_statement.default_import = default_import
       end
 
-      unless destructured_variables.nil?
-        import_statement.destructured_variables = destructured_variables
+      unless named_imports.nil?
+        import_statement.named_imports = named_imports
       end
     end
 
-    subject { import_statement.destructured? }
+    subject { import_statement.named_imports? }
 
-    context 'without a default variable or destructured variables' do
+    context 'without a default import or named imports' do
       it { should eq(false) }
     end
 
-    context 'with a default variable' do
-      let(:default_variable) { 'foo' }
+    context 'with a default import' do
+      let(:default_import) { 'foo' }
       it { should eq(false) }
 
-      context 'when default variable is removed' do
+      context 'when default import is removed' do
         before { import_statement.delete_variable('foo') }
         it { should eq(false) }
       end
     end
 
-    context 'with destructured variables' do
-      let(:destructured_variables) { ['foo'] }
+    context 'with named imports' do
+      let(:named_imports) { ['foo'] }
       it { should eq(true) }
 
-      context 'when destructured variables are removed' do
+      context 'when named imports are removed' do
         before { import_statement.delete_variable('foo') }
         it { should eq(false) }
       end
     end
 
-    context 'with an empty array of destructured variables' do
-      let(:destructured_variables) { [] }
+    context 'with an empty array of named imports' do
+      let(:named_imports) { [] }
       it { should eq(false) }
     end
   end
 
   describe '#empty?' do
     let(:import_statement) { described_class.new }
-    let(:default_variable) { nil }
-    let(:destructured_variables) { nil }
+    let(:default_import) { nil }
+    let(:named_imports) { nil }
 
     before do
-      unless default_variable.nil?
-        import_statement.default_variable = default_variable
+      unless default_import.nil?
+        import_statement.default_import = default_import
       end
 
-      unless destructured_variables.nil?
-        import_statement.destructured_variables = destructured_variables
+      unless named_imports.nil?
+        import_statement.named_imports = named_imports
       end
     end
 
     subject { import_statement.empty? }
 
-    context 'without a default variable or destructured variables' do
+    context 'without a default import or named imports' do
       it { should eq(true) }
     end
 
-    context 'with a default variable' do
-      let(:default_variable) { 'foo' }
+    context 'with a default import' do
+      let(:default_import) { 'foo' }
       it { should eq(false) }
 
-      context 'when default variable is removed' do
+      context 'when default import is removed' do
         before { import_statement.delete_variable('foo') }
         it { should eq(true) }
       end
     end
 
-    context 'with destructured variables' do
-      let(:destructured_variables) { ['foo'] }
+    context 'with named imports' do
+      let(:named_imports) { ['foo'] }
       it { should eq(false) }
 
-      context 'when destructured variables are removed' do
+      context 'when named imports are removed' do
         before { import_statement.delete_variable('foo') }
         it { should eq(true) }
       end
     end
 
-    context 'with an empty array of destructured variables' do
-      let(:destructured_variables) { [] }
+    context 'with an empty array of named imports' do
+      let(:named_imports) { [] }
       it { should eq(true) }
     end
   end
@@ -266,28 +266,26 @@ describe ImportJS::ImportStatement do
   describe '#merge' do
     let(:existing_import_statement) { described_class.new }
     let(:new_import_statement) { described_class.new }
-    let(:existing_default_variable) { nil }
-    let(:existing_destructured_variables) { nil }
-    let(:new_default_variable) { nil }
-    let(:new_destructured_variables) { nil }
+    let(:existing_default_import) { nil }
+    let(:existing_named_imports) { nil }
+    let(:new_default_import) { nil }
+    let(:new_named_imports) { nil }
 
     before do
-      unless existing_default_variable.nil?
-        existing_import_statement.default_variable = existing_default_variable
+      unless existing_default_import.nil?
+        existing_import_statement.default_import = existing_default_import
       end
 
-      unless existing_destructured_variables.nil?
-        existing_import_statement.destructured_variables =
-          existing_destructured_variables
+      unless existing_named_imports.nil?
+        existing_import_statement.named_imports = existing_named_imports
       end
 
-      unless new_default_variable.nil?
-        new_import_statement.default_variable = new_default_variable
+      unless new_default_import.nil?
+        new_import_statement.default_import = new_default_import
       end
 
-      unless new_destructured_variables.nil?
-        new_import_statement.destructured_variables =
-          new_destructured_variables
+      unless new_named_imports.nil?
+        new_import_statement.named_imports = new_named_imports
       end
     end
 
@@ -296,62 +294,62 @@ describe ImportJS::ImportStatement do
       existing_import_statement
     end
 
-    context 'without a new default variable' do
-      let(:existing_default_variable) { 'foo' }
+    context 'without a new default import' do
+      let(:existing_default_import) { 'foo' }
 
-      it 'uses the existing default variable' do
-        expect(subject.default_variable).to eq('foo')
+      it 'uses the existing default import' do
+        expect(subject.default_import).to eq('foo')
       end
     end
 
-    context 'without an existing default variable' do
-      let(:new_default_variable) { 'foo' }
+    context 'without an existing default import' do
+      let(:new_default_import) { 'foo' }
 
-      it 'uses the new default variable' do
-        expect(subject.default_variable).to eq('foo')
+      it 'uses the new default import' do
+        expect(subject.default_import).to eq('foo')
       end
     end
 
-    context 'with both default variables' do
-      let(:existing_default_variable) { 'foo' }
-      let(:new_default_variable) { 'bar' }
+    context 'with both default imports' do
+      let(:existing_default_import) { 'foo' }
+      let(:new_default_import) { 'bar' }
 
-      it 'uses the new default variable' do
-        expect(subject.default_variable).to eq('bar')
+      it 'uses the new default import' do
+        expect(subject.default_import).to eq('bar')
       end
     end
 
-    context 'without new destructured variables' do
-      let(:existing_destructured_variables) { ['foo'] }
+    context 'without new named imports' do
+      let(:existing_named_imports) { ['foo'] }
 
-      it 'uses the existing destructured variables' do
-        expect(subject.destructured_variables).to eq(['foo'])
+      it 'uses the existing named imports' do
+        expect(subject.named_imports).to eq(['foo'])
       end
     end
 
-    context 'without existing destructured variables' do
-      let(:new_destructured_variables) { ['foo'] }
+    context 'without existing named imports' do
+      let(:new_named_imports) { ['foo'] }
 
-      it 'uses the new destructured variables' do
-        expect(subject.destructured_variables).to eq(['foo'])
+      it 'uses the new named imports' do
+        expect(subject.named_imports).to eq(['foo'])
       end
     end
 
-    context 'with both destructured variables' do
-      let(:existing_destructured_variables) { ['foo'] }
-      let(:new_destructured_variables) { ['bar'] }
+    context 'with both named imports' do
+      let(:existing_named_imports) { ['foo'] }
+      let(:new_named_imports) { ['bar'] }
 
-      it 'uses the new destructured variables' do
-        expect(subject.destructured_variables).to eq(%w[bar foo])
+      it 'uses the new named imports' do
+        expect(subject.named_imports).to eq(%w[bar foo])
       end
     end
 
-    context 'when the new destructured variable is the same as the existing' do
-      let(:existing_destructured_variables) { ['foo'] }
-      let(:new_destructured_variables) { ['foo'] }
+    context 'when the new named import is the same as the existing' do
+      let(:existing_named_imports) { ['foo'] }
+      let(:new_named_imports) { ['foo'] }
 
       it 'does not duplicate' do
-        expect(subject.destructured_variables).to eq(['foo'])
+        expect(subject.named_imports).to eq(['foo'])
       end
     end
   end
@@ -360,20 +358,20 @@ describe ImportJS::ImportStatement do
     let(:import_statement) { described_class.new }
     let(:import_function) { 'require' }
     let(:path) { 'path' }
-    let(:default_variable) { nil }
-    let(:destructured_variables) { nil }
+    let(:default_import) { nil }
+    let(:named_imports) { nil }
     let(:max_line_length) { 80 }
     let(:tab) { '  ' }
 
     before do
       import_statement.path = path
 
-      unless default_variable.nil?
-        import_statement.default_variable = default_variable
+      unless default_import.nil?
+        import_statement.default_import = default_import
       end
 
-      unless destructured_variables.nil?
-        import_statement.destructured_variables = destructured_variables
+      unless named_imports.nil?
+        import_statement.named_imports = named_imports
       end
     end
 
@@ -386,8 +384,8 @@ describe ImportJS::ImportStatement do
     context 'with import declaration keyword' do
       let(:declaration_keyword) { 'import' }
 
-      context 'with a default variable' do
-        let(:default_variable) { 'foo' }
+      context 'with a default import' do
+        let(:default_import) { 'foo' }
         it { should eq(["import foo from 'path';"]) }
 
         context 'with `import_function`' do
@@ -398,24 +396,24 @@ describe ImportJS::ImportStatement do
         end
 
         context 'when longer than max line length' do
-          let(:default_variable) { 'ReallyReallyReallyReallyLong' }
+          let(:default_import) { 'ReallyReallyReallyReallyLong' }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
-          it { should eq(["import #{default_variable} from\n  '#{path}';"]) }
+          it { should eq(["import #{default_import} from\n  '#{path}';"]) }
 
           context 'with different tab' do
             let(:tab) { "\t" }
-            it { should eq(["import #{default_variable} from\n\t'#{path}';"]) }
+            it { should eq(["import #{default_import} from\n\t'#{path}';"]) }
           end
         end
       end
 
-      context 'with destructured variables' do
-        let(:destructured_variables) { %w[foo bar] }
+      context 'with named imports' do
+        let(:named_imports) { %w[foo bar] }
         it { should eq(["import { foo, bar } from 'path';"]) }
 
         context 'when longer than max line length' do
-          let(:destructured_variables) { %w[foo bar baz fizz buzz] }
+          let(:named_imports) { %w[foo bar baz fizz buzz] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
           it do
@@ -429,13 +427,13 @@ describe ImportJS::ImportStatement do
         end
       end
 
-      context 'with default and destructured variables' do
-        let(:default_variable) { 'foo' }
-        let(:destructured_variables) { %w[bar baz] }
+      context 'with default and named imports' do
+        let(:default_import) { 'foo' }
+        let(:named_imports) { %w[bar baz] }
         it { should eq(["import foo, { bar, baz } from 'path';"]) }
 
         context 'when longer than max line length' do
-          let(:destructured_variables) { %w[bar baz fizz buzz] }
+          let(:named_imports) { %w[bar baz fizz buzz] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
           it do
@@ -453,8 +451,8 @@ describe ImportJS::ImportStatement do
     context 'with const declaration keyword' do
       let(:declaration_keyword) { 'const' }
 
-      context 'with a default variable' do
-        let(:default_variable) { 'foo' }
+      context 'with a default import' do
+        let(:default_import) { 'foo' }
         it { should eq(["const foo = require('path');"]) }
 
         context 'with `import_function`' do
@@ -463,24 +461,24 @@ describe ImportJS::ImportStatement do
         end
 
         context 'when longer than max line length' do
-          let(:default_variable) { 'ReallyReallyReallyReallyLong' }
+          let(:default_import) { 'ReallyReallyReallyReallyLong' }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
           it do
-            should eq(["const #{default_variable} =\n  require('#{path}');"])
+            should eq(["const #{default_import} =\n  require('#{path}');"])
           end
 
           context 'with different tab' do
             let(:tab) { "\t" }
             it do
-              should eq(["const #{default_variable} =\n\trequire('#{path}');"])
+              should eq(["const #{default_import} =\n\trequire('#{path}');"])
             end
           end
         end
       end
 
-      context 'with destructured variables' do
-        let(:destructured_variables) { %w[foo bar] }
+      context 'with named imports' do
+        let(:named_imports) { %w[foo bar] }
         it { should eq(["const { foo, bar } = require('path');"]) }
 
         context 'with `import_function`' do
@@ -489,7 +487,7 @@ describe ImportJS::ImportStatement do
         end
 
         context 'when longer than max line length' do
-          let(:destructured_variables) { %w[foo bar baz fizz buzz] }
+          let(:named_imports) { %w[foo bar baz fizz buzz] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
           it do
@@ -503,9 +501,9 @@ describe ImportJS::ImportStatement do
         end
       end
 
-      context 'with default and destructured variables' do
-        let(:default_variable) { 'foo' }
-        let(:destructured_variables) { %w[bar baz] }
+      context 'with default and named imports' do
+        let(:default_import) { 'foo' }
+        let(:named_imports) { %w[bar baz] }
         it do
           should eq(
             [
@@ -528,7 +526,7 @@ describe ImportJS::ImportStatement do
         end
 
         context 'when longer than max line length' do
-          let(:destructured_variables) { %w[bar baz fizz buzz] }
+          let(:named_imports) { %w[bar baz fizz buzz] }
           let(:path) { 'also_very_long_for_some_reason' }
           let(:max_line_length) { 50 }
           it do
