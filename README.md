@@ -179,8 +179,9 @@ import styles from './bar.scss';
 
 ### `destructures`
 
-If you have a module that expose a single object that has a bunch of objects on
-it that you want to use, you can add those to a `destructures` configuration
+If you have a ES2015 module that exports multiple things (named exports), or a
+CommonJS module that exports an object with properties on it that you want to
+destructure when importing, you can add those to a `destructures` configuration
 option.
 
 ```json
