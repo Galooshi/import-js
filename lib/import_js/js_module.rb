@@ -107,6 +107,18 @@ module ImportJS
       parts.join('')
     end
 
+    # @param path_to_current_file [String]
+    # @return [String]
+    def open_file_path(path_to_current_file)
+      return file_path if file_path
+
+      if import_path.start_with?('.')
+        return File.expand_path(import_path, File.dirname(path_to_current_file))
+      end
+
+      import_path
+    end
+
     # @param variable_name [String]
     # @param config [ImportJS::Configuration]
     # @return [ImportJS::ImportStatement]
