@@ -27,8 +27,6 @@ describe ImportJS::Configuration do
       end
 
       context 'when the configuration has a `minimum_version`' do
-        let(:minimum_version) { '1.2.3' }
-        let(:current_version) { '1.2.4' }
         let(:configuration) do
           {
             'minimum_version' => minimum_version,
@@ -40,6 +38,9 @@ describe ImportJS::Configuration do
         end
 
         context 'when the current version is newer than minimum version' do
+          let(:minimum_version) { '1.2.3' }
+          let(:current_version) { '1.2.4' }
+
           it 'does not raise an error' do
             expect { subject }.not_to raise_error
           end
@@ -47,6 +48,7 @@ describe ImportJS::Configuration do
 
         context 'when the current version is smaller than minimum version' do
           let(:minimum_version) { '1.2.5' }
+          let(:current_version) { '1.2.4' }
 
           it 'raises a helpful error message' do
             expect { subject }.to raise_error(
