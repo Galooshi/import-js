@@ -1,0 +1,2 @@
+Version 0.4.0 changes the structure of the .importjs.json config file a bit. Check out the release notes to know if/how you need to migrate your existing configuration file:
+https://github.com/trotzig/import-js/releases
