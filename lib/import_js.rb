@@ -12,7 +12,7 @@ module ImportJS
   end
 
   class ClientTooOldError < StandardError
-    # Error thrwon when the client is too old to handle the config
+    # Error thrown when the client is too old to handle the config
   end
 end
 

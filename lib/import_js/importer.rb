@@ -47,8 +47,9 @@ module ImportJS
       end
       return if js_modules.empty?
       js_module = resolve_one_js_module(js_modules, variable_name)
-      @editor.open_file(
-        js_module.open_file_path(@editor.path_to_current_file)) if js_module
+      if js_module
+        @editor.open_file(js_module.open_file_path(@editor.path_to_current_file))
+      end
     end
 
     REGEX_ESLINT_RESULT = /
