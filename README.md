@@ -370,6 +370,17 @@ When using `applies_from` only a subset of configurations are supported:
 - `strip_from_path`
 - `use_relative_paths`
 
+### `minium_version`
+
+Setting `minimum_version` will warn people who are running a version of
+Import-JS that is older than what your `.importjs.json` configuration file
+requires. If your plugin version is older than this value, you will be shown a
+warning that encourages you to upgrade your plugin.
+
+```json
+"minimum_version": "0.4.0"
+```
+
 ## Contributing
 
 See the
