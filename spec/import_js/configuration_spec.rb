@@ -26,6 +26,37 @@ describe ImportJS::Configuration do
         expect(subject.get('aliases')).to eq('foo' => 'bar')
       end
 
+      context 'when the configuration has a `minimum_version`' do
+        let(:minimum_version) { '1.2.3' }
+        let(:current_version) { '1.2.4' }
+        let(:configuration) do
+          {
+            'minimum_version' => minimum_version,
+          }
+        end
+
+        before do
+          stub_const('ImportJS::VERSION', current_version)
+        end
+
+        context 'when the current version is newer than minimum version' do
+          it 'does not raise an error' do
+            expect { subject }.not_to raise_error
+          end
+        end
+
+        context 'when the current version is smaller than minimum version' do
+          let(:minimum_version) { '1.2.5' }
+
+          it 'raises a helpful error message' do
+            expect { subject }.to raise_error(
+              ImportJS::ClientTooOldError,
+              'The .importjs.json file you are using requires version ' \
+              "#{minimum_version}. You are using #{current_version}.")
+          end
+        end
+      end
+
       context 'when there are multiple configs in the .importjs.json file' do
         let(:path_to_current_file) do
           File.join(Dir.pwd, 'goo', 'gar', 'gaz.js')
@@ -195,6 +226,8 @@ describe ImportJS::Configuration do
 
         context 'when `import_dev_dependencies` is true' do
           before do
+            allow_any_instance_of(ImportJS::Configuration)
+              .to receive(:get).with('minimum_version').and_return('0.0.1')
             allow_any_instance_of(ImportJS::Configuration)
               .to receive(:get).with('import_dev_dependencies').and_return(true)
           end

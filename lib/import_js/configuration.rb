@@ -15,6 +15,7 @@ module ImportJS
     'import_dev_dependencies' => false,
     'import_function' => 'require',
     'lookup_paths' => ['.'],
+    'minimum_version' => '0.0.0',
     'strip_file_extensions' => ['.js', '.jsx'],
     'strip_from_path' => nil,
     'use_relative_paths' => false,
@@ -28,6 +29,8 @@ module ImportJS
       user_config = load_config(CONFIG_FILE)
       @configs.concat([user_config].flatten.reverse) if user_config
       @configs << DEFAULT_CONFIG
+
+      check_current_version!
     end
 
     # @return [Object] a configuration value
@@ -98,6 +101,18 @@ module ImportJS
       path = path.sub(/^#{Regexp.escape(Dir.pwd)}/, '.')
       path = "./#{path}" unless path.start_with?('.')
       path
+    end
+
+    # Checks that the current version is bigger than the `minimum_version`
+    # defined in config. Raises an error if it doesn't match.
+    def check_current_version!
+      minimum_version = get('minimum_version')
+      return if Gem::Dependency.new('', ">= #{minimum_version}")
+                               .match?('', ImportJS::VERSION)
+
+      fail ImportJS::ClientTooOldError,
+           'The .importjs.json file you are using requires version ' \
+           "#{get('minimum_version')}. You are using #{ImportJS::VERSION}."
     end
   end
 end

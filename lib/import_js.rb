@@ -10,6 +10,10 @@ module ImportJS
   class FindError < StandardError
     # Error thrown when the find command fails
   end
+
+  class ClientTooOldError < StandardError
+    # Error thrwon when the client is too old to handle the config
+  end
 end
 
 require_relative 'import_js/command_line_editor'
