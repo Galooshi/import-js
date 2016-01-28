@@ -46,9 +46,11 @@ module ImportJS
         js_modules = find_js_modules(variable_name)
       end
       return if js_modules.empty?
-      js_module = resolve_one_js_module(js_modules, variable_name)
+
+      js_module = resolve_goto_module(js_modules, variable_name)
       if js_module
-        @editor.open_file(js_module.open_file_path(@editor.path_to_current_file))
+        @editor.open_file(js_module.open_file_path(
+                            @editor.path_to_current_file))
       end
     end
 
@@ -399,7 +401,7 @@ module ImportJS
 
     # @param js_modules [Array]
     # @param variable_name [String]
-    # @return [String]
+    # @return [ImportJS::JSModule]
     def resolve_one_js_module(js_modules, variable_name)
       if js_modules.length == 1
         js_module = js_modules.first
@@ -419,6 +421,25 @@ module ImportJS
       )
       return unless selected_index
       js_modules[selected_index]
+    end
+
+    # @param js_modules [Array]
+    # @param variable_name [String]
+    # @return [ImportJS::JSModule]
+    def resolve_goto_module(js_modules, variable_name)
+      return js_modules.first if js_modules.length == 1
+
+      # Look for a current import matching the goto
+      find_current_imports[:imports].each do |ist|
+        js_modules.each do |js_module|
+          next unless variable_name == ist.default_import ||
+                      (ist.named_imports || []).include?(variable_name)
+          return js_module if ist.path == js_module.import_path
+        end
+      end
+
+      # fall back to asking the user to resolve the ambiguity
+      resolve_one_js_module(js_modules, variable_name)
     end
 
     # Takes a string in any of the following four formats:
