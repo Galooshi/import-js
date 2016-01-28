@@ -2291,5 +2291,38 @@ bar
         end
       end
     end
+
+    context 'with a variable name that matches multiple files' do
+      let(:existing_files) do
+        %w[
+          bar/foo.jsx
+          car/foo.jsx
+        ]
+      end
+
+      it 'displays a message about selecting a module' do
+        subject
+        expect(VIM.last_inputlist).to include(
+          "ImportJS: Pick JS module to import for 'foo'")
+      end
+
+      it 'does not open the file' do
+        expect_any_instance_of(ImportJS::VIMEditor).to_not receive(
+          :open_file)
+        subject
+      end
+
+      context 'and the user selects' do
+        before do
+          VIM.current_selection = 1
+        end
+
+        it 'opens the first one' do
+          expect_any_instance_of(ImportJS::VIMEditor).to receive(
+            :open_file).with("#{File.basename(@tmp_dir)}/bar/foo.jsx")
+          subject
+        end
+      end
+    end
   end
 end
