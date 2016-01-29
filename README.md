@@ -283,7 +283,7 @@ has different logic than the default `require` and `import from` behavior.
 ### `strip_file_extensions`
 
 An array that controls what file extensions are stripped out from the resulting
-`require` statement. The default configuration strips out `[".js", ".jsx"]`.
+import statement. The default configuration strips out `[".js", ".jsx"]`.
 Set to an empty array `[]` to avoid stripping out extensions.
 
 ```json
