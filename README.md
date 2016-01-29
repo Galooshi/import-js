@@ -322,6 +322,17 @@ When package dependencies are matched, these prefixes will be ignored. As an
 example, a variable named `validator` would match a package named
 `my-company-validator`.
 
+### `minium_version`
+
+Setting `minimum_version` will warn people who are running a version of
+Import-JS that is older than what your `.importjs.json` configuration file
+requires. If your plugin version is older than this value, you will be shown a
+warning that encourages you to upgrade your plugin.
+
+```json
+"minimum_version": "0.4.0"
+```
+
 ## Local configuration
 
 You can dynamically apply configuration to different directory trees within
@@ -369,17 +380,6 @@ When using `applies_from` only a subset of configurations are supported:
 - `strip_file_extensions`
 - `strip_from_path`
 - `use_relative_paths`
-
-### `minium_version`
-
-Setting `minimum_version` will warn people who are running a version of
-Import-JS that is older than what your `.importjs.json` configuration file
-requires. If your plugin version is older than this value, you will be shown a
-warning that encourages you to upgrade your plugin.
-
-```json
-"minimum_version": "0.4.0"
-```
 
 ## Contributing
 
