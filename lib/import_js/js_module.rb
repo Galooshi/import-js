@@ -111,11 +111,22 @@ module ImportJS
     # @return [String]
     def open_file_path(path_to_current_file)
       if file_path
+        # There is a file_path. This happens for JSModules that are not aliases.
         return file_path unless file_path.end_with?('/package.json')
+
+        # The file_path points to a package.json file, so we want to look in
+        # that package.json file for a `main` configuration value and open that
+        # file instead.
         return file_path.sub(/package\.json$/, main_file)
       end
 
+      # There is no file_path. This likely means that we are working with an
+      # alias, so we want to expand it to a full path if we can.
+
       if import_path.start_with?('.')
+        # The import path in the alias starts with a ".", which means that it is
+        # relative to the current file. In order to open this file, we need to
+        # expand it to a full path.
         return File.expand_path(import_path, File.dirname(path_to_current_file))
       end
 
