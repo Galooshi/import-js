@@ -110,10 +110,10 @@ module ImportJS
     # @param path_to_current_file [String]
     # @return [String]
     def open_file_path(path_to_current_file)
-      if file_path && file_path.end_with?('/package.json')
+      if file_path
+        return file_path unless file_path.end_with?('/package.json')
         return file_path.sub(/package\.json$/, main_file)
       end
-      return file_path if file_path
 
       if import_path.start_with?('.')
         return File.expand_path(import_path, File.dirname(path_to_current_file))
