@@ -137,7 +137,7 @@ module ImportJS
     # @param config [ImportJS::Configuration]
     # @return [ImportJS::ImportStatement]
     def to_import_statement(variable_name, config)
-      ImportJS::ImportStatement.new.tap do |statement|
+      ImportStatement.new.tap do |statement|
         if has_named_exports
           statement.inject_named_import(variable_name)
         else

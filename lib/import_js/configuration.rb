@@ -57,7 +57,7 @@ module ImportJS
         path = path.sub(/\{filename\}/,
                         File.basename(path_to_current_file, '.*'))
       end
-      ImportJS::JSModule.new(import_path: path)
+      JSModule.new(import_path: path)
     end
 
     # @param variable_name [String]
@@ -66,7 +66,7 @@ module ImportJS
       get('named_exports').each do |import_path, named_exports|
         next unless named_exports.include?(variable_name)
 
-        js_module = ImportJS::JSModule.new(import_path: import_path)
+        js_module = JSModule.new(import_path: import_path)
         js_module.has_named_exports = true
         return js_module
       end
@@ -108,11 +108,11 @@ module ImportJS
     def check_current_version!
       minimum_version = get('minimum_version')
       return if Gem::Dependency.new('', ">= #{minimum_version}")
-                               .match?('', ImportJS::VERSION)
+                               .match?('', VERSION)
 
-      fail ImportJS::ClientTooOldError,
+      fail ClientTooOldError,
            'The .importjs.json file you are using requires version ' \
-           "#{get('minimum_version')}. You are using #{ImportJS::VERSION}."
+           "#{get('minimum_version')}. You are using #{VERSION}."
     end
   end
 end
