@@ -45,13 +45,18 @@ module ImportJS
       time do
         js_modules = find_js_modules(variable_name)
       end
+
+      # If no JS modules are found in this project, there is nothing to go to,
+      # so we return early.
       return if js_modules.empty?
 
       js_module = resolve_goto_module(js_modules, variable_name)
-      if js_module
-        @editor.open_file(js_module.open_file_path(
-                            @editor.path_to_current_file))
-      end
+
+      # If the current word is not mappable to one of the JS modules that we
+      # found, then we have nothing to go to, so we return early.
+      return unless js_module
+
+      @editor.open_file(js_module.open_file_path(@editor.path_to_current_file))
     end
 
     REGEX_ESLINT_RESULT = /
@@ -438,7 +443,7 @@ module ImportJS
         end
       end
 
-      # fall back to asking the user to resolve the ambiguity
+      # Fall back to asking the user to resolve the ambiguity
       resolve_one_js_module(js_modules, variable_name)
     end
 
