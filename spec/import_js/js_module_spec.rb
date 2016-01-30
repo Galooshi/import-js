@@ -257,9 +257,25 @@ describe ImportJS::JSModule do
       context 'when the import path does not have any dots at the beginning' do
         let(:import_path) { 'my-package' }
 
-        it 'does nothing to the path' do
-          expect(subject.open_file_path(path_to_current_file))
-            .to eq(import_path)
+        context 'when it is an alias of a package' do
+          let(:main_file) { 'index.jsx' }
+          before do
+            allow(File).to receive(:read)
+              .with("node_modules/#{import_path}/package.json")
+              .and_return("{ \"main\": \"#{main_file}\" }")
+          end
+
+          it 'gives the main path found in the package.json' do
+            expect(subject.open_file_path(path_to_current_file))
+              .to eq("node_modules/#{import_path}/#{main_file}")
+          end
+        end
+
+        context 'when it is not an alias of a package' do
+          it 'does nothing to the path' do
+            expect(subject.open_file_path(path_to_current_file))
+              .to eq(import_path)
+          end
         end
       end
     end

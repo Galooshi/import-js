@@ -52,8 +52,17 @@ module ImportJS
     # @return [String, String]
     def self.resolve_import_path_and_main(file_path, strip_file_extensions)
       if file_path.end_with? '/package.json'
-        main_file = JSON.parse(File.read(file_path))['main']
+        begin
+          file_contents = File.read(file_path)
+        rescue Errno::ENOENT
+          # The package.json does not exist, so we just return early.
+          return [nil, nil]
+        end
+        return [nil, nil] unless file_contents
+
+        main_file = JSON.parse(file_contents)['main']
         return [nil, nil] unless main_file
+
         match = file_path.match(%r{(.*)/package\.json})
         return match[1], main_file
       end
@@ -127,8 +136,15 @@ module ImportJS
         # The import path in the alias starts with a ".", which means that it is
         # relative to the current file. In order to open this file, we need to
         # expand it to a full path.
-        return File.expand_path(@import_path, File.dirname(path_to_current_file))
+        return File.expand_path(
+          @import_path, File.dirname(path_to_current_file))
       end
+
+      # This is likely an alias that points to a package, so let's try to find
+      # its main file from its package.json file.
+      file_path = "node_modules/#{import_path}/package.json"
+      _, main = self.class.resolve_import_path_and_main(file_path, [])
+      return "node_modules/#{import_path}/#{main}" if main
 
       @import_path
     end
