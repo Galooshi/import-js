@@ -16,7 +16,7 @@ module ImportJS
     # Finds variable under the cursor to import. By default, this is bound to
     # `<Leader>j`.
     def import
-      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
+      reload_config
       variable_name = @editor.current_word
       if variable_name.empty?
         message(<<-EOS.split.join(' '))
@@ -39,7 +39,7 @@ module ImportJS
     end
 
     def goto
-      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
+      reload_config
       js_modules = []
       variable_name = @editor.current_word
       time do
@@ -75,7 +75,7 @@ module ImportJS
 
     # Removes unused imports and adds imports for undefined variables
     def fix_imports
-      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
+      reload_config
       eslint_result = run_eslint_command
 
       unused_variables = []
@@ -113,6 +113,13 @@ module ImportJS
     end
 
     private
+
+    # The configuration is relative to the current file, so we need to make sure
+    # that we are operating with the appropriate configuration when we perform
+    # certain actions.
+    def reload_config
+      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
+    end
 
     def message(str)
       @editor.message("ImportJS: #{str}")
