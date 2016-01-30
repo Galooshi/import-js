@@ -201,4 +201,67 @@ describe ImportJS::JSModule do
       end
     end
   end
+
+  describe '#open_file_path' do
+    context 'when the file path is present' do
+      let(:path_to_current_file) { '/path/to/file' }
+
+      context 'when relative file path ends with /package.json ' do
+        let(:relative_file_path) { 'node_modules/foo/package.json' }
+        let(:main_file) { 'index.jsx' }
+        before do
+          allow(File).to receive(:read)
+            .with(relative_file_path)
+            .and_return("{ \"main\": \"#{main_file}\" }")
+        end
+
+        it 'replaces /package.json with the main file' do
+          expect(subject.open_file_path(path_to_current_file))
+            .to eq('node_modules/foo/index.jsx')
+        end
+      end
+
+      context 'when relative file path has /package.json in the middle' do
+        let(:relative_file_path) { 'node_modules/foo/package.json/bar' }
+
+        it 'does not modify the path' do
+          expect(subject.open_file_path(path_to_current_file))
+            .to eq(relative_file_path)
+        end
+      end
+    end
+
+    context 'when the file path is empty' do
+      # This can happen when resolving aliases
+      let(:path_to_current_file) { '/path/to/file' }
+      subject { described_class.new(import_path: import_path) }
+
+      context 'when the import path starts with a ./' do
+        let(:import_path) { './index.scss' }
+
+        it 'makes the path relative to the path to the current file' do
+          expect(subject.open_file_path(path_to_current_file))
+            .to eq('/path/to/index.scss')
+        end
+      end
+
+      context 'when the import path starts with a ../' do
+        let(:import_path) { '../index.scss' }
+
+        it 'makes the path relative to the path to the current file' do
+          expect(subject.open_file_path(path_to_current_file))
+            .to eq('/path/index.scss')
+        end
+      end
+
+      context 'when the import path does not have any dots at the beginning' do
+        let(:import_path) { 'my-package' }
+
+        it 'does nothing to the path' do
+          expect(subject.open_file_path(path_to_current_file))
+            .to eq(import_path)
+        end
+      end
+    end
+  end
 end
