@@ -52,12 +52,9 @@ module ImportJS
     # @return [String, String]
     def self.resolve_import_path_and_main(file_path, strip_file_extensions)
       if file_path.end_with? '/package.json'
-        begin
-          file_contents = File.read(file_path)
-        rescue Errno::ENOENT
-          # The package.json does not exist, so we just return early.
-          return [nil, nil]
-        end
+        return [nil, nil] unless File.exist?(file_path)
+
+        file_contents = File.read(file_path)
         return [nil, nil] unless file_contents
 
         main_file = JSON.parse(file_contents)['main']

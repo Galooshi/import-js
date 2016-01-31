@@ -210,6 +210,9 @@ describe ImportJS::JSModule do
         let(:relative_file_path) { 'node_modules/foo/package.json' }
         let(:main_file) { 'index.jsx' }
         before do
+          allow(File).to receive(:exist?)
+            .with(relative_file_path)
+            .and_return(true)
           allow(File).to receive(:read)
             .with(relative_file_path)
             .and_return("{ \"main\": \"#{main_file}\" }")
@@ -260,6 +263,9 @@ describe ImportJS::JSModule do
         context 'when it is an alias of a package' do
           let(:main_file) { 'index.jsx' }
           before do
+            allow(File).to receive(:exist?)
+              .with("node_modules/#{import_path}/package.json")
+              .and_return(true)
             allow(File).to receive(:read)
               .with("node_modules/#{import_path}/package.json")
               .and_return("{ \"main\": \"#{main_file}\" }")
