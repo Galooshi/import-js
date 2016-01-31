@@ -55,7 +55,7 @@ module ImportJS
         return [nil, nil] unless File.exist?(file_path)
 
         file_contents = File.read(file_path)
-        return [nil, nil] unless file_contents
+        return [nil, nil] if file_contents.strip.empty?
 
         main_file = JSON.parse(file_contents)['main']
         return [nil, nil] unless main_file

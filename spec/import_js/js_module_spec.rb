@@ -286,4 +286,109 @@ describe ImportJS::JSModule do
       end
     end
   end
+
+  describe '.resolve_import_path_and_main' do
+    let(:file_path) { '' }
+    let(:strip_file_extensions) { [] }
+
+    subject do
+      described_class.resolve_import_path_and_main(
+        file_path, strip_file_extensions)
+    end
+
+    context 'when the file path ends with /package.json' do
+      let(:package_path) { 'node_modues/foo' }
+      let(:file_path) { "#{package_path}/package.json" }
+
+      context 'when the file path does not exist' do
+        it 'returns nils' do
+          expect(subject).to eq([nil, nil])
+        end
+      end
+
+      context 'when the file is empty' do
+        before do
+          allow(File).to receive(:exist?).with(file_path).and_return(true)
+          allow(File).to receive(:read).with(file_path).and_return('')
+        end
+
+        it 'returns nils' do
+          expect(subject).to eq([nil, nil])
+        end
+      end
+
+      context 'when the file has JSON but no main file' do
+        before do
+          allow(File).to receive(:exist?).with(file_path).and_return(true)
+          allow(File).to receive(:read).with(file_path)
+            .and_return('{}')
+        end
+
+        it 'returns nils' do
+          expect(subject).to eq([nil, nil])
+        end
+      end
+
+      context 'when the file has JSON with a main file' do
+        let(:main_file) { 'index.jsx' }
+        before do
+          allow(File).to receive(:exist?).with(file_path).and_return(true)
+          allow(File).to receive(:read).with(file_path)
+            .and_return("{ \"main\": \"#{main_file}\" }")
+        end
+
+        it 'returns the package path and the main file' do
+          expect(subject).to eq([package_path, main_file])
+        end
+      end
+    end
+
+    context 'when the file path ends with index.js' do
+      let(:file_path) { 'path/to/foo/index.js' }
+
+      it 'returns the directory path and index.js' do
+        expect(subject).to eq(['path/to/foo', 'index.js'])
+      end
+    end
+
+    context 'when the file path ends with index.jsx' do
+      let(:file_path) { 'path/to/foo/index.jsx' }
+
+      it 'returns the directory path and index.jsx' do
+        expect(subject).to eq(['path/to/foo', 'index.jsx'])
+      end
+    end
+
+    context 'when the file path is to a non-index js file' do
+      let(:file_path) { 'path/to/foo.js' }
+
+      it 'returns the file path' do
+        expect(subject).to eq([file_path, nil])
+      end
+
+      context 'when .js is an extension to strip' do
+        let(:strip_file_extensions) { ['.js', '.jsx'] }
+
+        it 'returns the file path without the extension' do
+          expect(subject).to eq(['path/to/foo', nil])
+        end
+      end
+    end
+
+    context 'when the file path is to a non-index jsx file' do
+      let(:file_path) { 'path/to/foo.jsx' }
+
+      it 'returns the file path' do
+        expect(subject).to eq([file_path, nil])
+      end
+
+      context 'when .jsx is an extension to strip' do
+        let(:strip_file_extensions) { ['.js', '.jsx'] }
+
+        it 'returns the file path without the extension' do
+          expect(subject).to eq(['path/to/foo', nil])
+        end
+      end
+    end
+  end
 end
