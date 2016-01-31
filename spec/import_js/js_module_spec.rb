@@ -340,6 +340,50 @@ describe ImportJS::JSModule do
         it 'returns the package path and the main file' do
           expect(subject).to eq([package_path, main_file])
         end
+
+        context 'when main is a directory' do
+          let(:main_file) { 'bar' }
+          let(:main_path) { "#{package_path}/#{main_file}" }
+
+          before do
+            allow(File).to receive(:exist?).with(main_path).and_return(true)
+            allow(File).to receive(:directory?).with(main_path).and_return(true)
+          end
+
+          context 'and the main directory has an index.js file' do
+            let(:main_index) { 'index.js' }
+            let(:main_index_path) { "#{main_path}/#{main_index}" }
+
+            before do
+              allow(File).to receive(:exist?)
+                .with("#{main_path}/index.jsx").and_return(false)
+              allow(File).to receive(:exist?)
+                .with(main_index_path).and_return(true)
+            end
+
+            it 'returns the package path and main/index.js' do
+              expect(subject)
+                .to eq([package_path, "#{main_file}/#{main_index}"])
+            end
+          end
+
+          context 'and the main directory has an index.jsx file' do
+            let(:main_index) { 'index.jsx' }
+            let(:main_index_path) { "#{main_path}/#{main_index}" }
+
+            before do
+              allow(File).to receive(:exist?)
+                .with("#{main_path}/index.js").and_return(false)
+              allow(File).to receive(:exist?)
+                .with(main_index_path).and_return(true)
+            end
+
+            it 'returns the package path and main/index.jsx' do
+              expect(subject)
+                .to eq([package_path, "#{main_file}/#{main_index}"])
+            end
+          end
+        end
       end
     end
 

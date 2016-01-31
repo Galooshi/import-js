@@ -60,8 +60,20 @@ module ImportJS
         main_file = JSON.parse(file_contents)['main']
         return [nil, nil] unless main_file
 
-        match = file_path.match(%r{(.*)/package\.json})
-        return match[1], main_file
+        match = file_path.match(%r{(?<package>.*)/package\.json})
+
+        if File.directory?("#{match[:package]}/#{main_file}")
+          # The main in package.json refers to a directory, so we want to
+          # resolve it to an index file.
+          %w[index.js index.jsx].each do |index_file|
+            if File.exist? "#{match[:package]}/#{main_file}/#{index_file}"
+              main_file += "/#{index_file}"
+              break
+            end
+          end
+        end
+
+        return match[:package], main_file
       end
 
       match = file_path.match(%r{(.*)/(index\.js[^/]*)$})
