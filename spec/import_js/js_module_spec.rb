@@ -297,7 +297,7 @@ describe ImportJS::JSModule do
     end
 
     context 'when the file path ends with /package.json' do
-      let(:package_path) { 'node_modues/foo' }
+      let(:package_path) { 'node_modules/foo' }
       let(:file_path) { "#{package_path}/package.json" }
 
       context 'when the file path does not exist' do
