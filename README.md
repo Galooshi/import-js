@@ -85,7 +85,7 @@ installed and the
 [`react-in-jsx-scope`](https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/react-in-jsx-scope.md)
 rule enabled in your `.eslintrc` configuration file.
 
-## Experimental: Go to module
+## Go to module
 
 Since import-js is pretty good at finding JS modules, it makes sense that
 there's an option to open/go to a file rather than import it. This is similar
