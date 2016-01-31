@@ -391,7 +391,7 @@ describe ImportJS::ImportStatement do
         context 'with `import_function`' do
           let(:import_function) { 'myCustomRequire' }
 
-          # `import_function` only applies to const/let/var
+          # `import_function` only applies to const/var
           it { should eq(["import foo from 'path';"]) }
         end
 
