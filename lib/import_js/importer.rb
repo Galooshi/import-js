@@ -46,12 +46,6 @@ module ImportJS
         js_modules = find_js_modules(variable_name)
       end
 
-      if js_modules.empty?
-        # No JS modules are found for the variable, so there is nothing to go to
-        # and we return early.
-        return message("No modules were found for `#{variable_name}`")
-      end
-
       js_module = resolve_goto_module(js_modules, variable_name)
 
       unless js_module
@@ -446,12 +440,25 @@ module ImportJS
     def resolve_goto_module(js_modules, variable_name)
       return js_modules.first if js_modules.length == 1
 
-      # Look for a current import matching the goto
-      find_current_imports[:imports].each do |ist|
+      # Look at the current imports and grab what is already imported for the
+      # variable.
+      matching_import_statement = find_current_imports[:imports].find do |ist|
+        variable_name == ist.default_import ||
+          (ist.named_imports || []).include?(variable_name)
+      end
+
+      if matching_import_statement
+        if js_modules.empty?
+          # We couldn't resolve any module for the variable. As a fallback, we
+          # can use the matching import statement. If that maps to a package
+          # dependency, we will still open the right file.
+          return JSModule.new(import_path: matching_import_statement.path)
+        end
+
+        # Look for a module matching what is already imported
         js_modules.each do |js_module|
-          next unless variable_name == ist.default_import ||
-                      (ist.named_imports || []).include?(variable_name)
-          return js_module if ist.path == js_module.import_path
+          return js_module if matching_import_statement.path ==
+                              js_module.import_path
         end
       end
 
