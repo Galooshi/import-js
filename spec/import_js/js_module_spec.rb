@@ -319,6 +319,7 @@ describe ImportJS::JSModule do
 
       context 'when the file has JSON but no main file' do
         before do
+          allow(File).to receive(:exist?).and_call_original
           allow(File).to receive(:exist?).with(file_path).and_return(true)
           allow(File).to receive(:read).with(file_path)
             .and_return('{}')
@@ -326,6 +327,30 @@ describe ImportJS::JSModule do
 
         it 'returns nils' do
           expect(subject).to eq([nil, nil])
+        end
+
+        context 'when there is an index.js' do
+          before do
+            allow(File).to receive(:exist?)
+              .with("#{package_path}/index.js")
+              .and_return(true)
+          end
+
+          it 'resolves to index.js' do
+            expect(subject).to eq([package_path, 'index.js'])
+          end
+        end
+
+        context 'when there is an index.jsx' do
+          before do
+            allow(File).to receive(:exist?)
+              .with("#{package_path}/index.jsx")
+              .and_return(true)
+          end
+
+          it 'resolves to index.jsx' do
+            expect(subject).to eq([package_path, 'index.jsx'])
+          end
         end
       end
 

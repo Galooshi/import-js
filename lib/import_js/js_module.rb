@@ -58,19 +58,19 @@ module ImportJS
         return [nil, nil] if file_contents.strip.empty?
 
         main_file = JSON.parse(file_contents)['main']
-        return [nil, nil] unless main_file
-
         match = file_path.match(%r{(?<package>.*)/package\.json})
+
+        unless main_file
+          index_file = find_index(match[:package])
+          return [nil, nil] unless index_file
+          main_file = index_file
+        end
 
         if File.directory?("#{match[:package]}/#{main_file}")
           # The main in package.json refers to a directory, so we want to
           # resolve it to an index file.
-          %w[index.js index.jsx].each do |index_file|
-            if File.exist? "#{match[:package]}/#{main_file}/#{index_file}"
-              main_file += "/#{index_file}"
-              break
-            end
-          end
+          index_file = find_index("#{match[:package]}/#{main_file}")
+          main_file += "/#{index_file}" if index_file
         end
 
         return match[:package], main_file
@@ -82,6 +82,15 @@ module ImportJS
       extensions = strip_file_extensions.map { |str| Regexp.escape(str) }
       import_path = file_path.sub(/(?:#{extensions.join('|')})$/, '')
       [import_path, nil]
+    end
+
+    # @param directory [String]
+    # @return [String, nil]
+    def self.find_index(directory)
+      %w[index.js index.jsx].each do |index_file|
+        return index_file if File.exist? "#{directory}/#{index_file}"
+      end
+      nil
     end
 
     # @param import_path [String]
