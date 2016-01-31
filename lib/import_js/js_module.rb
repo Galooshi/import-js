@@ -52,10 +52,28 @@ module ImportJS
     # @return [String, String]
     def self.resolve_import_path_and_main(file_path, strip_file_extensions)
       if file_path.end_with? '/package.json'
-        main_file = JSON.parse(File.read(file_path))['main']
-        return [nil, nil] unless main_file
-        match = file_path.match(%r{(.*)/package\.json})
-        return match[1], main_file
+        return [nil, nil] unless File.exist?(file_path)
+
+        file_contents = File.read(file_path)
+        return [nil, nil] if file_contents.strip.empty?
+
+        main_file = JSON.parse(file_contents)['main']
+        match = file_path.match(%r{(?<package>.*)/package\.json})
+
+        unless main_file
+          index_file = find_index(match[:package])
+          return [nil, nil] unless index_file
+          main_file = index_file
+        end
+
+        if File.directory?("#{match[:package]}/#{main_file}")
+          # The main in package.json refers to a directory, so we want to
+          # resolve it to an index file.
+          index_file = find_index("#{match[:package]}/#{main_file}")
+          main_file += "/#{index_file}" if index_file
+        end
+
+        return match[:package], main_file
       end
 
       match = file_path.match(%r{(.*)/(index\.js[^/]*)$})
@@ -64,6 +82,15 @@ module ImportJS
       extensions = strip_file_extensions.map { |str| Regexp.escape(str) }
       import_path = file_path.sub(/(?:#{extensions.join('|')})$/, '')
       [import_path, nil]
+    end
+
+    # @param directory [String]
+    # @return [String, nil]
+    def self.find_index(directory)
+      %w[index.js index.jsx].each do |index_file|
+        return index_file if File.exist? "#{directory}/#{index_file}"
+      end
+      nil
     end
 
     # @param import_path [String]
@@ -110,23 +137,41 @@ module ImportJS
     # @param path_to_current_file [String]
     # @return [String]
     def open_file_path(path_to_current_file)
-      if file_path && file_path.end_with?('/package.json')
-        return file_path.sub(/package\.json$/, main_file)
-      end
-      return file_path if file_path
+      if @file_path
+        # There is a file_path. This happens for JSModules that are not aliases.
+        return @file_path unless @file_path.end_with?('/package.json')
 
-      if import_path.start_with?('.')
-        return File.expand_path(import_path, File.dirname(path_to_current_file))
+        # The file_path points to a package.json file, so we want to look in
+        # that package.json file for a `main` configuration value and open that
+        # file instead.
+        return @file_path.sub(/package\.json$/, main_file)
       end
 
-      import_path
+      # There is no file_path. This likely means that we are working with an
+      # alias, so we want to expand it to a full path if we can.
+
+      if @import_path.start_with?('.')
+        # The import path in the alias starts with a ".", which means that it is
+        # relative to the current file. In order to open this file, we need to
+        # expand it to a full path.
+        return File.expand_path(
+          @import_path, File.dirname(path_to_current_file))
+      end
+
+      # This is likely an alias that points to a package, so let's try to find
+      # its main file from its package.json file.
+      file_path = "node_modules/#{@import_path}/package.json"
+      _, main = self.class.resolve_import_path_and_main(file_path, [])
+      return "node_modules/#{@import_path}/#{main}" if main
+
+      @import_path
     end
 
     # @param variable_name [String]
     # @param config [ImportJS::Configuration]
     # @return [ImportJS::ImportStatement]
     def to_import_statement(variable_name, config)
-      ImportJS::ImportStatement.new.tap do |statement|
+      ImportStatement.new.tap do |statement|
         if has_named_exports
           statement.inject_named_import(variable_name)
         else

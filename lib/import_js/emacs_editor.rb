@@ -16,13 +16,13 @@ module ImportJS
 
           case command
           when 'import'
-            ImportJS::Importer.new(self).import
+            Importer.new(self).import
             write_file
             puts 'import:success'
           when 'goto'
-            ImportJS::Importer.new(self).goto
+            Importer.new(self).goto
           when 'fix'
-            ImportJS::Importer.new(self).fix_imports
+            Importer.new(self).fix_imports
             write_file
             puts 'import:success'
           else

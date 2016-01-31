@@ -9,14 +9,14 @@ module ImportJS
     REGEX_MULTI_LINE_COMMENT_END = %r{\*/}
     REGEX_WHITESPACE_ONLY = /\A\s*\Z/
 
-    def initialize(editor = ImportJS::VIMEditor.new)
+    def initialize(editor = VIMEditor.new)
       @editor = editor
     end
 
     # Finds variable under the cursor to import. By default, this is bound to
     # `<Leader>j`.
     def import
-      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
+      reload_config
       variable_name = @editor.current_word
       if variable_name.empty?
         message(<<-EOS.split.join(' '))
@@ -39,19 +39,29 @@ module ImportJS
     end
 
     def goto
-      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
+      reload_config
       js_modules = []
       variable_name = @editor.current_word
       time do
         js_modules = find_js_modules(variable_name)
       end
-      return if js_modules.empty?
+
+      if js_modules.empty?
+        # No JS modules are found for the variable, so there is nothing to go to
+        # and we return early.
+        return message("No modules were found for `#{variable_name}`")
+      end
 
       js_module = resolve_goto_module(js_modules, variable_name)
-      if js_module
-        @editor.open_file(js_module.open_file_path(
-                            @editor.path_to_current_file))
+
+      unless js_module
+        # The current word is not mappable to one of the JS modules that we
+        # found. This can happen if the user does not select one from the list.
+        # We have nothing to go to, so we return early.
+        return message("Could not resolve a module for `#{variable_name}`")
       end
+
+      @editor.open_file(js_module.open_file_path(@editor.path_to_current_file))
     end
 
     REGEX_ESLINT_RESULT = /
@@ -70,7 +80,7 @@ module ImportJS
 
     # Removes unused imports and adds imports for undefined variables
     def fix_imports
-      @config = ImportJS::Configuration.new(@editor.path_to_current_file)
+      reload_config
       eslint_result = run_eslint_command
 
       unused_variables = []
@@ -109,6 +119,13 @@ module ImportJS
 
     private
 
+    # The configuration is relative to the current file, so we need to make sure
+    # that we are operating with the appropriate configuration when we perform
+    # certain actions.
+    def reload_config
+      @config = Configuration.new(@editor.path_to_current_file)
+    end
+
     def message(str)
       @editor.message("ImportJS: #{str}")
     end
@@ -141,11 +158,11 @@ module ImportJS
                                 stdin_data: @editor.current_file_content)
 
       if ESLINT_STDOUT_ERROR_REGEXES.any? { |regex| out =~ regex }
-        fail ImportJS::ParseError.new, out
+        fail ParseError.new, out
       end
 
       if ESLINT_STDERR_ERROR_REGEXES.any? { |regex| err =~ regex }
-        fail ImportJS::ParseError.new, err
+        fail ParseError.new, err
       end
 
       out.split("\n")
@@ -298,7 +315,7 @@ module ImportJS
       # iterate through those and stop at anything that's not an import.
       imports = {}
       potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
-        import_statement = ImportJS::ImportStatement.parse(potential_import)
+        import_statement = ImportStatement.parse(potential_import)
         break unless import_statement
 
         if imports[import_statement.path]
@@ -335,7 +352,7 @@ module ImportJS
         if lookup_path == ''
           # If lookup_path is an empty string, the `find` command will not work
           # as desired so we bail early.
-          fail ImportJS::FindError.new,
+          fail FindError.new,
                "lookup path cannot be empty (#{lookup_path.inspect})"
         end
 
@@ -347,14 +364,14 @@ module ImportJS
         command = "#{find_command} | #{egrep_command}"
         out, err = Open3.capture3(command)
 
-        fail ImportJS::FindError.new, err unless err == ''
+        fail FindError.new, err unless err == ''
 
         matched_modules.concat(
           out.split("\n").map do |f|
             next if @config.get('excludes').any? do |glob_pattern|
               File.fnmatch(glob_pattern, f)
             end
-            ImportJS::JSModule.construct(
+            JSModule.construct(
               lookup_path: lookup_path,
               relative_file_path: f,
               strip_file_extensions:
@@ -378,7 +395,7 @@ module ImportJS
       @config.package_dependencies.each do |dep|
         next unless dep =~ dep_regex
 
-        js_module = ImportJS::JSModule.construct(
+        js_module = JSModule.construct(
           lookup_path: 'node_modules',
           relative_file_path: "node_modules/#{dep}/package.json",
           strip_file_extensions: [])
@@ -438,7 +455,7 @@ module ImportJS
         end
       end
 
-      # fall back to asking the user to resolve the ambiguity
+      # Fall back to asking the user to resolve the ambiguity
       resolve_one_js_module(js_modules, variable_name)
     end
 

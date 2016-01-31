@@ -630,7 +630,11 @@ FooIO
         before do
           allow_any_instance_of(ImportJS::Configuration)
             .to receive(:package_dependencies).and_return(package_dependencies)
+          allow(File).to receive(:exist?).and_call_original
           package_dependencies.each do |dep|
+            allow(File).to receive(:exist?)
+              .with("node_modules/#{dep}/package.json")
+              .and_return(true)
             allow(File).to receive(:read)
               .with("node_modules/#{dep}/package.json")
               .and_return('{ "main": "bar.jsx" }')
@@ -2081,6 +2085,10 @@ var a = <span/>;
         before do
           allow_any_instance_of(ImportJS::Configuration)
             .to receive(:package_dependencies).and_return(['react'])
+          allow(File).to receive(:exist?).and_call_original
+          allow(File).to receive(:exist?)
+            .with('node_modules/react/package.json')
+            .and_return(true)
           allow(File).to receive(:read)
             .with('node_modules/react/package.json')
             .and_return('{ "main": "index.jsx" }')
@@ -2250,6 +2258,10 @@ bar
       before do
         allow_any_instance_of(ImportJS::Configuration)
           .to receive(:package_dependencies).and_return(['foo'])
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?)
+          .with('node_modules/foo/package.json')
+          .and_return(true)
         allow(File).to receive(:read)
           .with('node_modules/foo/package.json')
           .and_return('{ "main": "bar.jsx" }')
@@ -2283,11 +2295,20 @@ bar
       context 'to an absolute resource' do
         let(:aliaz) { 'stylez' }
 
-        it 'opens the alias path' do
-          # This won't work in most cases, but this is all the information we
-          # have available
-          expect_any_instance_of(ImportJS::VIMEditor).to receive(
-            :open_file).with('stylez')
+        before do
+          allow(File).to receive(:exist?).and_call_original
+          allow(File).to receive(:exist?)
+            .with("node_modules/#{aliaz}/package.json")
+            .and_return(true)
+          allow(File).to receive(:read)
+            .with("node_modules/#{aliaz}/package.json")
+            .and_return('{ "main": "bar.jsx" }')
+        end
+
+        it 'opens the alias main file' do
+          expect_any_instance_of(ImportJS::VIMEditor)
+            .to receive(:open_file)
+            .with("node_modules/#{aliaz}/bar.jsx")
           subject
         end
       end
