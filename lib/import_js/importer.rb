@@ -56,7 +56,8 @@ module ImportJS
 
       unless js_module
         # The current word is not mappable to one of the JS modules that we
-        # found, then we have nothing to go to, so we return early.
+        # found. This can happen if the user does not select one from the list.
+        # We have nothing to go to, so we return early.
         return message("Could not resolve a module for `#{variable_name}`")
       end
 
