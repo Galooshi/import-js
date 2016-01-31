@@ -46,15 +46,19 @@ module ImportJS
         js_modules = find_js_modules(variable_name)
       end
 
-      # If no JS modules are found in this project, there is nothing to go to,
-      # so we return early.
-      return if js_modules.empty?
+      if js_modules.empty?
+        # No JS modules are found for the variable, so there is nothing to go to
+        # and we return early.
+        return message("No modules were found for `#{variable_name}`")
+      end
 
       js_module = resolve_goto_module(js_modules, variable_name)
 
-      # If the current word is not mappable to one of the JS modules that we
-      # found, then we have nothing to go to, so we return early.
-      return unless js_module
+      unless js_module
+        # The current word is not mappable to one of the JS modules that we
+        # found, then we have nothing to go to, so we return early.
+        return message("Could not resolve a module for `#{variable_name}`")
+      end
 
       @editor.open_file(js_module.open_file_path(@editor.path_to_current_file))
     end
