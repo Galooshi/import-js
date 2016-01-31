@@ -2254,6 +2254,59 @@ bar
       end
     end
 
+    context 'with a variable name that will not resolve' do
+      let(:existing_files) { ['bar/goo.jsx'] }
+
+      it 'opens nothing' do
+        expect_any_instance_of(ImportJS::VIMEditor).to_not receive(
+          :open_file)
+        subject
+      end
+
+      context 'when there is a current import for the variable' do
+        let(:text) { <<-EOS.strip }
+import foo from 'some-package';
+
+foo
+        EOS
+
+        context 'not matching a package dependency' do
+          before do
+            allow(File).to receive(:exist?).and_call_original
+            allow(File).to receive(:exist?)
+              .with('node_modules/some-package/package.json')
+              .and_return(false)
+          end
+
+          it 'opens the import path' do
+            expect_any_instance_of(ImportJS::VIMEditor)
+              .to receive(:open_file)
+              .with('some-package')
+            subject
+          end
+        end
+
+        context 'matching a package dependency' do
+          before do
+            allow(File).to receive(:exist?).and_call_original
+            allow(File).to receive(:exist?)
+              .with('node_modules/some-package/package.json')
+              .and_return(true)
+            allow(File).to receive(:read)
+              .with('node_modules/some-package/package.json')
+              .and_return('{ "main": "bar.jsx" }')
+          end
+
+          it 'opens the package main file' do
+            expect_any_instance_of(ImportJS::VIMEditor)
+              .to receive(:open_file)
+              .with('node_modules/some-package/bar.jsx')
+            subject
+          end
+        end
+      end
+    end
+
     context 'with a variable name that will resolve to a package dependency' do
       before do
         allow_any_instance_of(ImportJS::Configuration)
