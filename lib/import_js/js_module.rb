@@ -160,9 +160,9 @@ module ImportJS
 
       # This is likely an alias that points to a package, so let's try to find
       # its main file from its package.json file.
-      file_path = "node_modules/#{import_path}/package.json"
+      file_path = "node_modules/#{@import_path}/package.json"
       _, main = self.class.resolve_import_path_and_main(file_path, [])
-      return "node_modules/#{import_path}/#{main}" if main
+      return "node_modules/#{@import_path}/#{main}" if main
 
       @import_path
     end
