@@ -67,7 +67,7 @@ describe ImportJS::Configuration do
         let(:configuration) do
           [
             {
-              'declaration_keyword' => 'let',
+              'declaration_keyword' => 'const',
               'import_function' => 'foobar',
             },
             {
@@ -95,7 +95,7 @@ describe ImportJS::Configuration do
           let(:path_to_current_file) { 'foo/far/gar.js' }
 
           it 'uses the global configuration' do
-            expect(subject.get('declaration_keyword')).to eq('let')
+            expect(subject.get('declaration_keyword')).to eq('const')
           end
         end
 

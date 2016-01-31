@@ -206,7 +206,8 @@ import { memoize } from 'underscore';
 memoize(() => { foo() });
 ```
 
-and imports that use `const`, `let`, or `var` use [ES2015 Destructuring Assigment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment),
+and imports that use `const` or `var` use [ES2015 Destructuring
+Assigment](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment),
 e.g.
 
 ```javascript
@@ -230,8 +231,8 @@ syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statem
 import Foo from 'foo';
 ```
 
-If you aren't ready for ES2015 yet, you have the option to use `var`, `let`, or
-`const` instead.
+If you aren't ready for ES2015 yet, you have the option to use `var` or `const`
+instead.
 
 ```json
 "declaration_keyword": "const"
@@ -241,7 +242,6 @@ In such case, your import statements will look something like this:
 
 ```js
 var Foo = require('foo'); // "declaration_keyword": "var"
-let Foo = require('foo'); // "declaration_keyword": "let"
 const Foo = require('foo'); // "declaration_keyword": "const"
 ```
 
@@ -258,7 +258,7 @@ importing. By default, only modules listed under `dependencies` and
 
 ### `import_function`
 
-*Note: this only applies if you are using `var`, `let`, or `const` as
+*Note: this only applies if you are using `var` or `const` as
 `declaration_keyword`.*
 
 The default value for this configuration option is `"require"`, which is [the

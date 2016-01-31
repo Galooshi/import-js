@@ -1,7 +1,7 @@
 module ImportJS
   # Class that represents an import statement, e.g.
   # `const foo = require('foo');`
-  # `let foo = myCustomRequire('foo');`
+  # `var foo = myCustomRequire('foo');`
   # `import foo from 'foo';`
   class ImportStatement
     REGEX_CONST_LET_VAR = /
@@ -50,7 +50,7 @@ module ImportJS
 
     # @param string [String] a possible import statement, e.g.
     #   `const foo = require('foo');`
-    #   `let foo = myCustomRequire('foo');`
+    #   `var foo = myCustomRequire('foo');`
     #   `import foo from 'foo';`
     # @return [ImportJS::ImportStatement?] a parsed statement, or nil if the
     #   string can't be parsed
@@ -138,7 +138,7 @@ module ImportJS
         else
           [default_import_string(max_line_length, tab)]
         end
-      else # const/let/var
+      else # const/var
         strings = []
 
         if default_import
