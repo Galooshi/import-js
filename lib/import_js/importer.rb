@@ -443,8 +443,9 @@ module ImportJS
       # Look at the current imports and grab what is already imported for the
       # variable.
       matching_import_statement = find_current_imports[:imports].find do |ist|
-        variable_name == ist.default_import ||
-          (ist.named_imports || []).include?(variable_name)
+        next true if variable_name == ist.default_import
+        next false unless ist.named_imports
+        ist.named_imports.include?(variable_name)
       end
 
       if matching_import_statement
