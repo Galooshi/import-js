@@ -1,10 +1,12 @@
 {
   "lib/import_js/*.rb": {
     "alternate": "spec/import_js/{}_spec.rb",
-    "type": "source"
+    "type": "source",
+    "dispatch": "rspec spec/import_js/{}_spec.rb"
   },
   "spec/import_js/*_spec.rb": {
     "alternate": "lib/import_js/{}.rb",
-    "type": "test"
+    "type": "test",
+    "dispatch": "rspec {file}"
   }
 }
