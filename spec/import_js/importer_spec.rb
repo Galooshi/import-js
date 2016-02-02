@@ -1111,6 +1111,46 @@ foo
           EOS
         end
       end
+
+      context "when Vim's textwidth is 0" do
+        # This is the default, unconfigured behavior for Vim
+        before(:each) do
+          allow_any_instance_of(ImportJS::VIMEditor)
+            .to receive(:get_number)
+            .with('&textwidth')
+            .and_return(0)
+        end
+
+        context 'when lines are shorter than 80 characters' do
+          let(:existing_files) { ['bar/foo.jsx'] }
+
+          it 'does not wrap them' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
+        context 'when lines are longer than 80 characters' do
+          let(:existing_files) do
+            [
+              'foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo.jsx',
+            ]
+          end
+
+          it 'wraps them' do
+            expect(subject).to eq(<<-EOS.strip)
+import foo from
+	'foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo';
+
+foo
+            EOS
+          end
+        end
+      end
+
     end
 
     context 'configuration' do

@@ -113,7 +113,9 @@ module ImportJS
     # Get the preferred max length of a line
     # @return [Number?]
     def max_line_length
-      get_number('&textwidth')
+      length = get_number('&textwidth')
+      return length unless length == 0
+      80
     end
 
     # @return [String] shiftwidth number of spaces if expandtab is not set,
