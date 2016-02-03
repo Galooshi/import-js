@@ -1020,27 +1020,29 @@ foo
 
     describe 'line wrapping' do
       let(:importer) { described_class.new }
+      let(:tab) { '  ' }
+
+      before(:each) do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:get).with('max_line_length')
+          .and_return(max_line_length)
+
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:get).with('tab')
+          .and_return(tab)
+      end
 
       subject do
         importer.import
         VIM::Buffer.current_buffer.to_s
       end
 
-      context "when lines exceed Vim's textwidth" do
-        before(:each) do
-          allow_any_instance_of(ImportJS::VIMEditor)
-            .to receive(:max_line_length)
-            .and_return(40)
-        end
-
+      context 'when lines exceed the configured max width' do
+        let(:max_line_length) { 40 }
         let(:existing_files) { ['fiz/bar/biz/baz/fiz/buz/boz/foo.jsx'] }
 
-        context 'when expandtab is not set' do
-          before(:each) do
-            allow_any_instance_of(ImportJS::VIMEditor)
-              .to receive(:expand_tab?)
-              .and_return(false)
-          end
+        context 'when configured to use a tab character' do
+          let(:tab) { "\t" }
 
           it 'wraps them and indents with a tab' do
             expect(subject).to eq(<<-EOS.strip)
@@ -1052,55 +1054,22 @@ foo
           end
         end
 
-        context 'when expandtab is set' do
-          before(:each) do
-            allow_any_instance_of(ImportJS::VIMEditor)
-              .to receive(:expand_tab?)
-              .and_return(true)
-          end
+        context 'when configured to use two spaces' do
+          let(:tab) { '  ' }
 
-          context 'when shiftwidth is set' do
-            before(:each) do
-              allow_any_instance_of(ImportJS::VIMEditor)
-                .to receive(:shift_width)
-                .and_return(3)
-            end
-
-            it 'wraps them and indents with shiftwidth spaces' do
-              expect(subject).to eq(<<-EOS.strip)
-import foo from
-   'fiz/bar/biz/baz/fiz/buz/boz/foo';
-
-foo
-              EOS
-            end
-          end
-
-          context 'when shiftwidth is not set' do
-            before(:each) do
-              allow_any_instance_of(ImportJS::VIMEditor)
-                .to receive(:shift_width)
-                .and_return(nil)
-            end
-
-            it 'wraps them and indents with 2 spaces' do
-              expect(subject).to eq(<<-EOS.strip)
+          it 'wraps them and indents with two spaces' do
+            expect(subject).to eq(<<-EOS.strip)
 import foo from
   'fiz/bar/biz/baz/fiz/buz/boz/foo';
 
 foo
-              EOS
-            end
+            EOS
           end
         end
       end
 
-      context "when lines do not exceed Vim's textwidth" do
-        before(:each) do
-          allow_any_instance_of(ImportJS::VIMEditor)
-            .to receive(:max_line_length).and_return(80)
-        end
-
+      context 'when lines do not exceed the configured max width' do
+        let(:max_line_length) { 80 }
         let(:existing_files) { ['bar/foo.jsx'] }
 
         it 'does not wrap them' do
@@ -1111,46 +1080,6 @@ foo
           EOS
         end
       end
-
-      context "when Vim's textwidth is 0" do
-        # This is the default, unconfigured behavior for Vim
-        before(:each) do
-          allow_any_instance_of(ImportJS::VIMEditor)
-            .to receive(:get_number)
-            .with('&textwidth')
-            .and_return(0)
-        end
-
-        context 'when lines are shorter than 80 characters' do
-          let(:existing_files) { ['bar/foo.jsx'] }
-
-          it 'does not wrap them' do
-            expect(subject).to eq(<<-EOS.strip)
-import foo from 'bar/foo';
-
-foo
-            EOS
-          end
-        end
-
-        context 'when lines are longer than 80 characters' do
-          let(:existing_files) do
-            [
-              'foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo.jsx',
-            ]
-          end
-
-          it 'wraps them' do
-            expect(subject).to eq(<<-EOS.strip)
-import foo from
-	'foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo';
-
-foo
-            EOS
-          end
-        end
-      end
-
     end
 
     context 'configuration' do
