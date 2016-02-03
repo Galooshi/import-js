@@ -110,11 +110,5 @@ module ImportJS
         nil
       end
     end
-
-    # @return [String] shiftwidth number of spaces if expandtab is not set,
-    #   otherwise `\t`.
-    def tab
-      '  '
-    end
   end
 end

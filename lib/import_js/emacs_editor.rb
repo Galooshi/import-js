@@ -138,16 +138,5 @@ module ImportJS
       return if selected_index < 1
       selected_index - 1
     end
-
-    # @return [String] shiftwidth number of spaces if expandtab is not set,
-    #   otherwise `\t`
-    def tab
-      ' ' * shift_width || 2
-    end
-
-    # @return [Number?]
-    def shift_width
-      2
-    end
   end
 end

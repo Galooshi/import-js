@@ -19,6 +19,7 @@ module ImportJS
     'minimum_version' => '0.0.0',
     'strip_file_extensions' => ['.js', '.jsx'],
     'strip_from_path' => nil,
+    'tab' => '  ',
     'use_relative_paths' => false,
   }.freeze
 

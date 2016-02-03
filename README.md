@@ -342,6 +342,15 @@ multiple lines.
 "max-line-length": 70
 ```
 
+### `tab`
+
+Defaults to two spaces (`"  "`). This setting controls how indentation is
+constructed when import statements are broken into multiple lines.
+
+```json
+"tab": "\t"
+```
+
 ## Local configuration
 
 You can dynamically apply configuration to different directory trees within
