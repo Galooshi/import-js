@@ -15,6 +15,7 @@ module ImportJS
     'import_dev_dependencies' => false,
     'import_function' => 'require',
     'lookup_paths' => ['.'],
+    'max_line_length' => 80,
     'minimum_version' => '0.0.0',
     'strip_file_extensions' => ['.js', '.jsx'],
     'strip_from_path' => nil,

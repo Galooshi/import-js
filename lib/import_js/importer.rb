@@ -209,7 +209,7 @@ module ImportJS
     # @return [String]
     def generate_import_strings(import_statements)
       import_statements.map do |import|
-        import.to_import_strings(@editor.max_line_length, @editor.tab)
+        import.to_import_strings(@config.get('max_line_length'), @editor.tab)
       end.flatten.sort
     end
 

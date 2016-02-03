@@ -333,6 +333,15 @@ warning that encourages you to upgrade your plugin.
 "minimum_version": "0.4.0"
 ```
 
+### `max_line_length`
+
+Defaults to `80`. This setting controls when import statements are broken into
+multiple lines.
+
+```json
+"max-line-length": 70
+```
+
 ## Local configuration
 
 You can dynamically apply configuration to different directory trees within
