@@ -46,7 +46,7 @@ class ImportJsCommand(sublime_plugin.TextCommand):
       command.append('--selections')
       command.append(','.join(args.get('selections')))
 
-    command.append('--filename')
+    command.append('--stdin-file-path')
     command.append(self.view.file_name())
 
     print(command)

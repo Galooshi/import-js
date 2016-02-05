@@ -7,7 +7,7 @@ module ImportJS
       @ask_for_selections = []
       @selections = opts[:selections] unless opts[:selections].empty?
       @word = opts[:word]
-      @filename = opts[:filename]
+      @path_to_file = opts[:path_to_file]
     end
 
     # @return [String]
@@ -17,7 +17,7 @@ module ImportJS
 
     # @return [String?]
     def path_to_current_file
-      @filename
+      @path_to_file
     end
 
     # @param file_path [String]
