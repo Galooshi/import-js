@@ -399,6 +399,30 @@ When using `applies_from` only a subset of configurations are supported:
 - `strip_from_path`
 - `use_relative_paths`
 
+## Command-line tool
+
+Import-js comes with a handy command-line tool that can help you perform
+importing outside of an editor. Under the hood, this is what the [Sublime
+editor](SUBLIME.md) uses.
+
+```bash
+⨠ import-js --help
+Usage: import-js [<path-to-file>] [options] ...
+    -w, --word         A word/variable to import
+    --goto             Instead of importing, just print the path to a module
+    --selections       A list of resolved selections, e.g. Foo:0,Bar:1
+    --stdin-file-path  A path to the file whose content is being passed in as stdin.
+                       This is used as a way to make sure that the right configuration
+                       is applied.
+    --overwrite        Overwrite the file with the result after importing (the
+                       default behavior is to print to stdout). This only applies
+                       if you are passing in a file (<path- to-file>) as the first
+                       positional argument.
+    --filename         (deprecated) Alias for --stdin-file-path
+    -v, --version      Prints the current version
+    -h, --help         Prints help
+```
+
 ## Contributing
 
 See the
