@@ -5,7 +5,7 @@ require 'slop'
 require 'json'
 
 opts = Slop.parse do |o|
-  o.banner = 'usage: import-js [<path-to-file>] [options] ...'
+  o.banner = 'Usage: import-js [<path-to-file>] [options] ...'
   o.string '-w', '--word', 'A word/variable to import'
   o.bool '--goto', 'Instead of importing, just print the path to a module'
   o.array '--selections', 'A list of resolved selections, e.g. Foo:0,Bar:1'
@@ -16,14 +16,14 @@ opts = Slop.parse do |o|
   o.bool '--overwrite',
          'Overwrite the file with the result after importing (the default ' \
          'behavior is to print to stdout). This only applies if you are ' \
-         'passing in a file (<path-to-file>) as the first postitional argument.'
-  o.string '--filename', '(deprecated) alias for --stdin-file-path'
+         'passing in a file (<path-to-file>) as the first positional argument.'
+  o.string '--filename', '(deprecated) Alias for --stdin-file-path'
 
-  o.on '-v', '--version', 'print the current version' do
+  o.on '-v', '--version', 'Prints the current version' do
     puts ImportJS::VERSION
     exit
   end
-  o.on '-h', '--help', 'prints help' do
+  o.on '-h', '--help', 'Prints help' do
     puts o
     exit
   end
