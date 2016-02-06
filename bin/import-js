@@ -70,7 +70,7 @@ if opts.goto?
   puts editor.goto
 elsif opts[:overwrite]
   File.open(path_to_file, 'w') do |f|
-    f.write editor.current_file_content
+    f.write editor.current_file_content + "\n"
   end
 else
   # Print resulting file to stdout
