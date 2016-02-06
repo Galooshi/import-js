@@ -2210,6 +2210,119 @@ bar
     end
   end
 
+  describe '#rewrite_imports' do
+    let(:existing_files) { ['app/baz.jsx'] }
+    let(:configuration) { {} }
+
+    before do
+      allow_any_instance_of(ImportJS::Configuration)
+        .to(receive(:load_config))
+        .and_return(configuration)
+
+      allow_any_instance_of(ImportJS::Configuration)
+        .to receive(:package_dependencies).and_return(['bar'])
+      allow(File).to receive(:exist?).and_call_original
+      allow(File).to receive(:exist?)
+        .with('node_modules/bar/package.json')
+        .and_return(true)
+      allow(File).to receive(:read)
+        .with('node_modules/bar/package.json')
+        .and_return('{ "main": "index.jsx" }')
+
+      allow_any_instance_of(ImportJS::Configuration)
+        .to receive(:get).with('named_exports').and_return('bar' => ['foo'])
+    end
+
+    subject do
+      described_class.new.rewrite_imports
+      VIM::Buffer.current_buffer.to_s
+    end
+
+    context 'when imports exist' do
+      let(:text) { <<-EOS.strip }
+import baz from 'app/baz';
+import bar, { foo } from 'bar';
+
+bar
+      EOS
+
+      context 'and we are not changing anything in config' do
+        it 'only sorts imports' do
+          expect(subject).to eq(<<-EOS.strip)
+import bar, { foo } from 'bar';
+import baz from 'app/baz';
+
+bar
+          EOS
+        end
+      end
+
+      context 'and we are switching declaration_keyword to `const`' do
+        let(:configuration) { { 'declaration_keyword' => 'const' } }
+
+        it 'changes imports to use `const`' do
+          expect(subject).to eq(<<-EOS.strip)
+const bar = require('bar');
+const baz = require('app/baz');
+const { foo } = require('bar');
+
+bar
+          EOS
+        end
+      end
+    end
+
+    context 'when imports use a mix of relative and normal paths' do
+      let(:text) { <<-EOS.strip }
+import bar, { foo } from 'bar';
+import baz from '../baz';
+
+bar
+      EOS
+
+      context 'and we are turning relative paths off' do
+        before do
+          allow_any_instance_of(ImportJS::Configuration)
+            .to receive(:use_relative_paths).and_return(false)
+        end
+
+        it 'changes to absolute paths' do
+          expect(subject).to eq(<<-EOS.strip)
+import bar, { foo } from 'bar';
+import baz from 'app/baz';
+
+bar
+          EOS
+        end
+      end
+    end
+
+    context 'when imports use normal paths' do
+      let(:text) { <<-EOS.strip }
+import bar, { foo } from 'bar';
+import baz from 'app/baz';
+
+bar
+      EOS
+
+      context 'and we are turning relative paths on' do
+        before do
+          allow_any_instance_of(ImportJS::Configuration)
+            .to receive(:use_relative_paths).and_return(true)
+        end
+
+        it 'changes to relative paths' do
+          expect(subject).to eq(<<-EOS.strip)
+import bar, { foo } from 'bar';
+import baz from '../baz';
+
+bar
+          EOS
+        end
+      end
+    end
+  end
+
   describe '#goto' do
     subject { described_class.new.goto }
 
