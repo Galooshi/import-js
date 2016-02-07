@@ -2231,6 +2231,10 @@ bar
 
       allow_any_instance_of(ImportJS::Configuration)
         .to receive(:get).with('named_exports').and_return('bar' => ['foo'])
+
+      allow_any_instance_of(ImportJS::VIMEditor)
+        .to receive(:path_to_current_file)
+        .and_return("#{@tmp_dir}/app/bilbo/frodo.js")
     end
 
     subject do
@@ -2281,10 +2285,7 @@ bar
       EOS
 
       context 'and we are turning relative paths off' do
-        before do
-          allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:use_relative_paths).and_return(false)
-        end
+        let(:configuration) { { 'use_relative_paths' => false } }
 
         it 'changes to absolute paths' do
           expect(subject).to eq(<<-EOS.strip)
@@ -2306,10 +2307,7 @@ bar
       EOS
 
       context 'and we are turning relative paths on' do
-        before do
-          allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:use_relative_paths).and_return(true)
-        end
+        let(:configuration) { { 'use_relative_paths' => true } }
 
         it 'changes to relative paths' do
           expect(subject).to eq(<<-EOS.strip)

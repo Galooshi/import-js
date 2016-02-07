@@ -116,6 +116,12 @@ module ImportJS
       default_import.nil? && !named_imports?
     end
 
+    # @return [Boolean] true if this instance was created through parsing an
+    #   existing import and it hasn't been altered since it was created.
+    def parsed_and_untouched?
+      !original_import_string.nil?
+    end
+
     # @return [Array] an array that can be used in `uniq!` to dedupe equal
     #   statements, e.g.
     #   `const foo = require('foo');`

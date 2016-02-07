@@ -126,7 +126,13 @@ module ImportJS
       end
 
       # There's a chance we have duplicate imports (can happen when switching
-      # declaration_keyword for instance).
+      # declaration_keyword for instance). By first sorting imports so that new
+      # ones are first, then removing duplicates, we guarantee that we delete
+      # the old ones that are now redundant.
+      new_imports = new_imports.partition do |import|
+        !import.parsed_and_untouched?
+      end.flatten
+
       new_imports.uniq! do |import|
         [import.default_import].concat(import.named_imports || []).compact
       end
