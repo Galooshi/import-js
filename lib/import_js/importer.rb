@@ -46,7 +46,8 @@ module ImportJS
         js_modules = find_js_modules(variable_name)
       end
 
-      js_module = resolve_goto_module(js_modules, variable_name)
+      js_module = resolve_module_using_current_imports(
+        js_modules, variable_name)
 
       unless js_module
         # The current word is not mappable to one of the JS modules that we
@@ -118,7 +119,8 @@ module ImportJS
       old_imports[:imports].each do |import|
         variables = [import.default_import].concat(import.named_imports || [])
         variables.compact.each do |variable|
-          js_module = resolve_goto_module(find_js_modules(variable), variable)
+          js_module = resolve_module_using_current_imports(
+            find_js_modules(variable), variable)
           inject_js_module(variable, js_module, new_imports) if js_module
         end
       end
@@ -461,7 +463,7 @@ module ImportJS
     # @param js_modules [Array]
     # @param variable_name [String]
     # @return [ImportJS::JSModule]
-    def resolve_goto_module(js_modules, variable_name)
+    def resolve_module_using_current_imports(js_modules, variable_name)
       return js_modules.first if js_modules.length == 1
 
       # Look at the current imports and grab what is already imported for the
