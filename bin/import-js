@@ -19,7 +19,8 @@ opts = Slop.parse do |o|
          'passing in a file (<path-to-file>) as the first positional argument.'
   o.string '--filename', '(deprecated) Alias for --stdin-file-path'
   o.bool '--rewrite',
-         'Rewrite all current imports instead of importing anything.'
+         'Rewrite all current imports to match Import-JS configuration. ' \
+         'This does not add missing imports or remove unused imports.'
 
   o.on '-v', '--version', 'Prints the current version' do
     puts ImportJS::VERSION
