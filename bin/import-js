@@ -18,6 +18,9 @@ opts = Slop.parse do |o|
          'behavior is to print to stdout). This only applies if you are ' \
          'passing in a file (<path-to-file>) as the first positional argument.'
   o.string '--filename', '(deprecated) Alias for --stdin-file-path'
+  o.bool '--rewrite',
+         'Rewrite all current imports to match Import-JS configuration. ' \
+         'This does not add missing imports or remove unused imports.'
 
   o.on '-v', '--version', 'Prints the current version' do
     puts ImportJS::VERSION
@@ -57,6 +60,8 @@ if opts.goto?
   importer.goto
 elsif opts[:word]
   importer.import
+elsif opts[:rewrite]
+  importer.rewrite_imports
 else
   importer.fix_imports
 end
@@ -66,7 +71,7 @@ if opts.goto?
   puts editor.goto
 elsif opts[:overwrite]
   File.open(path_to_file, 'w') do |f|
-    f.write editor.current_file_content
+    f.write editor.current_file_content + "\n"
   end
 else
   # Print resulting file to stdout

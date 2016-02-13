@@ -216,6 +216,25 @@ describe ImportJS::ImportStatement do
     end
   end
 
+  describe '#parsed_and_untouched?' do
+    subject { statement.parsed_and_untouched? }
+
+    context 'for parsed statements' do
+      let(:statement) { described_class.parse("const foo = require('foo');") }
+      it { should be_truthy }
+
+      context 'when touched' do
+        before { statement.set_default_import('Foo') }
+        it { should be_falsy }
+      end
+    end
+
+    context 'for statements created through the constructor' do
+      let(:statement) { described_class.new }
+      it { should be_falsy }
+    end
+  end
+
   describe '#empty?' do
     let(:import_statement) { described_class.new }
     let(:default_import) { nil }

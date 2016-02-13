@@ -46,7 +46,8 @@ module ImportJS
         js_modules = find_js_modules(variable_name)
       end
 
-      js_module = resolve_goto_module(js_modules, variable_name)
+      js_module = resolve_module_using_current_imports(
+        js_modules, variable_name)
 
       unless js_module
         # The current word is not mappable to one of the JS modules that we
@@ -104,6 +105,36 @@ module ImportJS
       undefined_variables.each do |variable|
         js_module = find_one_js_module(variable)
         inject_js_module(variable, js_module, new_imports) if js_module
+      end
+
+      replace_imports(old_imports[:newline_count],
+                      new_imports,
+                      old_imports[:imports_start_at])
+    end
+
+    def rewrite_imports
+      reload_config
+      old_imports = find_current_imports
+      new_imports = old_imports[:imports].clone
+      old_imports[:imports].each do |import|
+        variables = [import.default_import].concat(import.named_imports || [])
+        variables.compact.each do |variable|
+          js_module = resolve_module_using_current_imports(
+            find_js_modules(variable), variable)
+          inject_js_module(variable, js_module, new_imports) if js_module
+        end
+      end
+
+      # There's a chance we have duplicate imports (can happen when switching
+      # declaration_keyword for instance). By first sorting imports so that new
+      # ones are first, then removing duplicates, we guarantee that we delete
+      # the old ones that are now redundant.
+      new_imports = new_imports.partition do |import|
+        !import.parsed_and_untouched?
+      end.flatten
+
+      new_imports.uniq! do |import|
+        [import.default_import].concat(import.named_imports || []).compact
       end
 
       replace_imports(old_imports[:newline_count],
@@ -438,7 +469,7 @@ module ImportJS
     # @param js_modules [Array]
     # @param variable_name [String]
     # @return [ImportJS::JSModule]
-    def resolve_goto_module(js_modules, variable_name)
+    def resolve_module_using_current_imports(js_modules, variable_name)
       return js_modules.first if js_modules.length == 1
 
       # Look at the current imports and grab what is already imported for the
@@ -454,7 +485,13 @@ module ImportJS
           # We couldn't resolve any module for the variable. As a fallback, we
           # can use the matching import statement. If that maps to a package
           # dependency, we will still open the right file.
-          return JSModule.new(import_path: matching_import_statement.path)
+          matched_module = JSModule.new(
+            import_path: matching_import_statement.path)
+          if matching_import_statement.named_imports?
+            matched_module.has_named_exports =
+              matching_import_statement.named_imports.include?(variable_name)
+          end
+          return matched_module
         end
 
         # Look for a module matching what is already imported
