@@ -818,18 +818,38 @@ import bar from 'foo/bar';
 foo
         EOS
 
-        it 'adds the import and sorts the entire list' do
-          # TODO: We currently search for current imports until we encounter
-          # something that's not an import (like a blank line). We might want to
-          # do better here and ignore that whitespace. But for now, this is the
-          # behavior:
+        it 'adds the import, compacts, and sorts the entire list' do
           expect(subject).to eq(<<-EOS.strip)
+import bar from 'foo/bar';
 import foo from 'bar/foo';
 import zoo from 'foo/zoo';
 
+foo
+          EOS
+        end
+      end
+
+      context 'when there are multiple blank lines amongst current imports' do
+        let(:text) { <<-EOS.strip }
+import zoo from 'foo/zoo';
+
+import frodo from 'bar/frodo';
+
+
 import bar from 'foo/bar';
+
 foo
         EOS
+
+        it 'compacts the list' do
+          expect(subject).to eq(<<-EOS.strip)
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+import frodo from 'bar/frodo';
+import zoo from 'foo/zoo';
+
+foo
+          EOS
         end
       end
 

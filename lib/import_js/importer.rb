@@ -329,8 +329,8 @@ module ImportJS
       scanner = StringScanner.new(@editor.current_file_content)
       result[:imports_start_at].times { scanner.skip_until(/\n/) }
       imports = {}
-      while potential_import = scanner.scan(/^.*?;\n/m)
-        import_statement = ImportStatement.parse(potential_import)
+      while potential_import = scanner.scan(/(^\s*\n)*^.*?;\n/m)
+        import_statement = ImportStatement.parse(potential_import.strip)
         break unless import_statement
 
         if imports[import_statement.path]
