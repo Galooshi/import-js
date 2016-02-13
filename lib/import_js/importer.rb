@@ -1,5 +1,6 @@
 require 'json'
 require 'open3'
+require 'strscan'
 
 module ImportJS
   class Importer
@@ -325,22 +326,10 @@ module ImportJS
         imports_start_at: find_imports_start_line_index,
       }
 
-      # Find block of lines that might be imports.
-      potential_import_lines = []
-      (result[:imports_start_at]...@editor.count_lines).each do |line_index|
-        line = @editor.read_line(line_index + 1)
-        break if line.strip.empty?
-        potential_import_lines << line
-      end
-
-      # We need to put the potential imports back into a blob in order to scan
-      # for multiline imports
-      potential_imports_blob = potential_import_lines.join("\n")
-
-      # Scan potential imports for everything ending in a semicolon, then
-      # iterate through those and stop at anything that's not an import.
+      scanner = StringScanner.new(@editor.current_file_content)
+      result[:imports_start_at].times { scanner.skip_until(/\n/) }
       imports = {}
-      potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
+      while potential_import = scanner.scan(/^.*?;\n/m)
         import_statement = ImportStatement.parse(potential_import)
         break unless import_statement
 
@@ -353,7 +342,7 @@ module ImportJS
           imports[import_statement.path] = import_statement
         end
 
-        result[:newline_count] += potential_import.scan(/\n/).length + 1
+        result[:newline_count] += potential_import.scan(/\n/).length
       end
       result[:imports] = imports.values
       result

@@ -49,7 +49,7 @@ describe ImportJS::Importer do
           @last_inputlist = expression
           @current_selection || 0
         elsif expression =~ /getline/
-          @buffer.to_s
+          VIM::Buffer.current_buffer.to_s
         end
       end
 
