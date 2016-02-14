@@ -362,6 +362,30 @@ foo
           end
         end
 
+        context 'when a multi-line comment is stacked weirdly' do
+          let(:text) { <<-EOS.strip }
+/* Single-line multi-line comment *//*
+  Multi-line comment
+  that spans multiple lines
+*/
+
+foo
+          EOS
+
+          it 'adds the import below' do
+            expect(subject).to eq(<<-EOS.strip)
+/* Single-line multi-line comment *//*
+  Multi-line comment
+  that spans multiple lines
+*/
+
+import foo from 'bar/foo';
+
+foo
+            EOS
+          end
+        end
+
         context 'when both comment styles are at the top of the file' do
           let(:text) { <<-EOS.strip }
 // One-line comment
