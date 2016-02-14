@@ -1,13 +1,13 @@
 require 'json'
 require 'open3'
+require 'strscan'
 
 module ImportJS
   class Importer
-    REGEX_USE_STRICT = /(['"])use strict\1;?/
-    REGEX_SINGLE_LINE_COMMENT = %r{\A\s*//}
-    REGEX_MULTI_LINE_COMMENT_START = %r{\A\s*/\*}
-    REGEX_MULTI_LINE_COMMENT_END = %r{\*/}
-    REGEX_WHITESPACE_ONLY = /\A\s*\Z/
+    REGEX_USE_STRICT = /(['"])use strict\1;?\n/
+    REGEX_SINGLE_LINE_COMMENT = %r{\s*//.*\n}
+    REGEX_MULTI_LINE_COMMENT = %r{\s*/\*(\n|.)*?\*/\n}
+    REGEX_WHITESPACE_ONLY = /\s*\n/
 
     def initialize(editor = VIMEditor.new)
       @editor = editor
@@ -281,67 +281,31 @@ module ImportJS
       end
     end
 
-    # @return [Number]
-    def find_imports_start_line_index
-      imports_start_line_index = 0
-
-      # Skip over things at the top, like "use strict" and comments.
-      inside_multi_line_comment = false
-      matched_non_whitespace_line = false
-      (0...@editor.count_lines).each do |line_index|
-        line = @editor.read_line(line_index + 1)
-
-        if inside_multi_line_comment || line =~ REGEX_MULTI_LINE_COMMENT_START
-          matched_non_whitespace_line = true
-          imports_start_line_index = line_index + 1
-          inside_multi_line_comment = !(line =~ REGEX_MULTI_LINE_COMMENT_END)
-          next
-        end
-
-        if line =~ REGEX_USE_STRICT || line =~ REGEX_SINGLE_LINE_COMMENT
-          matched_non_whitespace_line = true
-          imports_start_line_index = line_index + 1
-          next
-        end
-
-        if line =~ REGEX_WHITESPACE_ONLY
-          imports_start_line_index = line_index + 1
-          next
-        end
-
-        break
-      end
-
-      # We don't want to skip over blocks that are only whitespace
-      return imports_start_line_index if matched_non_whitespace_line
-      0
-    end
-
     # @return [Hash]
     def find_current_imports
       result = {
         imports: [],
         newline_count: 0,
-        imports_start_at: find_imports_start_line_index,
+        imports_start_at: 0,
       }
 
-      # Find block of lines that might be imports.
-      potential_import_lines = []
-      (result[:imports_start_at]...@editor.count_lines).each do |line_index|
-        line = @editor.read_line(line_index + 1)
-        break if line.strip.empty?
-        potential_import_lines << line
+      scanner = StringScanner.new(@editor.current_file_content)
+      skipped = ''
+      while skip_section = scanner.scan(REGEX_USE_STRICT) ||
+                           scanner.scan(REGEX_SINGLE_LINE_COMMENT) ||
+                           scanner.scan(REGEX_MULTI_LINE_COMMENT) ||
+                           scanner.scan(REGEX_WHITESPACE_ONLY)
+        skipped += skip_section
       end
 
-      # We need to put the potential imports back into a blob in order to scan
-      # for multiline imports
-      potential_imports_blob = potential_import_lines.join("\n")
+      # We don't want to skip over blocks that are only whitespace
+      unless skipped =~ /\A(\s*\n)+\Z/m
+        result[:imports_start_at] += skipped.count("\n")
+      end
 
-      # Scan potential imports for everything ending in a semicolon, then
-      # iterate through those and stop at anything that's not an import.
       imports = {}
-      potential_imports_blob.scan(/^.*?;/m).each do |potential_import|
-        import_statement = ImportStatement.parse(potential_import)
+      while potential_import = scanner.scan(/(^\s*\n)*^.*?;\n/m)
+        import_statement = ImportStatement.parse(potential_import.strip)
         break unless import_statement
 
         if imports[import_statement.path]
@@ -353,7 +317,7 @@ module ImportJS
           imports[import_statement.path] = import_statement
         end
 
-        result[:newline_count] += potential_import.scan(/\n/).length + 1
+        result[:newline_count] += potential_import.scan(/\n/).length
       end
       result[:imports] = imports.values
       result
