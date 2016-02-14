@@ -24,7 +24,7 @@ endfun
 
 ruby << EOF
   begin
-    require 'import_js'
+    require 'vim_import_js'
     $import_js = ImportJS::Importer.new
   rescue LoadError
     load_path_modified = false
