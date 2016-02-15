@@ -66,9 +66,12 @@ module ImportJS
       statement.declaration_keyword = match[:declaration_keyword]
       statement.path = match[:path]
       statement.assignment = match[:assignment]
-      if match.names.include? 'import_function'
-        statement.import_function = match[:import_function]
-      end
+      statement.import_function = if match.names.include? 'import_function'
+                                    match[:import_function]
+                                  else
+                                    'require'
+                                  end
+
       dest_match = statement.assignment.match(REGEX_NAMED)
       if dest_match
         statement.default_import = dest_match[:default]
@@ -77,6 +80,7 @@ module ImportJS
       else
         statement.default_import = statement.assignment
       end
+
       statement
     end
 
@@ -98,9 +102,9 @@ module ImportJS
     end
 
     # Deletes a variable from an already existing default import or set of
-    #   named imports.
+    # named imports.
     # @param variable_name [String]
-    def delete_variable(variable_name)
+    def delete_variable!(variable_name)
       @default_import = nil if default_import == variable_name
       @named_imports.delete(variable_name) if named_imports?
 
@@ -129,7 +133,7 @@ module ImportJS
     #   `const foo = require('foo');`
     #   `import foo from 'foo';`
     def to_normalized
-      [default_import, named_imports, path]
+      [default_import || '', named_imports || '', path]
     end
 
     # @param max_line_length [Number] where to cap lines at
@@ -175,6 +179,8 @@ module ImportJS
         @named_imports.sort!.uniq!
         clear_import_string_cache
       end
+
+      @declaration_keyword = import_statement.declaration_keyword
     end
 
     private
@@ -189,7 +195,7 @@ module ImportJS
     # @return [Array]
     def equals_and_value
       return ['from', "'#{path}';"] if declaration_keyword == 'import'
-      ['=', "#{import_function}('#{path}');"]
+      ['=', "#{@import_function}('#{path}');"]
     end
 
     # @param max_line_length [Number] where to cap lines at
@@ -197,10 +203,10 @@ module ImportJS
     # @return [String] import statement, wrapped at max line length if necessary
     def default_import_string(max_line_length, tab)
       equals, value = equals_and_value
-      line = "#{declaration_keyword} #{default_import} #{equals} #{value}"
+      line = "#{@declaration_keyword} #{@default_import} #{equals} #{value}"
       return line unless line_too_long?(line, max_line_length)
 
-      "#{declaration_keyword} #{default_import} #{equals}\n#{tab}#{value}"
+      "#{@declaration_keyword} #{@default_import} #{equals}\n#{tab}#{value}"
     end
 
     # @param max_line_length [Number] where to cap lines at
@@ -208,17 +214,17 @@ module ImportJS
     # @return [String] import statement, wrapped at max line length if necessary
     def named_import_string(max_line_length, tab)
       equals, value = equals_and_value
-      if declaration_keyword == 'import' && default_import
-        prefix = "#{default_import}, "
+      if @declaration_keyword == 'import' && @default_import
+        prefix = "#{@default_import}, "
       end
 
-      named = "{ #{named_imports.join(', ')} }"
-      line = "#{declaration_keyword} #{prefix}#{named} #{equals} " \
+      named = "{ #{@named_imports.join(', ')} }"
+      line = "#{@declaration_keyword} #{prefix}#{named} #{equals} " \
         "#{value}"
       return line unless line_too_long?(line, max_line_length)
 
-      named = "{\n#{tab}#{named_imports.join(",\n#{tab}")},\n}"
-      "#{declaration_keyword} #{prefix}#{named} #{equals} #{value}"
+      named = "{\n#{tab}#{@named_imports.join(",\n#{tab}")},\n}"
+      "#{@declaration_keyword} #{prefix}#{named} #{equals} #{value}"
     end
 
     def clear_import_string_cache

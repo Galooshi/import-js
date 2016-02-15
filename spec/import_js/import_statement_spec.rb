@@ -219,7 +219,7 @@ describe ImportJS::ImportStatement do
       it { should eq(false) }
 
       context 'when default import is removed' do
-        before { import_statement.delete_variable('foo') }
+        before { import_statement.delete_variable!!('foo') }
         it { should eq(false) }
       end
     end
@@ -229,7 +229,7 @@ describe ImportJS::ImportStatement do
       it { should eq(true) }
 
       context 'when named imports are removed' do
-        before { import_statement.delete_variable('foo') }
+        before { import_statement.delete_variable!('foo') }
         it { should eq(false) }
       end
     end
@@ -285,7 +285,7 @@ describe ImportJS::ImportStatement do
       it { should eq(false) }
 
       context 'when default import is removed' do
-        before { import_statement.delete_variable('foo') }
+        before { import_statement.delete_variable!('foo') }
         it { should eq(true) }
       end
     end
@@ -295,7 +295,7 @@ describe ImportJS::ImportStatement do
       it { should eq(false) }
 
       context 'when named imports are removed' do
-        before { import_statement.delete_variable('foo') }
+        before { import_statement.delete_variable!('foo') }
         it { should eq(true) }
       end
     end

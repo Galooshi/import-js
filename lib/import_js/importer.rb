@@ -26,7 +26,8 @@ module ImportJS
 
       maintain_cursor_position do
         old_imports = find_current_imports
-        inject_js_module(variable_name, js_module, old_imports[:imports])
+        import_statement = js_module.to_import_statement(variable_name, @config)
+        old_imports[:imports] << import_statement
         replace_imports(old_imports[:newline_count],
                         old_imports[:imports],
                         old_imports[:imports_start_at])
@@ -90,16 +91,12 @@ module ImportJS
       undefined_variables.uniq!
 
       old_imports = find_current_imports
-      new_imports = old_imports[:imports].reject do |import_statement|
-        unused_variables.each do |unused_variable|
-          import_statement.delete_variable(unused_variable)
-        end
-        import_statement.empty?
-      end
+      new_imports = old_imports[:imports].delete_variables!(unused_variables)
 
       undefined_variables.each do |variable|
         js_module = find_one_js_module(variable)
-        inject_js_module(variable, js_module, new_imports) if js_module
+        next unless js_module
+        new_imports << js_module.to_import_statement(variable, @config)
       end
 
       replace_imports(old_imports[:newline_count],
@@ -109,27 +106,19 @@ module ImportJS
 
     def rewrite_imports
       reload_config
+
       old_imports = find_current_imports
       new_imports = old_imports[:imports].clone
+
       old_imports[:imports].each do |import|
+        # TODO add variables method to ImportStatement
         variables = [import.default_import].concat(import.named_imports || [])
         variables.compact.each do |variable|
           js_module = resolve_module_using_current_imports(
             find_js_modules(variable), variable)
-          inject_js_module(variable, js_module, new_imports) if js_module
+          next unless js_module
+          new_imports << js_module.to_import_statement(variable, @config)
         end
-      end
-
-      # There's a chance we have duplicate imports (can happen when switching
-      # declaration_keyword for instance). By first sorting imports so that new
-      # ones are first, then removing duplicates, we guarantee that we delete
-      # the old ones that are now redundant.
-      new_imports = new_imports.partition do |import|
-        !import.parsed_and_untouched?
-      end.flatten
-
-      new_imports.uniq! do |import|
-        [import.default_import].concat(import.named_imports || []).compact
       end
 
       replace_imports(old_imports[:newline_count],
@@ -204,33 +193,6 @@ module ImportJS
       resolve_one_js_module(js_modules, variable_name)
     end
 
-    # Add new import to the block of imports, wrapping at the max line length
-    # @param variable_name [String]
-    # @param js_module [ImportJS::JSModule]
-    # @param imports [Array<ImportJS::ImportStatement>]
-    def inject_js_module(variable_name, js_module, imports)
-      import = imports.find do |an_import|
-        an_import.path == js_module.import_path
-      end
-
-      if import
-        import.declaration_keyword = @config.get(
-          'declaration_keyword', from_file: js_module.file_path)
-        import.import_function = @config.get(
-          'import_function', from_file: js_module.file_path)
-        if js_module.has_named_exports
-          import.inject_named_import(variable_name)
-        else
-          import.set_default_import(variable_name)
-        end
-      else
-        imports.unshift(js_module.to_import_statement(variable_name, @config))
-      end
-
-      # Remove duplicate import statements
-      imports.uniq!(&:to_normalized)
-    end
-
     # @param imports [Array<ImportJS::ImportStatement>]
     # @return [String]
     def generate_import_strings(import_statements)
@@ -241,18 +203,18 @@ module ImportJS
     end
 
     # @param old_imports_lines [Number]
-    # @param new_imports [Array<ImportJS::ImportStatement>]
+    # @param new_imports [ImportJS::ImportStatements]
     # @param imports_start_at [Number]
     def replace_imports(old_imports_lines, new_imports, imports_start_at)
       imports_end_at = old_imports_lines + imports_start_at
 
+      import_strings = new_imports.to_a
+
       # Ensure that there is a blank line after the block of all imports
-      if old_imports_lines + new_imports.length > 0 &&
+      if old_imports_lines + import_strings.length > 0 &&
          !@editor.read_line(imports_end_at + 1).strip.empty?
         @editor.append_line(imports_end_at, '')
       end
-
-      import_strings = generate_import_strings(new_imports)
 
       # Find old import strings so we can compare with the new import strings
       # and see if anything has changed.
@@ -270,8 +232,12 @@ module ImportJS
       import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
-        import_string.split("\n").reverse_each do |line|
-          @editor.append_line(imports_start_at, line)
+        if import_string.include? "\n"
+          import_string.split("\n").reverse_each do |line|
+            @editor.append_line(imports_start_at, line)
+          end
+        else
+          @editor.append_line(imports_start_at, import_string)
         end
       end
     end
@@ -309,23 +275,15 @@ module ImportJS
         result[:imports_start_at] += skipped.count("\n")
       end
 
-      imports = {}
+      imports = ImportStatements.new(@config)
       while potential_import = scanner.scan(/(^\s*\n)*^.*?;\n/m)
         import_statement = ImportStatement.parse(potential_import.strip)
         break unless import_statement
 
-        if imports[import_statement.path]
-          # Import already exists, so this line is likely one of a named imports
-          # pair. Combine it into the same ImportStatement.
-          imports[import_statement.path].merge(import_statement)
-        else
-          # This is a new import, so we just add it to the hash.
-          imports[import_statement.path] = import_statement
-        end
-
+        imports << import_statement
         result[:newline_count] += potential_import.scan(/\n/).length
       end
-      result[:imports] = imports.values
+      result[:imports] = imports
       result
     end
 
