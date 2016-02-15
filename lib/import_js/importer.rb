@@ -4,11 +4,6 @@ require 'strscan'
 
 module ImportJS
   class Importer
-    REGEX_USE_STRICT = /(['"])use strict\1;?\n/
-    REGEX_SINGLE_LINE_COMMENT = %r{\s*//.*\n}
-    REGEX_MULTI_LINE_COMMENT = %r{\s*/\*(\n|.)*?\*/\n}
-    REGEX_WHITESPACE_ONLY = /\s*\n/
-
     def initialize(editor = VIMEditor.new)
       @editor = editor
     end
@@ -280,6 +275,11 @@ module ImportJS
         end
       end
     end
+
+    REGEX_USE_STRICT = /(['"])use strict\1;?\n/
+    REGEX_SINGLE_LINE_COMMENT = %r{\s*//.*\n}
+    REGEX_MULTI_LINE_COMMENT = %r{\s*/\*(\n|.)*?\*/\n}
+    REGEX_WHITESPACE_ONLY = /\s*\n/
 
     # @return [Hash]
     def find_current_imports
