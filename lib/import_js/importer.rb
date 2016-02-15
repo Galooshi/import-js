@@ -4,11 +4,6 @@ require 'strscan'
 
 module ImportJS
   class Importer
-    REGEX_USE_STRICT = /(['"])use strict\1;?\n/
-    REGEX_SINGLE_LINE_COMMENT = %r{\s*//.*\n}
-    REGEX_MULTI_LINE_COMMENT = %r{\s*/\*(\n|.)*?\*/\n}
-    REGEX_WHITESPACE_ONLY = /\s*\n/
-
     def initialize(editor = VIMEditor.new)
       @editor = editor
     end
@@ -281,6 +276,20 @@ module ImportJS
       end
     end
 
+    REGEX_SKIP_SECTION = %r{
+      \s*                       # preceding whitespace
+      (?:
+        (['"])use\sstrict\1;?   # 'use strict';
+        |
+        //.*                    # single-line comment
+        |
+        /\*                     # open multi-line comment
+        (?:\n|.)*?              # inside of multi-line comment
+        \*/                     # close multi-line comment
+      )?                        # ? b/c we want to match on only whitespace
+      \n                        # end of line
+    }x
+
     # @return [Hash]
     def find_current_imports
       result = {
@@ -291,10 +300,7 @@ module ImportJS
 
       scanner = StringScanner.new(@editor.current_file_content)
       skipped = ''
-      while skip_section = scanner.scan(REGEX_USE_STRICT) ||
-                           scanner.scan(REGEX_SINGLE_LINE_COMMENT) ||
-                           scanner.scan(REGEX_MULTI_LINE_COMMENT) ||
-                           scanner.scan(REGEX_WHITESPACE_ONLY)
+      while skip_section = scanner.scan(REGEX_SKIP_SECTION)
         skipped += skip_section
       end
 
