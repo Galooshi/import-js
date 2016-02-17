@@ -9,12 +9,13 @@ module ImportJS
       (?<declaration_keyword>const|let|var)\s+ # <declaration_keyword>
       (?<assignment>.+?)   # <assignment> variable assignment
       \s*=\s*
-      (?<import_function>[^\(]+?)\( # <import_function> variable assignment
+      (?<import_function>\w+?)\( # <import_function> variable assignment
         (?<quote>'|")      # <quote> opening quote
-        (?<path>[^\2]+)    # <path> module path
+        (?<path>[^\2\n]+)  # <path> module path
         \k<quote>          # closing quote
       \);?
       \s*
+      \Z
     /xm
 
     REGEX_IMPORT = /
@@ -23,9 +24,10 @@ module ImportJS
       (?<assignment>.*?) # <assignment> variable assignment
       \s+from\s+
       (?<quote>'|")      # <quote> opening quote
-      (?<path>[^\2]+)    # <path> module path
+      (?<path>[^\2\n]+)  # <path> module path
       \k<quote>          # closing quote
       ;?\s*
+      \Z
     /xm
 
     REGEX_NAMED = /

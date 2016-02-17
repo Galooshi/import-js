@@ -166,6 +166,30 @@ describe ImportJS::ImportStatement do
       it 'returns nil' do
         expect(subject).to be_nil
       end
+
+      context 'with const and newlines before semicolon' do
+        let(:string) { "const foo = require('foo')\n'bar';" }
+
+        it 'returns nil' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'with import and newlines before semicolon' do
+        let(:string) { "import foo from 'foo'\n'bar';" }
+
+        it 'returns nil' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'with spaces where the require function is' do
+        let(:string) { "const foo = my custom require('foo');" }
+
+        it 'returns nil' do
+          expect(subject).to be_nil
+        end
+      end
     end
   end
 

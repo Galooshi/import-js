@@ -772,11 +772,12 @@ import tsar from 'foo/bar').tsa;
 foo
         EOS
 
-        it 'adds the import and sorts the entire list' do
+        it 'adds the import and moves out the unconventional import' do
           expect(subject).to eq(<<-EOS.strip)
 import foo from 'bar/foo';
-import tsar from 'foo/bar').tsa;
 import zoo from 'foo/zoo';
+
+import tsar from 'foo/bar').tsa;
 
 foo
         EOS
