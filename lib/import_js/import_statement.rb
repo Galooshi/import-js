@@ -173,19 +173,24 @@ module ImportJS
     # Merge another ImportStatement into this one.
     # @param import_statement [ImportJS::ImportStatement]
     def merge(import_statement)
-      if import_statement.default_import
+      if import_statement.default_import &&
+         @default_import != import_statement.default_import
         @default_import = import_statement.default_import
         clear_import_string_cache
       end
 
       if import_statement.named_imports?
         @named_imports ||= []
+        original_named_imports = @named_imports.clone
         @named_imports.concat(import_statement.named_imports)
         @named_imports.sort!.uniq!
-        clear_import_string_cache
+        clear_import_string_cache if original_named_imports != @named_imports
       end
 
-      @declaration_keyword = import_statement.declaration_keyword
+      if @declaration_keyword != import_statement.declaration_keyword
+        @declaration_keyword = import_statement.declaration_keyword
+        clear_import_string_cache
+      end
     end
 
     private
