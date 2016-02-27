@@ -128,12 +128,9 @@ module ImportJS
       !original_import_string.nil?
     end
 
-    # @return [Array] an array that can be used in `uniq!` to dedupe equal
-    #   statements, e.g.
-    #   `const foo = require('foo');`
-    #   `import foo from 'foo';`
+    # @return [Array] an array that can be used in `sort` and `uniq`
     def to_normalized
-      [default_import || '', named_imports || '', path]
+      [default_import || '', named_imports || '']
     end
 
     # @return [Array<String>] Array of all variables that this ImportStatement

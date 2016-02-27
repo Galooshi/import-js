@@ -93,10 +93,11 @@ module ImportJS
           strings.concat(
             import_statement.to_import_strings(max_line_length, tab))
         end
-        strings << ''
+        strings << '' # Add a blank line between groups.
       end
 
-      # We don't want to include a trailing newline here.
+      # We don't want to include a trailing newline at the end of all the
+      # groups here.
       strings.pop if strings.last == ''
 
       strings
@@ -116,14 +117,11 @@ module ImportJS
       # declaration_keyword for instance). By first sorting imports so that new
       # ones are first, then removing duplicates, we guarantee that we delete
       # the old ones that are now redundant.
-      partitioned_imports = imports_array.partition do |import_statement|
+      partitioned = imports_array.partition do |import_statement|
         !import_statement.parsed_and_untouched?
-      end.flatten
-      partitioned_imports.uniq! do |import_statement|
-        [import_statement.default_import, import_statement.named_imports]
-      end
+      end.flatten.uniq(&:to_normalized).sort_by(&:to_normalized)
 
-      partitioned_imports.sort_by(&:to_normalized).each do |import_statement|
+      partitioned.each do |import_statement|
         # Figure out what group to put this import statement in
         group_index = import_statement_group_index(import_statement)
 
