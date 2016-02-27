@@ -39,7 +39,7 @@ module ImportJS
       js_modules = []
       variable_name = @editor.current_word
       time do
-        js_modules = find_js_modules(variable_name)
+        js_modules = find_js_modules_for(variable_name)
       end
 
       js_module = resolve_module_using_current_imports(
@@ -114,7 +114,7 @@ module ImportJS
       old_imports[:imports].each do |import|
         import.variables.each do |variable|
           js_module = resolve_module_using_current_imports(
-            find_js_modules(variable), variable)
+            find_js_modules_for(variable), variable)
           next unless js_module
           new_imports << js_module.to_import_statement(variable, @config)
         end
@@ -181,7 +181,7 @@ module ImportJS
     def find_one_js_module(variable_name)
       js_modules = []
       time do
-        js_modules = find_js_modules(variable_name)
+        js_modules = find_js_modules_for(variable_name)
       end
       if js_modules.empty?
         message(
@@ -288,7 +288,7 @@ module ImportJS
 
     # @param variable_name [String]
     # @return [Array]
-    def find_js_modules(variable_name)
+    def find_js_modules_for(variable_name)
       path_to_current_file = @editor.path_to_current_file
 
       alias_module = @config.resolve_alias(variable_name, path_to_current_file)
