@@ -101,15 +101,18 @@ module ImportJS
     # @param make_relative_to [String]
     def make_relative_to(make_relative_to)
       return unless lookup_path
+
+      # Prevent mutating the argument that was passed in
+      make_relative_to = make_relative_to.clone
+
       # First, strip out any absolute path up until the current directory
-      make_relative_to = make_relative_to.sub("#{Dir.pwd}/", '')
+      make_relative_to.sub!("#{Dir.pwd}/", '')
 
       # Ignore if the file to relate to is part of a different lookup_path
       return unless make_relative_to.start_with? lookup_path
 
       # Strip out the lookup_path
-      make_relative_to = make_relative_to.sub(
-        %r{^#{Regexp.escape(lookup_path)}/}, '')
+      make_relative_to.sub!(%r{^#{Regexp.escape(lookup_path)}/}, '')
 
       path = Pathname.new(import_path).relative_path_from(
         Pathname.new(File.dirname(make_relative_to))
