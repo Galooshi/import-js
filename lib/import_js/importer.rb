@@ -29,9 +29,7 @@ module ImportJS
         old_imports = find_current_imports
         import_statement = js_module.to_import_statement(variable_name, @config)
         old_imports[:imports] << import_statement
-        replace_imports(old_imports[:newline_count],
-                        old_imports[:imports],
-                        old_imports[:imports_start_at])
+        replace_imports(old_imports[:range], old_imports[:imports])
       end
     end
 
@@ -98,9 +96,7 @@ module ImportJS
         new_imports << js_module.to_import_statement(variable, @config)
       end
 
-      replace_imports(old_imports[:newline_count],
-                      new_imports,
-                      old_imports[:imports_start_at])
+      replace_imports(old_imports[:range], new_imports)
     end
 
     def rewrite_imports
@@ -118,9 +114,7 @@ module ImportJS
         end
       end
 
-      replace_imports(old_imports[:newline_count],
-                      new_imports,
-                      old_imports[:imports_start_at])
+      replace_imports(old_imports[:range], new_imports)
     end
 
     private
@@ -199,24 +193,21 @@ module ImportJS
       end.flatten.sort
     end
 
-    # @param old_imports_lines [Number]
+    # @param old_imports_range [Range]
     # @param new_imports [ImportJS::ImportStatements]
-    # @param imports_start_at [Number]
-    def replace_imports(old_imports_lines, new_imports, imports_start_at)
-      imports_end_at = old_imports_lines + imports_start_at
-
+    def replace_imports(old_imports_range, new_imports)
       import_strings = new_imports.to_a
 
       # Ensure that there is a blank line after the block of all imports
-      if old_imports_lines + import_strings.length > 0 &&
-         !@editor.read_line(imports_end_at + 1).strip.empty?
-        @editor.append_line(imports_end_at, '')
+      if old_imports_range.size + import_strings.length > 0 &&
+         !@editor.read_line(old_imports_range.last + 1).strip.empty?
+        @editor.append_line(old_imports_range.last, '')
       end
 
       # Find old import strings so we can compare with the new import strings
       # and see if anything has changed.
       old_import_strings = []
-      (imports_start_at...imports_end_at).each do |line_index|
+      old_imports_range.each do |line_index|
         old_import_strings << @editor.read_line(line_index + 1)
       end
 
@@ -225,16 +216,18 @@ module ImportJS
       return if import_strings == old_import_strings
 
       # Delete old imports, then add the modified list back in.
-      old_imports_lines.times { @editor.delete_line(1 + imports_start_at) }
+      old_imports_range.each do
+        @editor.delete_line(1 + old_imports_range.first)
+      end
       import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
         if import_string.include? "\n"
           import_string.split("\n").reverse_each do |line|
-            @editor.append_line(imports_start_at, line)
+            @editor.append_line(old_imports_range.first, line)
           end
         else
-          @editor.append_line(imports_start_at, import_string)
+          @editor.append_line(old_imports_range.first, import_string)
         end
       end
     end
@@ -255,11 +248,8 @@ module ImportJS
 
     # @return [Hash]
     def find_current_imports
-      result = {
-        imports: [],
-        newline_count: 0,
-        imports_start_at: 0,
-      }
+      imports_start_at = 0
+      newline_count = 0
 
       scanner = StringScanner.new(@editor.current_file_content)
       skipped = ''
@@ -269,7 +259,7 @@ module ImportJS
 
       # We don't want to skip over blocks that are only whitespace
       unless skipped =~ /\A(\s*\n)+\Z/m
-        result[:imports_start_at] += skipped.count("\n")
+        imports_start_at += skipped.count("\n")
       end
 
       imports = ImportStatements.new(@config)
@@ -278,10 +268,13 @@ module ImportJS
         break unless import_statement
 
         imports << import_statement
-        result[:newline_count] += potential_import.scan(/\n/).length
+        newline_count += potential_import.scan(/\n/).length
       end
-      result[:imports] = imports
-      result
+
+      {
+        imports: imports,
+        range: imports_start_at...(imports_start_at + newline_count),
+      }
     end
 
     # @param variable_name [String]
