@@ -1,5 +1,6 @@
 require 'json'
 require 'open3'
+require 'set'
 require 'strscan'
 
 module ImportJS
@@ -74,25 +75,22 @@ module ImportJS
       reload_config
       eslint_result = run_eslint_command
 
-      unused_variables = []
-      undefined_variables = []
+      unused_variables = Set.new
+      undefined_variables = Set.new
 
       eslint_result.each do |line|
         match = REGEX_ESLINT_RESULT.match(line)
         next unless match
         if match[:type] == 'is defined but never used'
-          unused_variables << match[:variable_name]
+          unused_variables.add match[:variable_name]
         else
-          undefined_variables << match[:variable_name]
+          undefined_variables.add match[:variable_name]
         end
       end
 
-      unused_variables.uniq!
-      undefined_variables.uniq!
-
       old_imports = find_current_imports
       new_imports = old_imports[:imports].clone
-                                         .delete_variables!(unused_variables)
+      new_imports.delete_variables!(unused_variables.to_a)
 
       undefined_variables.each do |variable|
         js_module = find_one_js_module(variable)
