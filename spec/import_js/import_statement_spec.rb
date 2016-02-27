@@ -219,7 +219,7 @@ describe ImportJS::ImportStatement do
       it { should eq(false) }
 
       context 'when default import is removed' do
-        before { import_statement.delete_variable!!('foo') }
+        before { import_statement.delete_variable!('foo') }
         it { should eq(false) }
       end
     end
