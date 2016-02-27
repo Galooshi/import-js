@@ -306,6 +306,44 @@ describe ImportJS::ImportStatement do
     end
   end
 
+  describe '#variables' do
+    let(:import_statement) { described_class.new }
+    let(:default_import) { nil }
+    let(:named_imports) { nil }
+
+    before do
+      unless default_import.nil?
+        import_statement.default_import = default_import
+      end
+
+      unless named_imports.nil?
+        import_statement.named_imports = named_imports
+      end
+    end
+
+    subject { import_statement.variables }
+
+    context 'without a default import or named imports' do
+      it { should eq([]) }
+    end
+
+    context 'with a default import' do
+      let(:default_import) { 'foo' }
+      it { should eq(['foo']) }
+    end
+
+    context 'with named imports' do
+      let(:named_imports) { %w[foo bar baz] }
+      it { should eq(%w[foo bar baz]) }
+    end
+
+    context 'with a default import and named imports' do
+      let(:default_import) { 'foo' }
+      let(:named_imports) { %w[bar baz] }
+      it { should eq(%w[foo bar baz]) }
+    end
+  end
+
   describe '#merge' do
     let(:existing_import_statement) { described_class.new }
     let(:new_import_statement) { described_class.new }

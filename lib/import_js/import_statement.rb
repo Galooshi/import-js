@@ -136,6 +136,12 @@ module ImportJS
       [default_import || '', named_imports || '', path]
     end
 
+    # @return [Array<String>] Array of all variables that this ImportStatement
+    #   imports.
+    def variables
+      [@default_import, *@named_imports].compact
+    end
+
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
     # @return [Array] generated import statement strings

@@ -111,9 +111,7 @@ module ImportJS
       new_imports = old_imports[:imports].clone
 
       old_imports[:imports].each do |import|
-        # TODO add variables method to ImportStatement
-        variables = [import.default_import].concat(import.named_imports || [])
-        variables.compact.each do |variable|
+        import.variables.each do |variable|
           js_module = resolve_module_using_current_imports(
             find_js_modules(variable), variable)
           next unless js_module
