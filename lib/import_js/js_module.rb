@@ -31,8 +31,7 @@ module ImportJS
 
       return unless import_path
 
-      import_path = import_path.sub(
-        %r{^#{Regexp.escape(js_module.lookup_path)}/}, '')
+      import_path.sub!(%r{^#{Regexp.escape(js_module.lookup_path)}/}, '')
 
       js_module.import_path = import_path
       js_module.main_file = main_file
