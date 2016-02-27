@@ -61,44 +61,47 @@ module ImportJS
               REGEX_IMPORT.match(string)
       return unless match
 
-      statement = new
-      statement.original_import_string = match.string
-      statement.declaration_keyword = match[:declaration_keyword]
-      statement.path = match[:path]
-      statement.assignment = match[:assignment]
-      statement.import_function = if match.names.include? 'import_function'
-                                    match[:import_function]
-                                  else
-                                    'require'
-                                  end
+      import_function = if match.names.include?('import_function')
+                          match[:import_function]
+                        else
+                          'require'
+                        end
 
-      dest_match = statement.assignment.match(REGEX_NAMED)
+      dest_match = match[:assignment].match(REGEX_NAMED)
       if dest_match
-        statement.default_import = dest_match[:default]
-        statement.named_imports =
-          dest_match[:named].split(/,\s*/).map(&:strip)
+        default_import = dest_match[:default]
+        named_imports = dest_match[:named].split(/,\s*/).map(&:strip)
       else
-        statement.default_import = statement.assignment
+        default_import = match[:assignment]
       end
 
-      statement
+      new(
+        assignment: match[:assignment],
+        declaration_keyword: match[:declaration_keyword],
+        default_import: default_import,
+        import_function: import_function,
+        named_imports: named_imports,
+        original_import_string: match.string,
+        path: match[:path]
+      )
     end
 
-    # Sets the default_import and clears the original import string cache.
-    # @param value [String]
-    def set_default_import(value)
-      @default_import = value
-      clear_import_string_cache
-    end
-
-    # Injects a new variable into an already existing set of named imports.
-    # @param variable_name [String]
-    def inject_named_import(variable_name)
-      @named_imports ||= []
-      named_imports << variable_name
-      named_imports.sort!.uniq!
-
-      clear_import_string_cache
+    def initialize(
+      assignment: nil,
+      declaration_keyword: nil,
+      default_import: nil,
+      import_function: nil,
+      named_imports: nil,
+      original_import_string: nil,
+      path: nil
+    )
+      @assignment = assignment
+      @declaration_keyword = declaration_keyword
+      @default_import = default_import
+      @import_function = import_function
+      @named_imports = named_imports
+      @original_import_string = original_import_string
+      @path = path
     end
 
     # Deletes a variable from an already existing default import or set of

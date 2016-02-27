@@ -172,18 +172,20 @@ module ImportJS
     # @param config [ImportJS::Configuration]
     # @return [ImportJS::ImportStatement]
     def to_import_statement(variable_name, config)
-      ImportStatement.new.tap do |statement|
-        if has_named_exports
-          statement.inject_named_import(variable_name)
-        else
-          statement.set_default_import(variable_name)
-        end
-        statement.path = import_path
-        statement.declaration_keyword = config.get('declaration_keyword',
-                                                   from_file: file_path)
-        statement.import_function = config.get('import_function',
-                                               from_file: file_path)
+      if has_named_exports
+        named_imports = [variable_name]
+      else
+        default_import = variable_name
       end
+
+      ImportStatement.new(
+        declaration_keyword:
+          config.get('declaration_keyword', from_file: file_path),
+        default_import: default_import,
+        import_function: config.get('import_function', from_file: file_path),
+        named_imports: named_imports,
+        path: import_path
+      )
     end
   end
 end

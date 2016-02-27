@@ -121,42 +121,6 @@ describe ImportJS::ImportStatement do
             expect(subject.named_imports).to eq(%w[foo bar])
           end
         end
-
-        context 'injecting a new named import' do
-          let(:injected_variable) { 'bar' }
-          let(:statement) do
-            statement = subject
-            statement.inject_named_import(injected_variable)
-            statement
-          end
-
-          it 'does not add a default_import' do
-            expect(statement.default_import).to eq(nil)
-          end
-
-          it 'adds that variable and sorts the list' do
-            expect(statement.named_imports).to eq(%w[bar foo])
-          end
-
-          it 'can reconstruct using `to_import_strings`' do
-            statement.declaration_keyword = 'const'
-            statement.import_function = 'require'
-            expect(statement.to_import_strings(80, ' '))
-              .to eq(["const { bar, foo } = require('foo');"])
-          end
-
-          context 'injecting a variable that is already in the list' do
-            let(:injected_variable) { 'foo' }
-
-            it 'does not add a default import' do
-              expect(statement.default_import).to eq(nil)
-            end
-
-            it 'does not add a duplicate' do
-              expect(statement.named_imports).to eq(['foo'])
-            end
-          end
-        end
       end
     end
 
@@ -239,11 +203,13 @@ describe ImportJS::ImportStatement do
     subject { statement.parsed_and_untouched? }
 
     context 'for parsed statements' do
-      let(:statement) { described_class.parse("const foo = require('foo');") }
+      let(:statement) do
+        described_class.parse("import foo, { bar } from 'foo';")
+      end
       it { should be_truthy }
 
       context 'when touched' do
-        before { statement.set_default_import('Foo') }
+        before { statement.delete_variable!('foo') }
         it { should be_falsy }
       end
     end
