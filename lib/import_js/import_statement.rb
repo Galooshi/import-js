@@ -141,29 +141,19 @@ module ImportJS
 
     # @param max_line_length [Number] where to cap lines at
     # @param tab [String] e.g. '  ' (two spaces)
-    # @return [Array] generated import statement strings
+    # @return [Array<String>] generated import statement strings
     def to_import_strings(max_line_length, tab)
       return [original_import_string] if original_import_string
 
       if declaration_keyword == 'import'
         # ES2015 Modules (ESM) syntax can support default imports and
         # named imports on the same line.
-        if named_imports?
-          [named_import_string(max_line_length, tab)]
-        else
-          [default_import_string(max_line_length, tab)]
-        end
+        return [named_import_string(max_line_length, tab)] if named_imports?
+        [default_import_string(max_line_length, tab)]
       else # const/var
         strings = []
-
-        if default_import
-          strings << default_import_string(max_line_length, tab)
-        end
-
-        if named_imports?
-          strings << named_import_string(max_line_length, tab)
-        end
-
+        strings << default_import_string(max_line_length, tab) if default_import
+        strings << named_import_string(max_line_length, tab) if named_imports?
         strings
       end
     end
