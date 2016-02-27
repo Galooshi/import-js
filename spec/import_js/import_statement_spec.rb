@@ -199,13 +199,8 @@ describe ImportJS::ImportStatement do
     let(:named_imports) { nil }
 
     before do
-      unless default_import.nil?
-        import_statement.default_import = default_import
-      end
-
-      unless named_imports.nil?
-        import_statement.named_imports = named_imports
-      end
+      import_statement.default_import = default_import if default_import
+      import_statement.named_imports = named_imports if named_imports
     end
 
     subject { import_statement.named_imports? }
@@ -265,13 +260,8 @@ describe ImportJS::ImportStatement do
     let(:named_imports) { nil }
 
     before do
-      unless default_import.nil?
-        import_statement.default_import = default_import
-      end
-
-      unless named_imports.nil?
-        import_statement.named_imports = named_imports
-      end
+      import_statement.default_import = default_import if default_import
+      import_statement.named_imports = named_imports if named_imports
     end
 
     subject { import_statement.empty? }
@@ -312,13 +302,8 @@ describe ImportJS::ImportStatement do
     let(:named_imports) { nil }
 
     before do
-      unless default_import.nil?
-        import_statement.default_import = default_import
-      end
-
-      unless named_imports.nil?
-        import_statement.named_imports = named_imports
-      end
+      import_statement.default_import = default_import if default_import
+      import_statement.named_imports = named_imports if named_imports
     end
 
     subject { import_statement.variables }
@@ -353,19 +338,19 @@ describe ImportJS::ImportStatement do
     let(:new_named_imports) { nil }
 
     before do
-      unless existing_default_import.nil?
+      if existing_default_import
         existing_import_statement.default_import = existing_default_import
       end
 
-      unless existing_named_imports.nil?
+      if existing_named_imports
         existing_import_statement.named_imports = existing_named_imports
       end
 
-      unless new_default_import.nil?
+      if new_default_import
         new_import_statement.default_import = new_default_import
       end
 
-      unless new_named_imports.nil?
+      if new_named_imports
         new_import_statement.named_imports = new_named_imports
       end
     end
@@ -447,13 +432,8 @@ describe ImportJS::ImportStatement do
     before do
       import_statement.path = path
 
-      unless default_import.nil?
-        import_statement.default_import = default_import
-      end
-
-      unless named_imports.nil?
-        import_statement.named_imports = named_imports
-      end
+      import_statement.default_import = default_import if default_import
+      import_statement.named_imports = named_imports if named_imports
     end
 
     subject do
