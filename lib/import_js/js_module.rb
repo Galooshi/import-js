@@ -37,7 +37,7 @@ module ImportJS
       js_module.import_path = import_path
       js_module.main_file = main_file
       js_module.make_relative_to(make_relative_to) if make_relative_to
-      js_module.strip_from_path(strip_from_path) unless make_relative_to
+      js_module.strip_from_path!(strip_from_path) unless make_relative_to
       js_module
     end
 
@@ -123,7 +123,7 @@ module ImportJS
     end
 
     # @param prefix [String]
-    def strip_from_path(prefix)
+    def strip_from_path!(prefix)
       return unless prefix
       import_path.sub!(/^#{Regexp.escape(prefix)}/, '')
     end
