@@ -4,15 +4,15 @@ module ImportJS
   # under that namespace, e.g. `ImportJS::Importer`.
 
   class ParseError < StandardError
-    # Error thrown when a JS file can't be parsed
+    # Error raised when a JS file can't be parsed
   end
 
   class FindError < StandardError
-    # Error thrown when the find command fails
+    # Error raised when the find command fails
   end
 
   class ClientTooOldError < StandardError
-    # Error thrown when the client is too old to handle the config
+    # Error raised when the client is too old to handle the config
   end
 end
 

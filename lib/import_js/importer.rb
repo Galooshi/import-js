@@ -165,11 +165,11 @@ module ImportJS
                                 stdin_data: @editor.current_file_content)
 
       if ESLINT_STDOUT_ERROR_REGEXES.any? { |regex| out =~ regex }
-        fail ParseError.new, out
+        raise ParseError.new, out
       end
 
       if ESLINT_STDERR_ERROR_REGEXES.any? { |regex| err =~ regex }
-        fail ParseError.new, err
+        raise ParseError.new, err
       end
 
       out.split("\n")
@@ -304,8 +304,8 @@ module ImportJS
         if lookup_path == ''
           # If lookup_path is an empty string, the `find` command will not work
           # as desired so we bail early.
-          fail FindError.new,
-               "lookup path cannot be empty (#{lookup_path.inspect})"
+          raise FindError.new,
+                "lookup path cannot be empty (#{lookup_path.inspect})"
         end
 
         find_command = %W[
@@ -316,7 +316,7 @@ module ImportJS
         command = "#{find_command} | #{egrep_command}"
         out, err = Open3.capture3(command)
 
-        fail FindError.new, err unless err == ''
+        raise FindError.new, err unless err == ''
 
         matched_modules.concat(
           out.split("\n").map do |f|

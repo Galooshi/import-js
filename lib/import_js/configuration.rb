@@ -112,9 +112,9 @@ module ImportJS
       return if Gem::Dependency.new('', ">= #{minimum_version}")
                                .match?('', VERSION)
 
-      fail ClientTooOldError,
-           'The .importjs.json file you are using requires version ' \
-           "#{get('minimum_version')}. You are using #{VERSION}."
+      raise ClientTooOldError,
+            'The .importjs.json file you are using requires version ' \
+            "#{get('minimum_version')}. You are using #{VERSION}."
     end
   end
 end
