@@ -185,6 +185,19 @@ foo
         it 'leaves the buffer unchanged' do
           expect(subject).to eq(text)
         end
+
+        context 'when there is a blank line above the import' do
+          let(:text) { <<-EOS.rstrip }
+
+import foo from 'bar/foo';
+
+foo
+          EOS
+
+          it 'removes the blank line from the top' do
+            expect(subject).to eq(text.strip)
+          end
+        end
       end
 
       context "when 'use strict' is at the top of the file" do

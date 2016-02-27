@@ -258,7 +258,9 @@ module ImportJS
       end
 
       # We don't want to skip over blocks that are only whitespace
-      unless skipped =~ /\A(\s*\n)+\Z/m
+      if skipped =~ /\A(\s*\n)+\Z/m
+        scanner = StringScanner.new(@editor.current_file_content)
+      else
         imports_start_at += skipped.count("\n")
       end
 
