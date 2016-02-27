@@ -125,7 +125,7 @@ module ImportJS
     # @param prefix [String]
     def strip_from_path(prefix)
       return unless prefix
-      self.import_path = import_path.sub(/^#{Regexp.escape(prefix)}/, '')
+      import_path.sub!(/^#{Regexp.escape(prefix)}/, '')
     end
 
     # @return [String] a readable description of the module
