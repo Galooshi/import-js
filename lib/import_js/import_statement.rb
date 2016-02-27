@@ -108,10 +108,19 @@ module ImportJS
     # named imports.
     # @param variable_name [String]
     def delete_variable!(variable_name)
-      @default_import = nil if default_import == variable_name
-      @named_imports.delete(variable_name) if named_imports?
+      touched = false
 
-      clear_import_string_cache
+      if default_import == variable_name
+        @default_import = nil
+        touched = true
+      end
+
+      if named_imports?
+        deleted = @named_imports.delete(variable_name)
+        touched = true if deleted
+      end
+
+      clear_import_string_cache if touched
     end
 
     # @return [Boolean] true if there are named imports

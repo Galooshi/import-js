@@ -208,9 +208,19 @@ describe ImportJS::ImportStatement do
       end
       it { should be_truthy }
 
-      context 'when touched' do
+      context 'when a default import is deleted' do
         before { statement.delete_variable!('foo') }
         it { should be_falsy }
+      end
+
+      context 'when a named import is deleted' do
+        before { statement.delete_variable!('bar') }
+        it { should be_falsy }
+      end
+
+      context 'when nothing is deleted' do
+        before { statement.delete_variable!('somethingElse') }
+        it { should be_truthy }
       end
     end
 
