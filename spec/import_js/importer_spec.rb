@@ -185,23 +185,23 @@ foo
         it 'leaves the buffer unchanged' do
           expect(subject).to eq(text)
         end
+      end
 
-        context "when 'use strict' is at the top of the file" do
-          let(:text) { <<-EOS.strip }
+      context "when 'use strict' is at the top of the file" do
+        let(:text) { <<-EOS.strip }
 'use strict';
 
 foo
-          EOS
+        EOS
 
-          it 'adds the import below' do
-            expect(subject).to eq(<<-EOS.strip)
+        it 'adds the import below' do
+          expect(subject).to eq(<<-EOS.strip)
 'use strict';
 
 import foo from 'bar/foo';
 
 foo
-            EOS
-          end
+          EOS
         end
 
         context "when 'use strict' is at the top of the file twice" do
