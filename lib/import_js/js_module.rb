@@ -176,7 +176,7 @@ module ImportJS
         if has_named_exports
           statement.inject_named_import(variable_name)
         else
-          statement.default_import = variable_name
+          statement.set_default_import(variable_name)
         end
         statement.path = import_path
         statement.declaration_keyword = config.get('declaration_keyword',
