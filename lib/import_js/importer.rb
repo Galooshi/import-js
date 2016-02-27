@@ -91,7 +91,8 @@ module ImportJS
       undefined_variables.uniq!
 
       old_imports = find_current_imports
-      new_imports = old_imports[:imports].delete_variables!(unused_variables)
+      new_imports = old_imports[:imports].clone
+                                         .delete_variables!(unused_variables)
 
       undefined_variables.each do |variable|
         js_module = find_one_js_module(variable)
