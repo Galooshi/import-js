@@ -121,9 +121,11 @@ module ImportJS
         !import_statement.parsed_and_untouched?
       end.flatten.uniq(&:to_normalized).sort_by(&:to_normalized)
 
+      package_dependencies = @config.package_dependencies
       partitioned.each do |import_statement|
         # Figure out what group to put this import statement in
-        group_index = import_statement_group_index(import_statement)
+        group_index = import_statement_group_index(
+          import_statement, package_dependencies)
 
         # Add the import statement to the group
         groups[group_index] ||= []
@@ -135,10 +137,12 @@ module ImportJS
     end
 
     # @param import_statement [ImportJS::ImportStatement]
+    # @param package_dependencies [Array<String>]
     # @return [Number]
-    def import_statement_group_index(import_statement)
+    def import_statement_group_index(import_statement, package_dependencies)
       style = import_statement_style(import_statement)
-      path_type = import_statement_path_type(import_statement)
+      path_type = import_statement_path_type(
+        import_statement, package_dependencies)
 
       GROUPINGS["#{style} #{path_type}"]
     end
@@ -159,11 +163,12 @@ module ImportJS
 
     # Determine import path type
     # @param import_statement [ImportJS::ImportStatement]
+    # @param package_dependencies [Array<String>]
     # @return [String] 'package, 'non-relative', 'relative'
-    def import_statement_path_type(import_statement)
+    def import_statement_path_type(import_statement, package_dependencies)
       path = import_statement.path
       return PATH_TYPE_RELATIVE if path.start_with?('.')
-      return PATH_TYPE_PACKAGE if @config.package_dependencies.include?(path)
+      return PATH_TYPE_PACKAGE if package_dependencies.include?(path)
       PATH_TYPE_NON_RELATIVE
     end
   end
