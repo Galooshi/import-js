@@ -220,7 +220,7 @@ describe ImportJS::ImportStatements do
       end
     end
 
-    context 'when it deletes the default import from a complext statement' do
+    context 'when it deletes the default import from a complex statement' do
       let(:import_statement) do
         ImportJS::ImportStatement.parse("import foo, { bar } from 'foo';")
       end
