@@ -103,7 +103,7 @@ module ImportJS
       return unless lookup_path
 
       # Prevent mutating the argument that was passed in
-      make_relative_to = make_relative_to.clone
+      make_relative_to = make_relative_to.dup
 
       # First, strip out any absolute path up until the current directory
       make_relative_to.sub!("#{Dir.pwd}/", '')

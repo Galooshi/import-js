@@ -151,6 +151,14 @@ describe ImportJS::JSModule do
           expect(subject.import_path).to eq('./foo')
         end
 
+        context 'when the other file is a frozen string' do
+          before { make_relative_to.freeze }
+
+          it 'produces a correct relative path' do
+            expect(subject.import_path).to eq('./foo')
+          end
+        end
+
         context 'when the lookup_path starts with a dot' do
           let(:lookup_path) { './app' }
 
