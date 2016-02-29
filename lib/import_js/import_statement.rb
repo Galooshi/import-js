@@ -31,6 +31,7 @@ module ImportJS
     /xm
 
     REGEX_NAMED = /
+      \A
       (?:                # non-capturing group
         (?<default>.*?)  # <default> default import
         ,\s*
@@ -40,6 +41,7 @@ module ImportJS
         (?<named>.*)      # <named> named imports
         \s*
       \}
+      \Z
     /xm
 
     attr_accessor :assignment
@@ -73,6 +75,7 @@ module ImportJS
         named_imports = dest_match[:named].split(/,\s*/).map(&:strip)
       else
         default_import = match[:assignment]
+        return unless default_import =~ /\A\w+\Z/
       end
 
       new(

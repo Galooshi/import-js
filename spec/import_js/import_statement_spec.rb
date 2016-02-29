@@ -154,6 +154,37 @@ describe ImportJS::ImportStatement do
           expect(subject).to be_nil
         end
       end
+
+      context 'with const and a require inside an object' do
+        let(:string) { "const foo {\n const goo = require('foo');" }
+
+        it 'returns nil' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'with a comment containing curlies' do
+        let(:string) { <<-EOS.strip }
+const foo = {
+  /**
+   * Significant comment: {baz} bar
+   */
+  bar() {
+    const doo = require('doo');
+        EOS
+
+        it 'returns nil' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'with import and a from inside an object' do
+        let(:string) { "import foo {\n import goo from 'foo';" }
+
+        it 'returns nil' do
+          expect(subject).to be_nil
+        end
+      end
     end
   end
 
