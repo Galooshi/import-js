@@ -156,7 +156,11 @@ describe ImportJS::ImportStatement do
       end
 
       context 'with const and a require inside an object' do
-        let(:string) { "const foo {\n const goo = require('foo');" }
+        let(:string) { <<-EOS.strip }
+const foo = {
+  doIt() {
+    const goo = require('foo');
+        EOS
 
         it 'returns nil' do
           expect(subject).to be_nil
@@ -179,7 +183,10 @@ const foo = {
       end
 
       context 'with import and a from inside an object' do
-        let(:string) { "import foo {\n import goo from 'foo';" }
+        let(:string) { <<-EOS.strip }
+import foo {
+  import goo from 'foo';
+        EOS
 
         it 'returns nil' do
           expect(subject).to be_nil
