@@ -16,6 +16,7 @@ module ImportJS
     #   e.g. ['.js', '.jsx']
     # @param make_relative_to [String|nil] a path to a different file which the
     #   resulting import path should be relative to.
+    # @param strip_from_path [String]
     def self.construct(lookup_path: nil,
                        relative_file_path: nil,
                        strip_file_extensions: nil,
@@ -30,13 +31,12 @@ module ImportJS
 
       return unless import_path
 
-      import_path = import_path.sub(
-        %r{^#{Regexp.escape(js_module.lookup_path)}/}, '')
+      import_path.sub!(%r{^#{Regexp.escape(js_module.lookup_path)}/}, '')
 
       js_module.import_path = import_path
       js_module.main_file = main_file
       js_module.make_relative_to(make_relative_to) if make_relative_to
-      js_module.strip_from_path(strip_from_path) unless make_relative_to
+      js_module.strip_from_path!(strip_from_path) unless make_relative_to
       js_module
     end
 
@@ -101,15 +101,18 @@ module ImportJS
     # @param make_relative_to [String]
     def make_relative_to(make_relative_to)
       return unless lookup_path
+
+      # Prevent mutating the argument that was passed in
+      make_relative_to = make_relative_to.dup
+
       # First, strip out any absolute path up until the current directory
-      make_relative_to = make_relative_to.sub("#{Dir.pwd}/", '')
+      make_relative_to.sub!("#{Dir.pwd}/", '')
 
       # Ignore if the file to relate to is part of a different lookup_path
       return unless make_relative_to.start_with? lookup_path
 
       # Strip out the lookup_path
-      make_relative_to = make_relative_to.sub(
-        %r{^#{Regexp.escape(lookup_path)}/}, '')
+      make_relative_to.sub!(%r{^#{Regexp.escape(lookup_path)}/}, '')
 
       path = Pathname.new(import_path).relative_path_from(
         Pathname.new(File.dirname(make_relative_to))
@@ -122,9 +125,9 @@ module ImportJS
     end
 
     # @param prefix [String]
-    def strip_from_path(prefix)
+    def strip_from_path!(prefix)
       return unless prefix
-      self.import_path = import_path.sub(/^#{Regexp.escape(prefix)}/, '')
+      import_path.sub!(/^#{Regexp.escape(prefix)}/, '')
     end
 
     # @return [String] a readable description of the module
@@ -171,18 +174,20 @@ module ImportJS
     # @param config [ImportJS::Configuration]
     # @return [ImportJS::ImportStatement]
     def to_import_statement(variable_name, config)
-      ImportStatement.new.tap do |statement|
-        if has_named_exports
-          statement.inject_named_import(variable_name)
-        else
-          statement.default_import = variable_name
-        end
-        statement.path = import_path
-        statement.declaration_keyword = config.get('declaration_keyword',
-                                                   from_file: file_path)
-        statement.import_function = config.get('import_function',
-                                               from_file: file_path)
+      if has_named_exports
+        named_imports = [variable_name]
+      else
+        default_import = variable_name
       end
+
+      ImportStatement.new(
+        declaration_keyword:
+          config.get('declaration_keyword', from_file: file_path),
+        default_import: default_import,
+        import_function: config.get('import_function', from_file: file_path),
+        named_imports: named_imports,
+        path: import_path
+      )
     end
   end
 end

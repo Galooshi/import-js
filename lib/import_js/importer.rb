@@ -1,5 +1,6 @@
 require 'json'
 require 'open3'
+require 'set'
 require 'strscan'
 
 module ImportJS
@@ -26,10 +27,9 @@ module ImportJS
 
       maintain_cursor_position do
         old_imports = find_current_imports
-        inject_js_module(variable_name, js_module, old_imports[:imports])
-        replace_imports(old_imports[:newline_count],
-                        old_imports[:imports],
-                        old_imports[:imports_start_at])
+        import_statement = js_module.to_import_statement(variable_name, @config)
+        old_imports[:imports] << import_statement
+        replace_imports(old_imports[:range], old_imports[:imports])
       end
     end
 
@@ -38,7 +38,7 @@ module ImportJS
       js_modules = []
       variable_name = @editor.current_word
       time do
-        js_modules = find_js_modules(variable_name)
+        js_modules = find_js_modules_for(variable_name)
       end
 
       js_module = resolve_module_using_current_imports(
@@ -73,68 +73,48 @@ module ImportJS
       reload_config
       eslint_result = run_eslint_command
 
-      unused_variables = []
-      undefined_variables = []
+      unused_variables = Set.new
+      undefined_variables = Set.new
 
       eslint_result.each do |line|
         match = REGEX_ESLINT_RESULT.match(line)
         next unless match
         if match[:type] == 'is defined but never used'
-          unused_variables << match[:variable_name]
+          unused_variables.add match[:variable_name]
         else
-          undefined_variables << match[:variable_name]
+          undefined_variables.add match[:variable_name]
         end
       end
-
-      unused_variables.uniq!
-      undefined_variables.uniq!
 
       old_imports = find_current_imports
-      new_imports = old_imports[:imports].reject do |import_statement|
-        unused_variables.each do |unused_variable|
-          import_statement.delete_variable(unused_variable)
-        end
-        import_statement.empty?
-      end
+      new_imports = old_imports[:imports].clone
+      new_imports.delete_variables!(unused_variables.to_a)
 
       undefined_variables.each do |variable|
         js_module = find_one_js_module(variable)
-        inject_js_module(variable, js_module, new_imports) if js_module
+        next unless js_module
+        new_imports << js_module.to_import_statement(variable, @config)
       end
 
-      replace_imports(old_imports[:newline_count],
-                      new_imports,
-                      old_imports[:imports_start_at])
+      replace_imports(old_imports[:range], new_imports)
     end
 
     def rewrite_imports
       reload_config
+
       old_imports = find_current_imports
       new_imports = old_imports[:imports].clone
+
       old_imports[:imports].each do |import|
-        variables = [import.default_import].concat(import.named_imports || [])
-        variables.compact.each do |variable|
+        import.variables.each do |variable|
           js_module = resolve_module_using_current_imports(
-            find_js_modules(variable), variable)
-          inject_js_module(variable, js_module, new_imports) if js_module
+            find_js_modules_for(variable), variable)
+          next unless js_module
+          new_imports << js_module.to_import_statement(variable, @config)
         end
       end
 
-      # There's a chance we have duplicate imports (can happen when switching
-      # declaration_keyword for instance). By first sorting imports so that new
-      # ones are first, then removing duplicates, we guarantee that we delete
-      # the old ones that are now redundant.
-      new_imports = new_imports.partition do |import|
-        !import.parsed_and_untouched?
-      end.flatten
-
-      new_imports.uniq! do |import|
-        [import.default_import].concat(import.named_imports || []).compact
-      end
-
-      replace_imports(old_imports[:newline_count],
-                      new_imports,
-                      old_imports[:imports_start_at])
+      replace_imports(old_imports[:range], new_imports)
     end
 
     private
@@ -178,11 +158,11 @@ module ImportJS
                                 stdin_data: @editor.current_file_content)
 
       if ESLINT_STDOUT_ERROR_REGEXES.any? { |regex| out =~ regex }
-        fail ParseError.new, out
+        raise ParseError.new, out
       end
 
       if ESLINT_STDERR_ERROR_REGEXES.any? { |regex| err =~ regex }
-        fail ParseError.new, err
+        raise ParseError.new, err
       end
 
       out.split("\n")
@@ -193,7 +173,7 @@ module ImportJS
     def find_one_js_module(variable_name)
       js_modules = []
       time do
-        js_modules = find_js_modules(variable_name)
+        js_modules = find_js_modules_for(variable_name)
       end
       if js_modules.empty?
         message(
@@ -202,33 +182,6 @@ module ImportJS
       end
 
       resolve_one_js_module(js_modules, variable_name)
-    end
-
-    # Add new import to the block of imports, wrapping at the max line length
-    # @param variable_name [String]
-    # @param js_module [ImportJS::JSModule]
-    # @param imports [Array<ImportJS::ImportStatement>]
-    def inject_js_module(variable_name, js_module, imports)
-      import = imports.find do |an_import|
-        an_import.path == js_module.import_path
-      end
-
-      if import
-        import.declaration_keyword = @config.get(
-          'declaration_keyword', from_file: js_module.file_path)
-        import.import_function = @config.get(
-          'import_function', from_file: js_module.file_path)
-        if js_module.has_named_exports
-          import.inject_named_import(variable_name)
-        else
-          import.set_default_import(variable_name)
-        end
-      else
-        imports.unshift(js_module.to_import_statement(variable_name, @config))
-      end
-
-      # Remove duplicate import statements
-      imports.uniq!(&:to_normalized)
     end
 
     # @param imports [Array<ImportJS::ImportStatement>]
@@ -240,24 +193,21 @@ module ImportJS
       end.flatten.sort
     end
 
-    # @param old_imports_lines [Number]
-    # @param new_imports [Array<ImportJS::ImportStatement>]
-    # @param imports_start_at [Number]
-    def replace_imports(old_imports_lines, new_imports, imports_start_at)
-      imports_end_at = old_imports_lines + imports_start_at
+    # @param old_imports_range [Range]
+    # @param new_imports [ImportJS::ImportStatements]
+    def replace_imports(old_imports_range, new_imports)
+      import_strings = new_imports.to_a
 
       # Ensure that there is a blank line after the block of all imports
-      if old_imports_lines + new_imports.length > 0 &&
-         !@editor.read_line(imports_end_at + 1).strip.empty?
-        @editor.append_line(imports_end_at, '')
+      if old_imports_range.size + import_strings.length > 0 &&
+         !@editor.read_line(old_imports_range.last + 1).strip.empty?
+        @editor.append_line(old_imports_range.last, '')
       end
-
-      import_strings = generate_import_strings(new_imports)
 
       # Find old import strings so we can compare with the new import strings
       # and see if anything has changed.
       old_import_strings = []
-      (imports_start_at...imports_end_at).each do |line_index|
+      old_imports_range.each do |line_index|
         old_import_strings << @editor.read_line(line_index + 1)
       end
 
@@ -266,12 +216,18 @@ module ImportJS
       return if import_strings == old_import_strings
 
       # Delete old imports, then add the modified list back in.
-      old_imports_lines.times { @editor.delete_line(1 + imports_start_at) }
+      old_imports_range.each do
+        @editor.delete_line(1 + old_imports_range.first)
+      end
       import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
-        import_string.split("\n").reverse_each do |line|
-          @editor.append_line(imports_start_at, line)
+        if import_string.include? "\n"
+          import_string.split("\n").reverse_each do |line|
+            @editor.append_line(old_imports_range.first, line)
+          end
+        else
+          @editor.append_line(old_imports_range.first, import_string)
         end
       end
     end
@@ -292,11 +248,8 @@ module ImportJS
 
     # @return [Hash]
     def find_current_imports
-      result = {
-        imports: [],
-        newline_count: 0,
-        imports_start_at: 0,
-      }
+      imports_start_at = 0
+      newline_count = 0
 
       scanner = StringScanner.new(@editor.current_file_content)
       skipped = ''
@@ -305,33 +258,30 @@ module ImportJS
       end
 
       # We don't want to skip over blocks that are only whitespace
-      unless skipped =~ /\A(\s*\n)+\Z/m
-        result[:imports_start_at] += skipped.count("\n")
+      if skipped =~ /\A(\s*\n)+\Z/m
+        scanner = StringScanner.new(@editor.current_file_content)
+      else
+        imports_start_at += skipped.count("\n")
       end
 
-      imports = {}
+      imports = ImportStatements.new(@config)
       while potential_import = scanner.scan(/(^\s*\n)*^.*?;\n/m)
         import_statement = ImportStatement.parse(potential_import.strip)
         break unless import_statement
 
-        if imports[import_statement.path]
-          # Import already exists, so this line is likely one of a named imports
-          # pair. Combine it into the same ImportStatement.
-          imports[import_statement.path].merge(import_statement)
-        else
-          # This is a new import, so we just add it to the hash.
-          imports[import_statement.path] = import_statement
-        end
-
-        result[:newline_count] += potential_import.scan(/\n/).length
+        imports << import_statement
+        newline_count += potential_import.scan(/\n/).length
       end
-      result[:imports] = imports.values
-      result
+
+      {
+        imports: imports,
+        range: imports_start_at...(imports_start_at + newline_count),
+      }
     end
 
     # @param variable_name [String]
     # @return [Array]
-    def find_js_modules(variable_name)
+    def find_js_modules_for(variable_name)
       path_to_current_file = @editor.path_to_current_file
 
       alias_module = @config.resolve_alias(variable_name, path_to_current_file)
@@ -348,8 +298,8 @@ module ImportJS
         if lookup_path == ''
           # If lookup_path is an empty string, the `find` command will not work
           # as desired so we bail early.
-          fail FindError.new,
-               "lookup path cannot be empty (#{lookup_path.inspect})"
+          raise FindError.new,
+                "lookup path cannot be empty (#{lookup_path.inspect})"
         end
 
         find_command = %W[
@@ -360,7 +310,7 @@ module ImportJS
         command = "#{find_command} | #{egrep_command}"
         out, err = Open3.capture3(command)
 
-        fail FindError.new, err unless err == ''
+        raise FindError.new, err unless err == ''
 
         matched_modules.concat(
           out.split("\n").map do |f|

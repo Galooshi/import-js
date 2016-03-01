@@ -186,22 +186,35 @@ foo
           expect(subject).to eq(text)
         end
 
-        context "when 'use strict' is at the top of the file" do
-          let(:text) { <<-EOS.strip }
-'use strict';
+        context 'when there is a blank line above the import' do
+          let(:text) { <<-EOS.rstrip }
+
+import foo from 'bar/foo';
 
 foo
           EOS
 
-          it 'adds the import below' do
-            expect(subject).to eq(<<-EOS.strip)
+          it 'removes the blank line from the top' do
+            expect(subject).to eq(text.strip)
+          end
+        end
+      end
+
+      context "when 'use strict' is at the top of the file" do
+        let(:text) { <<-EOS.strip }
+'use strict';
+
+foo
+        EOS
+
+        it 'adds the import below' do
+          expect(subject).to eq(<<-EOS.strip)
 'use strict';
 
 import foo from 'bar/foo';
 
 foo
-            EOS
-          end
+          EOS
         end
 
         context "when 'use strict' is at the top of the file twice" do
@@ -751,12 +764,13 @@ import bar from 'foo/bar';
 foo
           EOS
 
-          it 'adds the import and sorts the entire list' do
+          it 'adds the import and sorts the entire list with groups' do
             expect(subject).to eq(<<-EOS.strip)
-const sko = customImportFunction('sko');
 import bar from 'foo/bar';
 import foo from 'bar/foo';
 import zoo from 'foo/zoo';
+
+const sko = customImportFunction('sko');
 
 foo
             EOS
@@ -1331,8 +1345,8 @@ memoize
             it 'adds the destructuring on a new line' do
               expect(subject).to eq(<<-EOS.strip)
 var _ = require('underscore');
-var foo = require('foo');
 var { memoize } = require('underscore');
+var foo = require('foo');
 
 memoize
               EOS
@@ -1350,6 +1364,7 @@ memoize
             it 'places the import at the right place' do
               expect(subject).to eq(<<-EOS.strip)
 const bar = require('foo/bar');
+
 var { memoize } = require('underscore');
 var { xyz } = require('alphabet');
 
@@ -1456,9 +1471,9 @@ memoize
 
             it 'places the import at the right place' do
               expect(subject).to eq(<<-EOS.strip)
-import bar from 'foo/bar';
 import { memoize } from 'underscore';
 import { xyz } from 'alphabet';
+import bar from 'foo/bar';
 
 memoize
               EOS
@@ -1670,11 +1685,13 @@ let bar = require('foo/bar');
 foo
             EOS
 
-            it 'adds the import and sorts the entire list' do
+            it 'adds the import and sorts and groups the entire list' do
               expect(subject).to eq(<<-EOS.strip)
 const foo = require('bar/foo');
-let bar = require('foo/bar');
+
 var zoo = require('foo/zoo');
+
+let bar = require('foo/bar');
 
 foo
             EOS
@@ -1772,11 +1789,13 @@ let bar = require('foo/bar');
 foo
             EOS
 
-            it 'adds the import and sorts the entire list' do
+            it 'adds the import and sorts and groups the entire list' do
               expect(subject).to eq(<<-EOS.strip)
 import foo from 'bar/foo';
-let bar = require('foo/bar');
+
 var zoo = require('foo/zoo');
+
+let bar = require('foo/bar');
 
 foo
             EOS
@@ -2296,9 +2315,10 @@ bar
       EOS
 
       context 'and we are not changing anything in config' do
-        it 'only sorts imports' do
+        it 'only sorts and groups imports' do
           expect(subject).to eq(<<-EOS.strip)
 import bar, { foo } from 'bar';
+
 import baz from 'app/baz';
 
 bar
@@ -2309,11 +2329,12 @@ bar
       context 'and we are switching declaration_keyword to `const`' do
         let(:configuration) { { 'declaration_keyword' => 'const' } }
 
-        it 'changes imports to use `const`' do
+        it 'groups, sorts, and changes imports to use `const`' do
           expect(subject).to eq(<<-EOS.strip)
 const bar = require('bar');
-const baz = require('app/baz');
 const { foo } = require('bar');
+
+const baz = require('app/baz');
 
 bar
           EOS
@@ -2332,9 +2353,10 @@ bar
       context 'and we are turning relative paths off' do
         let(:configuration) { { 'use_relative_paths' => false } }
 
-        it 'changes to absolute paths' do
+        it 'sorts, groups, and changes to absolute paths' do
           expect(subject).to eq(<<-EOS.strip)
 import bar, { foo } from 'bar';
+
 import baz from 'app/baz';
 
 bar
@@ -2354,9 +2376,10 @@ bar
       context 'and we are turning relative paths on' do
         let(:configuration) { { 'use_relative_paths' => true } }
 
-        it 'changes to relative paths' do
+        it 'sorts, groups, and changes to relative paths' do
           expect(subject).to eq(<<-EOS.strip)
 import bar, { foo } from 'bar';
+
 import baz from '../baz';
 
 bar
