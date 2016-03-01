@@ -1,0 +1,19 @@
+Starting with version 0.5.0, imports are now split into groups. Package
+dependencies come first, followed by one or more groups containing "internal"
+imports. It will look something like this:
+
+  import React from 'react';
+  import { debounce } from 'underscore';
+
+  import Button from 'components/Button'
+  import Icon from 'components/Icon';
+
+To prepare your codebase for the change in one sweep, you can run the following
+command:
+
+find ./app -name "**.js" -exec import-js {} --overwrite --rewrite \;
+
+You will need to adapt it to fit your project. And please note that this command
+is destructive - it will overwrite all files matched by the `find` pattern.
+
+https://github.com/trotzig/import-js/releases

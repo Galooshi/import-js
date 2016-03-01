@@ -2,5 +2,6 @@
   "install": "sublime-messages/install.txt",
   "0.2.4": "sublime-messages/v0.2.4.txt",
   "0.3.0": "sublime-messages/v0.3.0.txt",
-  "0.4.0": "sublime-messages/v0.4.0.txt"
+  "0.4.0": "sublime-messages/v0.4.0.txt",
+  "0.5.0": "sublime-messages/v0.5.0.txt"
 }
