@@ -55,6 +55,10 @@ module ImportJS
     end
 
     REGEX_ESLINT_RESULT = /
+      :
+      (?<line>\d+)                # <line> line number
+      :\d+:
+      \s
       (?<quote>["'])              # <quote> opening quote
       (?<variable_name>[^\1]+)    # <variable_name>
       \k<quote>
@@ -73,22 +77,34 @@ module ImportJS
       reload_config
       eslint_result = run_eslint_command
 
-      unused_variables = Set.new
+      return if eslint_result.empty?
+
+      unused_variables = {}
       undefined_variables = Set.new
 
       eslint_result.each do |line|
         match = REGEX_ESLINT_RESULT.match(line)
         next unless match
         if match[:type] == 'is defined but never used'
-          unused_variables.add match[:variable_name]
+          unused_variables[match[:variable_name]] ||= Set.new
+          unused_variables[match[:variable_name]].add match[:line].to_i
         else
           undefined_variables.add match[:variable_name]
         end
       end
 
+      return if unused_variables.empty? && undefined_variables.empty?
+
       old_imports = find_current_imports
+
+      # Filter out unused variables that do not appear within the imports block.
+      unused_variables.select! do |_, line_numbers|
+        any_line_numbers_within_imports_range?(
+          line_numbers, old_imports[:range])
+      end
+
       new_imports = old_imports[:imports].clone
-      new_imports.delete_variables!(unused_variables.to_a)
+      new_imports.delete_variables!(unused_variables.keys)
 
       undefined_variables.each do |variable|
         js_module = find_one_js_module(variable)
@@ -128,6 +144,19 @@ module ImportJS
 
     def message(str)
       @editor.message("ImportJS: #{str}")
+    end
+
+    # @param line_numbers [Set]
+    # @param imports_range [Range]
+    # @return [Boolean]
+    def any_line_numbers_within_imports_range?(line_numbers, imports_range)
+      line_numbers.each do |line_number|
+        # Because the range uses line indexes, which are 0-based, and
+        # line_numbers are 1-based, we need to adjust one of them to make this
+        # comparison properly.
+        return true if imports_range.include?(line_number - 1)
+      end
+      false
     end
 
     ESLINT_STDOUT_ERROR_REGEXES = [

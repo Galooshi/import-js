@@ -2151,7 +2151,7 @@ import foo from 'bar/foo';
 bar
       EOS
       let(:eslint_result) do
-        'stdin:1:4: "foo" is defined but never used [Error/no-unused-vars]'
+        'stdin:2:7: "foo" is defined but never used [Error/no-unused-vars]'
       end
 
       it 'removes that import' do
@@ -2216,7 +2216,7 @@ foo
       EOS
 
       let(:eslint_result) do
-        'stdin:3:11: "bar" is defined but never used ' \
+        'stdin:1:11: "bar" is defined but never used ' \
         "[Error/no-unused-vars]\n" \
         'stdin:3:11: "foo" is not defined. [Error/no-undef]'
       end
@@ -2238,7 +2238,7 @@ bar
       EOS
 
       let(:eslint_result) do
-        'stdin:3:11: "foo" is defined but never used ' \
+        'stdin:1:11: "foo" is defined but never used ' \
         "[Error/no-unused-vars]\n" \
       end
 
@@ -2260,7 +2260,7 @@ bar
       EOS
 
       let(:eslint_result) do
-        'stdin:3:11: "foo" is defined but never used ' \
+        'stdin:2:11: "foo" is defined but never used ' \
         "[Error/no-unused-vars]\n" \
       end
 
@@ -2270,6 +2270,33 @@ import bar from 'bar';
 
 bar
         EOS
+      end
+    end
+
+    context 'when an unused variable that shares its name with an import exists' do
+      let(:text) { <<-EOS.strip }
+import uuid from 'uuid';
+
+function bar() {
+  return uuid.v4();
+}
+
+export default function foo() {
+  const things = {
+    uuid: bar(),
+    henric: 'is cool',
+  };
+
+  const { uuid, henric } = things;
+  return henric;
+}
+      EOS
+      let(:eslint_result) do
+        'stdin:13:11: "uuid" is defined but never used [Error/no-unused-vars]'
+      end
+
+      it 'does not remove the import' do
+        expect(subject).to eq(text)
       end
     end
   end
