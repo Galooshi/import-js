@@ -55,6 +55,10 @@ module ImportJS
     end
 
     REGEX_ESLINT_RESULT = /
+      :
+      (?<line>\d+)                # <line> line number
+      :\d+:
+      \s
       (?<quote>["'])              # <quote> opening quote
       (?<variable_name>[^\1]+)    # <variable_name>
       \k<quote>
@@ -73,22 +77,33 @@ module ImportJS
       reload_config
       eslint_result = run_eslint_command
 
-      unused_variables = Set.new
+      return if eslint_result.empty?
+
+      unused_variables = {}
       undefined_variables = Set.new
 
       eslint_result.each do |line|
         match = REGEX_ESLINT_RESULT.match(line)
         next unless match
         if match[:type] == 'is defined but never used'
-          unused_variables.add match[:variable_name]
+          unused_variables[match[:variable_name]] ||= Set.new
+          unused_variables[match[:variable_name]].add match[:line].to_i
         else
           undefined_variables.add match[:variable_name]
         end
       end
 
+      return if unused_variables.empty? && undefined_variables.empty?
+
       old_imports = find_current_imports
+
+      # Filter out unused variables that do not appear within the imports block.
+      unused_variables.select! do |_, line_numbers|
+        any_numbers_within_range?(line_numbers, old_imports[:range])
+      end
+
       new_imports = old_imports[:imports].clone
-      new_imports.delete_variables!(unused_variables.to_a)
+      new_imports.delete_variables!(unused_variables.keys)
 
       undefined_variables.each do |variable|
         js_module = find_one_js_module(variable)
@@ -128,6 +143,16 @@ module ImportJS
 
     def message(str)
       @editor.message("ImportJS: #{str}")
+    end
+
+    # @param numbers [Set]
+    # @param range [Range]
+    # @return [Boolean]
+    def any_numbers_within_range?(numbers, range)
+      numbers.each do |number|
+        return true if range.include?(number)
+      end
+      false
     end
 
     ESLINT_STDOUT_ERROR_REGEXES = [
@@ -200,15 +225,15 @@ module ImportJS
 
       # Ensure that there is a blank line after the block of all imports
       if old_imports_range.size + import_strings.length > 0 &&
-         !@editor.read_line(old_imports_range.last + 1).strip.empty?
-        @editor.append_line(old_imports_range.last, '')
+         !@editor.read_line(old_imports_range.last).strip.empty?
+        @editor.append_line(old_imports_range.last - 1, '')
       end
 
       # Find old import strings so we can compare with the new import strings
       # and see if anything has changed.
       old_import_strings = []
-      old_imports_range.each do |line_index|
-        old_import_strings << @editor.read_line(line_index + 1)
+      old_imports_range.each do |line_number|
+        old_import_strings << @editor.read_line(line_number)
       end
 
       # If nothing has changed, bail to prevent unnecessarily dirtying the
@@ -217,17 +242,17 @@ module ImportJS
 
       # Delete old imports, then add the modified list back in.
       old_imports_range.each do
-        @editor.delete_line(1 + old_imports_range.first)
+        @editor.delete_line(old_imports_range.first)
       end
       import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
         if import_string.include? "\n"
           import_string.split("\n").reverse_each do |line|
-            @editor.append_line(old_imports_range.first, line)
+            @editor.append_line(old_imports_range.first - 1, line)
           end
         else
-          @editor.append_line(old_imports_range.first, import_string)
+          @editor.append_line(old_imports_range.first - 1, import_string)
         end
       end
     end
@@ -248,7 +273,7 @@ module ImportJS
 
     # @return [Hash]
     def find_current_imports
-      imports_start_at = 0
+      imports_start_at_line_number = 1
       newline_count = 0
 
       scanner = StringScanner.new(@editor.current_file_content)
@@ -261,7 +286,7 @@ module ImportJS
       if skipped =~ /\A(\s*\n)+\Z/m
         scanner = StringScanner.new(@editor.current_file_content)
       else
-        imports_start_at += skipped.count("\n")
+        imports_start_at_line_number += skipped.count("\n")
       end
 
       imports = ImportStatements.new(@config)
@@ -273,9 +298,10 @@ module ImportJS
         newline_count += potential_import.scan(/\n/).length
       end
 
+      imports_end_at_line_number = imports_start_at_line_number + newline_count
       {
         imports: imports,
-        range: imports_start_at...(imports_start_at + newline_count),
+        range: imports_start_at_line_number...imports_end_at_line_number,
       }
     end
 
