@@ -75,7 +75,7 @@ module ImportJS
         named_imports = dest_match[:named].split(/,\s*/).map(&:strip)
       else
         default_import = match[:assignment]
-        return unless default_import =~ /\A\w+\Z/
+        return unless default_import =~ /\A[^\s]+\Z/
       end
 
       new(

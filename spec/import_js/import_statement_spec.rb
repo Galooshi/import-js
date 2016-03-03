@@ -13,6 +13,15 @@ describe ImportJS::ImportStatement do
         expect(subject.path).to eq('foo')
       end
 
+      context 'and it has a non-alphanumeric variable name' do
+        let(:string) { "import $ from 'jquery';" }
+
+        it 'returns a valid ImportStatement instance' do
+          expect(subject.assignment).to eq('$')
+          expect(subject.path).to eq('jquery')
+        end
+      end
+
       context 'and it has line breaks' do
         let(:string) { "import foo\n  from 'foo';" }
 
