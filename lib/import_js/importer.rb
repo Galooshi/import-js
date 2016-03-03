@@ -247,9 +247,9 @@ module ImportJS
 
       if import_strings.empty? &&
          @editor.read_line(old_imports_range.first).empty?
-        # We have no imports to write back to the editor, and they used to be at
-        # the top. To avoid leaving whitespace behind, we'll look at what's at
-        # the top and
+        # We have no newlines to write back to the file. Clearing out potential
+        # whitespace where the imports used to be leaves the file in a better
+        # state.
         @editor.delete_line(old_imports_range.first)
         return
       end
