@@ -2193,6 +2193,28 @@ bar
 bar
             EOS
           end
+
+          context 'with whitespace after the comment' do
+            let(:text) { <<-EOS.strip }
+// I'm a comment
+
+import foo from 'bar/foo';
+
+bar
+            EOS
+
+            let(:eslint_result) do
+              'stdin:3:7: "foo" is defined but never used [Error/no-unused-vars]'
+            end
+
+            it 'removes that import and leaves one newline' do
+              expect(subject).to eq(<<-EOS.strip)
+// I'm a comment
+
+bar
+              EOS
+            end
+          end
         end
 
         context 'and there is no previous whitespace' do
