@@ -420,10 +420,26 @@ Usage: import-js [<path-to-file>] [options] ...
                        default behavior is to print to stdout). This only applies
                        if you are passing in a file (<path- to-file>) as the first
                        positional argument.
+    --rewrite          Rewrite all current imports to match Import-JS configuration.
+                       This does not add missing imports or remove unused imports.
     --filename         (deprecated) Alias for --stdin-file-path
     -v, --version      Prints the current version
     -h, --help         Prints help
 ```
+
+### Batch-rewriting
+
+If you want to change how imports are constructed in an existing project, you
+can use the command-line tool in combination with `find` to batch-update a set
+of files. E.g.
+
+```bash
+find ./app -name "**.js*" -exec import-js {} --overwrite --rewrite \;
+```
+
+Since the `--overwrite` flag makes import-js destructive (files are
+overwritten), it's a good thing to double-check that the `find` command returns
+the right files before adding the `-exec` part.
 
 ## Contributing
 
