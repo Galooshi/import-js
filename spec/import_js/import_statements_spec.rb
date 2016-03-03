@@ -139,6 +139,44 @@ describe ImportJS::ImportStatements do
         ]
       )
     end
+
+    context 'when one statement is a package dependency' do
+      let(:second_import_statement) do
+        ImportJS::ImportStatement.parse("import bar from 'bar';")
+      end
+
+      before do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:package_dependencies)
+          .and_return(['bar'])
+      end
+
+      it 'gives the two statements in different groups' do
+        expect(subject.to_a).to eq(
+          [
+            "import bar from 'bar';",
+            '',
+            "import foo from 'foo';",
+          ]
+        )
+      end
+
+      context 'when importing a package-local module' do
+        let(:second_import_statement) do
+          ImportJS::ImportStatement.parse("import bar from 'bar/too/far';")
+        end
+
+        it 'gives the two statements in different groups' do
+          expect(subject.to_a).to eq(
+            [
+              "import bar from 'bar/too/far';",
+              '',
+              "import foo from 'foo';",
+            ]
+          )
+        end
+      end
+    end
   end
 
   context 'when pushed import statements of all different kinds' do

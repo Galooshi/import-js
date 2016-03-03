@@ -166,7 +166,11 @@ module ImportJS
     # @param package_dependencies [Array<String>]
     # @return [String] 'package, 'non-relative', 'relative'
     def import_statement_path_type(import_statement, package_dependencies)
-      path = import_statement.path
+      # If there is a slash in the path, remove that and everything after it.
+      # This is so that imports for modules inside package dependencies end up
+      # in the right group (PATH_TYPE_PACKAGE).
+      path = import_statement.path.sub(%r{\A(.*?)/.*\Z}, '\1')
+
       return PATH_TYPE_RELATIVE if path.start_with?('.')
       return PATH_TYPE_PACKAGE if package_dependencies.include?(path)
       PATH_TYPE_NON_RELATIVE
