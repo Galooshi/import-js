@@ -2145,21 +2145,68 @@ var a = <span/>;
 
     context 'when one unused import exists' do
       let(:text) { <<-EOS.strip }
-import bar from 'foo/bar';
 import foo from 'bar/foo';
+import zar from 'foo/zar';
 
 bar
       EOS
       let(:eslint_result) do
-        'stdin:2:7: "foo" is defined but never used [Error/no-unused-vars]'
+        'stdin:1:7: "foo" is defined but never used [Error/no-unused-vars]'
       end
 
       it 'removes that import' do
         expect(subject).to eq(<<-EOS.strip)
-import bar from 'foo/bar';
+import zar from 'foo/zar';
 
 bar
         EOS
+      end
+
+      context 'when that import is the last one' do
+        let(:text) { <<-EOS.strip }
+import foo from 'bar/foo';
+
+bar
+        EOS
+
+        it 'removes that import and leaves no whitespace' do
+          expect(subject).to eq(<<-EOS.strip)
+bar
+          EOS
+        end
+
+        context 'and there is a comment above' do
+          let(:text) { <<-EOS.strip }
+// I'm a comment
+import foo from 'bar/foo';
+
+bar
+          EOS
+
+          let(:eslint_result) do
+            'stdin:2:7: "foo" is defined but never used [Error/no-unused-vars]'
+          end
+
+          it 'removes that import and leaves no whitespace' do
+            expect(subject).to eq(<<-EOS.strip)
+// I'm a comment
+bar
+            EOS
+          end
+        end
+
+        context 'and there is no previous whitespace' do
+          let(:text) { <<-EOS.strip }
+import foo from 'bar/foo';
+bar
+          EOS
+
+          it 'removes that import and leaves no whitespace' do
+            expect(subject).to eq(<<-EOS.strip)
+bar
+            EOS
+          end
+        end
       end
     end
 
