@@ -244,6 +244,16 @@ module ImportJS
       old_imports_range.each do
         @editor.delete_line(old_imports_range.first)
       end
+
+      if import_strings.empty? &&
+         @editor.read_line(old_imports_range.first).empty?
+        # We have no newlines to write back to the file. Clearing out potential
+        # whitespace where the imports used to be leaves the file in a better
+        # state.
+        @editor.delete_line(old_imports_range.first)
+        return
+      end
+
       import_strings.reverse_each do |import_string|
         # We need to add each line individually because the Vim buffer will
         # convert newline characters to `~@`.
