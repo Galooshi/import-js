@@ -11,6 +11,7 @@ module ImportJS
     'named_exports' => {},
     'eslint_executable' => 'eslint',
     'excludes' => [],
+    'group_imports' => true,
     'ignore_package_prefixes' => [],
     'import_dev_dependencies' => false,
     'import_function' => 'require',

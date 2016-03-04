@@ -121,6 +121,8 @@ module ImportJS
         !import_statement.parsed_and_untouched?
       end.flatten.uniq(&:to_normalized).sort_by(&:to_normalized)
 
+      return [partitioned] unless @config.get('group_imports')
+
       package_dependencies = @config.package_dependencies
       partitioned.each do |import_statement|
         # Figure out what group to put this import statement in

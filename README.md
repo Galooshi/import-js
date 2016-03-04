@@ -98,8 +98,8 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 - Only files ending in .js\* are considered when importing
 - As part of resolving imports, all imports will be sorted and placed into
-  groups (package dependencies first, then one or more groups with internal
-  imports).
+  groups. *Grouping can be disabled, see the `group_imports` configuration
+  option.*
 - The core of the plugin is written in Ruby. If you are using Vim, you need a
   [Vim with Ruby support](VIM.md).
 
@@ -245,6 +245,17 @@ In such case, your import statements will look something like this:
 ```js
 var Foo = require('foo'); // "declaration_keyword": "var"
 const Foo = require('foo'); // "declaration_keyword": "const"
+```
+
+### `group_imports`
+
+By default, import-js will put imports into groups. The first group consists of
+package dependencies, then one or more groups with internal imports follow. You
+can turn off this behavior by setting `group_imports` to `false`. When
+disabled, imports are listed alphabetically in one list.
+
+```json
+"group_imports": false
 ```
 
 ### `import_dev_dependencies`
