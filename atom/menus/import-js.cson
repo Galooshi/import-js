@@ -1,0 +1,39 @@
+# See https://atom.io/docs/latest/hacking-atom-package-word-count#menus for more
+# details
+'context-menu':
+  'atom-text-editor': [
+    {
+      'label': 'Import'
+      'command': 'import-js:import'
+    }
+    {
+      'label': 'Goto'
+      'command': 'import-js:goto'
+    }
+    {
+      'label': 'Fix Imports'
+      'command': 'import-js:fix-imports'
+    }
+  ]
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'ImportJS'
+      'submenu': [
+        {
+          'label': 'Import'
+          'command': 'import-js:import'
+        }
+        {
+          'label': 'Goto'
+          'command': 'import-js:goto'
+        }
+        {
+          'label': 'Fix Imports'
+          'command': 'import-js:fix-imports'
+        }
+      ]
+    ]
+  }
+]
