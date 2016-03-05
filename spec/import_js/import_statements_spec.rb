@@ -222,6 +222,31 @@ describe ImportJS::ImportStatements do
         )
       end
     end
+
+    context 'when one is a core module and the other looks like one' do
+      let(:first_import_statement) do
+        ImportJS::ImportStatement.parse("import constants from 'constants';")
+      end
+      let(:second_import_statement) do
+        ImportJS::ImportStatement.parse("import AppConstants from 'constants/app_constants';")
+      end
+
+      before do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:environment_core_modules)
+          .and_return(['constants'])
+      end
+
+      it 'gives the two statements in different groups, core module on top' do
+        expect(subject.to_a).to eq(
+          [
+            "import constants from 'constants';",
+            '',
+            "import AppConstants from 'constants/app_constants';",
+          ]
+        )
+      end
+    end
   end
 
   context 'when pushed import statements of all different kinds' do
