@@ -194,6 +194,34 @@ describe ImportJS::ImportStatements do
         end
       end
     end
+
+    context 'when one is a package dependency and the other is a core module' do
+      let(:first_import_statement) do
+        ImportJS::ImportStatement.parse("import readline from 'readline';")
+      end
+      let(:second_import_statement) do
+        ImportJS::ImportStatement.parse("import bar from 'bar';")
+      end
+
+      before do
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:package_dependencies)
+          .and_return(['bar'])
+        allow_any_instance_of(ImportJS::Configuration)
+          .to receive(:environment_core_modules)
+          .and_return(['readline'])
+      end
+
+      it 'gives the two statements in different groups, core module on top' do
+        expect(subject.to_a).to eq(
+          [
+            "import readline from 'readline';",
+            '',
+            "import bar from 'bar';",
+          ]
+        )
+      end
+    end
   end
 
   context 'when pushed import statements of all different kinds' do

@@ -178,6 +178,17 @@ will for a file `foo/bar.js` result in
 import styles from './bar.scss';
 ```
 
+### `environments`
+
+This list of environments control what core modules are available when
+importing. The only supported value right now is `["node"]`, and if you use it
+you automatically make [all the core modules for
+Node](https://nodejs.org/api/modules.html#modules_core_modules) available for
+import-js.
+
+```json
+"environments": ["node"]
+```
 
 ### `named_exports`
 
@@ -250,9 +261,10 @@ const Foo = require('foo'); // "declaration_keyword": "const"
 ### `group_imports`
 
 By default, import-js will put imports into groups. The first group consists of
-package dependencies, then one or more groups with internal imports follow. You
-can turn off this behavior by setting `group_imports` to `false`. When
-disabled, imports are listed alphabetically in one list.
+core modules, then comes package dependencies, then one or more groups with
+internal imports follow. You can turn off this behavior by setting
+`group_imports` to `false`. When disabled, imports are listed alphabetically in
+one list.
 
 ```json
 "group_imports": false

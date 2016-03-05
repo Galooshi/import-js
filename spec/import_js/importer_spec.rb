@@ -658,6 +658,26 @@ FooIO
         end
       end
 
+      context 'in a node environment' do
+        let(:word) { 'Readline' }
+        let(:text) { 'Readline' }
+
+        before do
+          allow_any_instance_of(ImportJS::Configuration)
+            .to receive(:get).and_call_original
+          allow_any_instance_of(ImportJS::Configuration)
+            .to receive(:get).with('environments').and_return(['node'])
+        end
+
+        it 'adds an import to the top of the buffer' do
+          expect(subject).to eq(<<-EOS.strip)
+import Readline from 'readline';
+
+Readline
+          EOS
+        end
+      end
+
       context 'when the import resolves to a dependency from package.json' do
         let(:existing_files) { [] }
         let(:package_dependencies) { ['foo-bar'] }
