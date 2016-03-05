@@ -159,6 +159,67 @@ describe ImportJS::Configuration do
     end
   end
 
+  describe '.environment_core_modules' do
+    before do
+      allow_any_instance_of(ImportJS::Configuration)
+        .to receive(:get).and_call_original
+      allow_any_instance_of(ImportJS::Configuration)
+        .to receive(:get).with('environments').and_return(environments)
+    end
+
+    context 'with no environments specified' do
+      let(:environments) { [] }
+
+      it 'returns an empty array' do
+        expect(subject.environment_core_modules).to eq([])
+      end
+    end
+
+    context 'in a node environment' do
+      let(:environments) { ['node'] }
+
+      it 'returns node core modules' do
+        expect(subject.environment_core_modules).to eq(
+          %w[
+            assert
+            buffer
+            child_process
+            cluster
+            console
+            constants
+            crypto
+            dgram
+            dns
+            domain
+            events
+            fs
+            http
+            https
+            module
+            net
+            os
+            path
+            process
+            punycode
+            querystring
+            readline
+            repl
+            stream
+            string_decoder
+            sys
+            timers
+            tls
+            tty
+            url
+            util
+            v8
+            vm
+            zlib
+          ]
+        )
+      end
+    end
+  end
   describe '.package_dependencies' do
     let(:package_json) { nil }
 

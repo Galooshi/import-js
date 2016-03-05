@@ -11,12 +11,14 @@ module ImportJS
     # Order is significant here
     STYLES = [STYLE_IMPORT, STYLE_CONST, STYLE_VAR, STYLE_CUSTOM].freeze
 
+    PATH_TYPE_CORE_MODULE = :core_module
     PATH_TYPE_PACKAGE = :package
     PATH_TYPE_NON_RELATIVE = :non_relative
     PATH_TYPE_RELATIVE = :relative
 
     # Order is significant here
     PATH_TYPES = [
+      PATH_TYPE_CORE_MODULE,
       PATH_TYPE_PACKAGE,
       PATH_TYPE_NON_RELATIVE,
       PATH_TYPE_RELATIVE,
@@ -124,10 +126,13 @@ module ImportJS
       return [partitioned] unless @config.get('group_imports')
 
       package_dependencies = @config.package_dependencies
+      core_modules = @config.environment_core_modules
       partitioned.each do |import_statement|
         # Figure out what group to put this import statement in
         group_index = import_statement_group_index(
-          import_statement, package_dependencies)
+          import_statement,
+          package_dependencies,
+          core_modules)
 
         # Add the import statement to the group
         groups[group_index] ||= []
@@ -140,11 +145,14 @@ module ImportJS
 
     # @param import_statement [ImportJS::ImportStatement]
     # @param package_dependencies [Array<String>]
+    # @param core_modules [Array<String>]
     # @return [Number]
-    def import_statement_group_index(import_statement, package_dependencies)
+    def import_statement_group_index(import_statement,
+                                     package_dependencies,
+                                     core_modules)
       style = import_statement_style(import_statement)
       path_type = import_statement_path_type(
-        import_statement, package_dependencies)
+        import_statement, package_dependencies, core_modules)
 
       GROUPINGS["#{style} #{path_type}"]
     end
@@ -166,14 +174,18 @@ module ImportJS
     # Determine import path type
     # @param import_statement [ImportJS::ImportStatement]
     # @param package_dependencies [Array<String>]
+    # @param core_modules [Array<String>]
     # @return [String] 'package, 'non-relative', 'relative'
-    def import_statement_path_type(import_statement, package_dependencies)
+    def import_statement_path_type(import_statement,
+                                   package_dependencies,
+                                   core_modules)
       # If there is a slash in the path, remove that and everything after it.
       # This is so that imports for modules inside package dependencies end up
       # in the right group (PATH_TYPE_PACKAGE).
       path = import_statement.path.sub(%r{\A(.*?)/.*\Z}, '\1')
 
       return PATH_TYPE_RELATIVE if path.start_with?('.')
+      return PATH_TYPE_CORE_MODULE if core_modules.include?(path)
       return PATH_TYPE_PACKAGE if package_dependencies.include?(path)
       PATH_TYPE_NON_RELATIVE
     end

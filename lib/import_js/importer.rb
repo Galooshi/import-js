@@ -384,6 +384,12 @@ module ImportJS
         matched_modules << js_module if js_module
       end
 
+      @config.environment_core_modules.each do |dep|
+        next unless dep.casecmp(variable_name) == 0
+
+        matched_modules << JSModule.new(import_path: dep)
+      end
+
       # If you have overlapping lookup paths, you might end up seeing the same
       # module to import twice. In order to dedupe these, we remove the module
       # with the longest path

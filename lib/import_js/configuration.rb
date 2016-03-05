@@ -9,6 +9,7 @@ module ImportJS
     'aliases' => {},
     'declaration_keyword' => 'import',
     'named_exports' => {},
+    'environments' => [],
     'eslint_executable' => 'eslint',
     'excludes' => [],
     'group_imports' => true,
@@ -86,6 +87,54 @@ module ImportJS
       keys.map do |key|
         package_json[key].keys if package_json[key]
       end.compact.flatten
+    end
+
+    ENVIRONMENT_CORE_MODULES = {
+      'node' => %w[
+        assert
+        buffer
+        child_process
+        cluster
+        console
+        constants
+        crypto
+        dgram
+        dns
+        domain
+        events
+        fs
+        http
+        https
+        module
+        net
+        os
+        path
+        process
+        punycode
+        querystring
+        readline
+        repl
+        stream
+        string_decoder
+        sys
+        timers
+        tls
+        tty
+        url
+        util
+        v8
+        vm
+        zlib
+      ],
+    }.freeze
+
+    # @return [Array<String>]
+    def environment_core_modules
+      result = []
+      get('environments').map do |environment|
+        result.concat(ENVIRONMENT_CORE_MODULES[environment])
+      end
+      result
     end
 
     private
