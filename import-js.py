@@ -1,23 +1,22 @@
+from textwrap import dedent
 import sublime, sublime_plugin, subprocess, os, json
 
 def no_executable_error(executable):
-  return (
-    "Couldn't find executable "
-    '' + executable + ''
-    '.\n\n'
-    'Make sure you have the `import-js` gem installed '
-    '(`gem install import-js`).'
-    '\n\n'
-    'If it is installed but you still get this message, '
-    'you might have to set a custom `executable` in your user settings. E.g.'
-    '\n\n'
-    '{ \n'
-    '  "executable": "~/path/to/import-js"\n'
-    '}'
-    "\n\n"
-    'To see where import-js was installed, run `which import-js` '
-    'from the command line.'
-  )
+  return dedent('''
+    Couldn't find executable {executable}.
+
+    Make sure you have the `import_js` gem installed (`gem install import_js`).
+
+    If it is installed but you still get this message, you might have to set a
+    custom `executable` in your ImportJS package user settings. Example:
+
+      {{
+        "executable": "/Users/USERNAME/.rbenv/shims/import-js"
+      }}
+
+    To see where import-js was installed, run `which import-js`
+    from the command line in your project's root.
+    '''.format(executable = executable)).strip()
 
 class ImportJsReplaceCommand(sublime_plugin.TextCommand):
   def run(self, edit, characters):
