@@ -63,11 +63,12 @@ class ImportJsCommand(sublime_plugin.TextCommand):
     except FileNotFoundError as e:
       sublime.error_message(no_executable_error(executable))
       raise e
+
     result = proc.communicate(input=current_file_contents.encode('utf-8'))
     stderr = result[1].decode()
 
     if(proc.returncode > 0):
-      sublime.error_message('Error when executing import-js: ' + stderr)
+      sublime.error_message('Error when executing import-js:\n\n' + stderr)
       return
 
     if(len(stderr) > 0):
