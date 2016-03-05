@@ -775,6 +775,25 @@ const sko = customImportFunction('sko');
 foo
             EOS
           end
+
+          context 'and `group_imports` is false' do
+            before do
+              allow_any_instance_of(ImportJS::Configuration)
+                .to receive(:get).with('group_imports')
+                .and_return(false)
+            end
+
+            it 'adds the import and sorts all of them' do
+              expect(subject).to eq(<<-EOS.strip)
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+const sko = customImportFunction('sko');
+import zoo from 'foo/zoo';
+
+foo
+              EOS
+            end
+          end
         end
       end
 
@@ -2415,6 +2434,23 @@ bar
           expect(subject).to eq(<<-EOS.strip)
 import bar, { foo } from 'bar';
 
+import baz from 'app/baz';
+
+bar
+          EOS
+        end
+      end
+
+      context 'and `group_imports` is false' do
+        let(:configuration) do
+          {
+            'group_imports' => false,
+          }
+        end
+
+        it 'sorts imports' do
+          expect(subject).to eq(<<-EOS.strip)
+import bar, { foo } from 'bar';
 import baz from 'app/baz';
 
 bar

@@ -140,6 +140,23 @@ describe ImportJS::ImportStatements do
       )
     end
 
+    context 'when `group_imports` is false' do
+      let(:configuration) do
+        {
+          'group_imports' => false,
+        }
+      end
+
+      it 'returns a single, ordered group' do
+        expect(subject.to_a).to eq(
+          [
+            "const bar = require('bar');",
+            "import foo from 'foo';",
+          ]
+        )
+      end
+    end
+
     context 'when one statement is a package dependency' do
       let(:second_import_statement) do
         ImportJS::ImportStatement.parse("import bar from 'bar';")
@@ -205,6 +222,25 @@ describe ImportJS::ImportStatements do
           "const custom = custom('custom');",
         ]
       )
+    end
+
+    context 'when `group_imports` is false' do
+      let(:configuration) do
+        {
+          'group_imports' => false,
+        }
+      end
+
+      it 'returns a single, ordered group' do
+        expect(subject.to_a).to eq(
+          [
+            "const bar = require('bar');",
+            "var baz = require('baz');",
+            "const custom = custom('custom');",
+            "import foo from 'foo';",
+          ]
+        )
+      end
     end
   end
 
