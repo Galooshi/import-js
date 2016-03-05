@@ -90,6 +90,7 @@ module ImportJS
     end
 
     ENVIRONMENT_CORE_MODULES = {
+      # As listed in https://github.com/nodejs/node/tree/master/lib
       'node' => %w[
         assert
         buffer
