@@ -1,0 +1,7 @@
+Version 0.6.0 adds support for the following:
+
+- Disabling grouping of imports using the `group_imports` configuration option.
+- Importing core modules from Node.js, by using the `environments` configuration
+  option.
+
+https://github.com/trotzig/import-js/releases
