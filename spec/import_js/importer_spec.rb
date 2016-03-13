@@ -4,112 +4,68 @@ require 'tmpdir'
 require 'pathname'
 
 describe ImportJS::Importer do
-  before do
-    # Setup mocks
-    module VIM
-      class Window
-        def self.current
-          MockVimWindow.new
-        end
-      end
-      class Buffer
-        def self.current
-          @buffer
-        end
-
-        def self.current_buffer=(text)
-          @buffer = MockVimBuffer.new(text)
-        end
-
-        def self.current_buffer
-          @buffer
-        end
-      end
-
-      def self.command(command)
-        @last_command = command
-      end
-
-      def self.last_command
-        @last_command
-      end
-
-      def self.last_command_message
-        @last_command.gsub(/^:call importjs#WideMsg\('(.*?)'\)/, '\1')
-      end
-
-      def self.last_inputlist
-        @last_inputlist
-      end
-
-      def self.evaluate(expression)
-        if expression =~ /<cword>/
-          @current_word
-        elsif expression =~ /inputlist/
-          @last_inputlist = expression
-          @current_selection || 0
-        elsif expression =~ /getline/
-          VIM::Buffer.current_buffer.to_s
-        end
-      end
-
-      def self.current_word=(word)
-        @current_word = word
-      end
-
-      def self.current_selection=(index)
-        @current_selection = index
-      end
-    end
-  end
+  let(:tmp_dir) { Dir.mktmpdir(nil, Dir.pwd) }
 
   let(:word) { 'foo' }
-  let(:text) { 'foo' } # start with a simple buffer
-  let(:existing_files) { [] } # start with a simple buffer
+  let(:text) { 'foo' }
+  let(:existing_files) { [] }
   let(:package_json_content) { nil }
-  let(:lookup_paths) { [File.basename(@tmp_dir)] }
+  let(:package_dependencies) { [] }
+  let(:path_to_current_file) { File.join(tmp_dir, 'test.js') }
+  let(:configuration) do
+    {
+      'lookup_paths' => [File.basename(tmp_dir)],
+    }
+  end
+  let(:selections) {{}}
+
+  let(:editor) do
+    ImportJS::CommandLineEditor.new(text.split("\n"),
+                                    word: word,
+                                    path_to_file: path_to_current_file,
+                                    selections: selections
+                                   )
+  end
 
   before do
-    VIM.current_word = word
-    VIM::Buffer.current_buffer = text
+    allow(File).to receive(:exist?).and_call_original
+    allow(File).to receive(:exist?)
+      .with('.importjs.json')
+      .and_return(true)
+    allow(File).to receive(:read).and_call_original
+    allow(File).to receive(:read)
+      .with('.importjs.json')
+      .and_return(configuration.to_json)
 
-    @tmp_dir = Dir.mktmpdir(nil, Dir.pwd)
     allow_any_instance_of(ImportJS::Configuration)
-      .to receive(:get).and_call_original
-    allow_any_instance_of(ImportJS::Configuration)
-      .to receive(:get).with('lookup_paths').and_return(lookup_paths)
-    allow_any_instance_of(ImportJS::VIMEditor)
-      .to receive(:available_columns).and_return(100)
-    allow_any_instance_of(ImportJS::VIMEditor)
-      .to receive(:path_to_current_file)
-      .and_return(File.join(@tmp_dir, 'test.js'))
+      .to receive(:package_dependencies)
+      .and_return(package_dependencies)
 
     existing_files.each do |file|
-      full_path = File.join(@tmp_dir, file)
+      full_path = File.join(tmp_dir, file)
       FileUtils.mkdir_p(Pathname.new(full_path).dirname)
       FileUtils.touch(full_path)
     end
 
     if package_json_content
-      File.open(File.join(@tmp_dir, 'Foo/package.json'), 'w') do |f|
+      File.open(File.join(tmp_dir, 'Foo/package.json'), 'w') do |f|
         f.write(package_json_content.to_json)
       end
     end
   end
 
   after do
-    FileUtils.remove_entry_secure @tmp_dir
-    VIM.current_selection = nil
+    FileUtils.remove_entry_secure tmp_dir
   end
 
   describe '#import' do
     subject do
-      described_class.new.import
-      VIM::Buffer.current_buffer.to_s
+      described_class.new(editor).import
+      editor.current_file_content
     end
 
     context 'when lookup_paths is just an empty string' do
-      let(:lookup_paths) { [''] }
+      let(:configuration) { { lookup_paths: [''] } }
 
       it 'throws an error' do
         expect { subject }.to raise_error(ImportJS::FindError)
@@ -123,7 +79,7 @@ describe ImportJS::Importer do
 
       it 'displays a message' do
         subject
-        expect(VIM.last_command_message).to start_with(
+        expect(editor.messages).to start_with(
           "ImportJS: No JS module to import for variable `#{word}`")
       end
     end
@@ -137,25 +93,10 @@ describe ImportJS::Importer do
 
       it 'displays a message' do
         subject
-        expect(VIM.last_command_message).to eq(
+        expect(editor.messages).to eq(
           'ImportJS: No variable to import. Place your cursor on a variable, '\
           'then try again.'
         )
-      end
-
-      context 'when Vim is narrower than the message' do
-        before do
-          allow_any_instance_of(ImportJS::VIMEditor)
-            .to receive(:available_columns).and_return(80)
-        end
-
-        it 'truncates the message' do
-          subject
-          expect(VIM.last_command_message).to eq(
-            'ImportJS: No variable to import. Place your cursor on a '\
-            'variable, then try aga…'
-          )
-        end
       end
     end
 
@@ -171,7 +112,8 @@ foo
       end
 
       it 'displays a message about the imported module' do
-        expect(VIM.last_command_message).to start_with(
+        subject
+        expect(editor.messages).to start_with(
           'ImportJS: Imported `bar/foo`')
       end
 
@@ -309,7 +251,6 @@ foo
             EOS
           end
         end
-
 
         context 'when one-line comments with empty lines are at the top' do
           let(:text) { <<-EOS.strip }
@@ -639,7 +580,8 @@ foo
         end
 
         it 'displays a message about the imported module' do
-          expect(VIM.last_command_message).to start_with(
+          subject
+          expect(editor.messages).to start_with(
             'ImportJS: Imported `Foo (main: index.jsx)`')
         end
 
@@ -662,11 +604,8 @@ FooIO
         let(:word) { 'Readline' }
         let(:text) { 'Readline' }
 
-        before do
-          allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:get).and_call_original
-          allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:get).with('environments').and_return(['node'])
+        let(:configuration) do
+          super().merge('environments' => ['node'])
         end
 
         it 'adds an import to the top of the buffer' do
@@ -685,9 +624,6 @@ Readline
         let(:text) { 'fooBar' }
 
         before do
-          allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:package_dependencies).and_return(package_dependencies)
-          allow(File).to receive(:exist?).and_call_original
           package_dependencies.each do |dep|
             allow(File).to receive(:exist?)
               .with("node_modules/#{dep}/package.json")
@@ -707,17 +643,14 @@ fooBar
         end
 
         it 'displays a message about the imported module' do
-          expect(VIM.last_command_message).to start_with(
+          subject
+          expect(editor.messages).to start_with(
             'ImportJS: Imported `foo-bar (main: bar.jsx)`')
         end
 
         context 'with an `ignore_package_prefixes` configuration' do
-          let(:ignore_prefixes) { ['foo-'] }
-
-          before do
-            allow_any_instance_of(ImportJS::Configuration)
-              .to receive(:get).with('ignore_package_prefixes')
-              .and_return(ignore_prefixes)
+          let(:configuration) do
+            super().merge('ignore_package_prefixes' => ['foo-'])
           end
 
           context 'when the variable has the prefix' do
@@ -797,10 +730,8 @@ foo
           end
 
           context 'and `group_imports` is false' do
-            before do
-              allow_any_instance_of(ImportJS::Configuration)
-                .to receive(:get).with('group_imports')
-                .and_return(false)
+            let(:configuration) do
+              super().merge('group_imports' => false)
             end
 
             it 'adds the import and sorts all of them' do
@@ -940,29 +871,27 @@ foo
           ]
         end
 
-        it 'displays a message about selecting a module' do
+        it 'records the alternatives to choose from' do
           subject
-          expect(VIM.last_inputlist).to include(
-            "ImportJS: Pick JS module to import for 'foo'")
-        end
-
-        it 'list all possible imports' do
-          subject
-          expect(VIM.last_inputlist).to include(
-            '1: bar/foo')
-          expect(VIM.last_inputlist).to include(
-            '2: zoo/foo')
-          expect(VIM.last_inputlist).to include(
-            '3: zoo/goo/Foo (main: index.js)')
+          expect(editor.ask_for_selections).to include(
+            word: 'foo',
+            alternatives: [
+              'bar/foo',
+              'zoo/foo',
+              'zoo/goo/Foo (main: index.js)',
+            ]
+          )
         end
 
         context 'and the user selects' do
-          before do
-            VIM.current_selection = selection
+          let(:selections) do
+            {
+              'foo' => selection,
+            }
           end
 
-          context 'the first file' do
-            let(:selection) { 1 }
+          context 'the first alternative' do
+            let(:selection) { 0 }
 
             it 'picks the first one' do
               expect(subject).to eq(<<-eos.strip)
@@ -973,23 +902,13 @@ foo
             end
           end
 
-          context 'the second file' do
-            let(:selection) { 2 }
+          context 'the second alternative' do
+            let(:selection) { 1 }
 
             it 'picks the second one' do
               expect(subject).to eq(<<-EOS.strip)
 import foo from 'zoo/foo';
 
-foo
-              EOS
-            end
-          end
-
-          context 'index 0 (which is the heading)' do
-            let(:selection) { 0 }
-
-            it 'picks nothing' do
-              expect(subject).to eq(<<-EOS.strip)
 foo
               EOS
             end
@@ -1007,7 +926,6 @@ foo
           end
 
           context 'an index < 0' do
-            # Apparently, this can happen when you use `inputlist`
             let(:selection) { -1 }
 
             it 'picks nothing' do
@@ -1036,13 +954,13 @@ foo
 
         it 'lists the version of the file resolved through package.json' do
           subject
-          expect(VIM.last_inputlist).to include(
-            '1: Foo (main: lib/foo.jsx)')
+          expect(editor.ask_for_selections[0][:alternatives]).to include(
+            'Foo (main: lib/foo.jsx)')
         end
 
         it 'does not list the file also resolved through package.json' do
           subject
-          expect(VIM.last_inputlist).to_not include(
+          expect(editor.ask_for_selections[0][:alternatives]).to_not include(
             'Foo/lib/foo.jsx')
         end
       end
@@ -1091,7 +1009,7 @@ foo
         let(:word) { 'FooJS' }
 
         before do
-          File.open(File.join(@tmp_dir, 'Foo.js/package.json'), 'w') do |f|
+          File.open(File.join(tmp_dir, 'Foo.js/package.json'), 'w') do |f|
             f.write({ main: 'main.js' }.to_json)
           end
         end
@@ -1117,22 +1035,12 @@ foo
     end
 
     describe 'line wrapping' do
-      let(:importer) { described_class.new }
       let(:tab) { '  ' }
-
-      before(:each) do
-        allow_any_instance_of(ImportJS::Configuration)
-          .to receive(:get).with('max_line_length')
-          .and_return(max_line_length)
-
-        allow_any_instance_of(ImportJS::Configuration)
-          .to receive(:get).with('tab')
-          .and_return(tab)
-      end
-
-      subject do
-        importer.import
-        VIM::Buffer.current_buffer.to_s
+      let(:configuration) do
+        super().merge(
+          'max_line_length' => max_line_length,
+          'tab' => tab
+        )
       end
 
       context 'when lines exceed the configured max width' do
@@ -1181,17 +1089,9 @@ foo
     end
 
     context 'configuration' do
-      before do
-        allow_any_instance_of(ImportJS::Configuration)
-          .to(receive(:load_config))
-          .and_return(configuration)
-      end
-
       context 'with aliases' do
         let(:configuration) do
-          {
-            'aliases' => { '$' => 'jquery' },
-          }
+          super().merge('aliases' => { '$' => 'jquery' })
         end
         let(:text) { '$' }
         let(:word) { '$' }
@@ -1205,16 +1105,8 @@ $
         end
 
         context 'and an alias has a dynamic {filename}' do
-          before do
-            allow_any_instance_of(ImportJS::VIMEditor)
-              .to receive(:path_to_current_file)
-              .and_return(path_to_current_file)
-          end
-
           let(:configuration) do
-            {
-              'aliases' => { 'styles' => './{filename}.scss' },
-            }
+            super().merge('aliases' => { 'styles' => './{filename}.scss' })
           end
           let(:text) { 'styles' }
           let(:word) { 'styles' }
@@ -1258,9 +1150,7 @@ styles
         context 'and an alias contains a slash' do
           # https://github.com/trotzig/import-js/issues/39
           let(:configuration) do
-            {
-              'aliases' => { '$' => 'jquery/jquery' },
-            }
+            super().merge('aliases' => { '$' => 'jquery/jquery' })
           end
 
           it 'keeps the slash in the alias path' do
@@ -1275,14 +1165,14 @@ $
 
       context 'with `named_exports` object' do
         let(:configuration) do
-          {
+          super().merge(
             'named_exports' => {
               'lib/utils' => %w[
                 foo
                 bar
               ],
-            },
-          }
+            }
+          )
         end
         let(:text) { 'foo' }
         let(:word) { 'foo' }
@@ -1298,7 +1188,7 @@ foo
 
       context 'using `var`, `aliases` and a `named_exports` object' do
         let(:configuration) do
-          {
+          super().merge(
             'declaration_keyword' => 'var',
             'named_exports' => {
               'underscore' => %w[
@@ -1308,8 +1198,8 @@ foo
             },
             'aliases' => {
               '_' => 'underscore',
-            },
-          }
+            }
+          )
         end
         let(:text) { '_' }
         let(:word) { '_' }
@@ -1352,7 +1242,8 @@ memoize
           end
 
           it 'displays a message about the imported module' do
-            expect(VIM.last_command_message).to start_with(
+            subject
+            expect(editor.messages).to start_with(
               'ImportJS: Imported `memoize` from `underscore`')
           end
 
@@ -1590,10 +1481,10 @@ memoize
 
         context 'and `declaration_keyword=import`' do
           let(:configuration) do
-            {
+            super().merge(
               'import_function' => 'myRequire',
-              'declaration_keyword' => 'import',
-            }
+              'declaration_keyword' => 'import'
+            )
           end
 
           it 'does nothing special' do
@@ -1607,11 +1498,12 @@ foo
 
         context 'and `declaration_keyword=const`' do
           let(:configuration) do
-            {
+            super().merge(
               'import_function' => 'myRequire',
-              'declaration_keyword' => 'const',
-            }
+              'declaration_keyword' => 'const'
+            )
           end
+
           it 'uses the custom import function instead of "require"' do
             expect(subject).to eq(<<-EOS.strip)
 const foo = myRequire('bar/foo');
@@ -1625,9 +1517,7 @@ foo
       context 'when strip_file_extensions is empty' do
         let(:existing_files) { ['bar/foo.js'] }
         let(:configuration) do
-          {
-            'strip_file_extensions' => [],
-          }
+          super().merge('strip_file_extensions' => [])
         end
 
         it 'keeps the file ending in the import' do
@@ -1642,9 +1532,7 @@ foo
       context 'with excludes' do
         let(:existing_files) { ['bar/foo/foo.js'] }
         let(:configuration) do
-          {
-            'excludes' => ['**/foo/**'],
-          }
+          super().merge('excludes' => ['**/foo/**'])
         end
 
         it 'does not add an import' do
@@ -1655,21 +1543,14 @@ foo
 
         it 'displays a message' do
           subject
-          expect(VIM.last_command_message).to start_with(
+          expect(editor.messages).to start_with(
             "ImportJS: No JS module to import for variable `#{word}`")
         end
       end
 
       context 'with declaration_keyword=const' do
-        subject do
-          described_class.new.import
-          VIM::Buffer.current_buffer.to_s
-        end
-
         let(:configuration) do
-          {
-            'declaration_keyword' => 'const',
-          }
+          super().merge('declaration_keyword' => 'const')
         end
 
         context 'with a variable name that will resolve' do
@@ -1740,15 +1621,8 @@ foo
       end
 
       context 'with declaration_keyword=import' do
-        subject do
-          described_class.new.import
-          VIM::Buffer.current_buffer.to_s
-        end
-
         let(:configuration) do
-          {
-            'declaration_keyword' => 'import',
-          }
+          super().merge('declaration_keyword' => 'import')
         end
 
         context 'with a variable name that will resolve' do
@@ -1787,12 +1661,12 @@ foo
           end
 
           context 'when the imported variable has "from" in it' do
+            let(:word) { 'fromfoo' }
             let(:text) { <<-EOS.strip }
 var fromfoo = require('bar/fromfoo');
 
 fromfoo
             EOS
-            let(:word) { 'fromfoo' }
 
             it 'changes the `var` to declaration_keyword' do
               expect(subject).to eq(<<-EOS.strip)
@@ -1849,25 +1723,12 @@ foo
 foo
         EOS
 
-        before do
-          allow_any_instance_of(ImportJS::VIMEditor)
-            .to receive(:path_to_current_file)
-            .and_return(path_to_current_file)
-        end
-
-        subject do
-          described_class.new.import
-          VIM::Buffer.current_buffer.to_s
-        end
-
         let(:configuration) do
-          {
-            'use_relative_paths' => true,
-          }
+          super().merge('use_relative_paths' => true)
         end
 
         context 'when the current file is in the same lookup_path' do
-          let(:path_to_current_file) { File.join(@tmp_dir, 'bar/current.js') }
+          let(:path_to_current_file) { File.join(tmp_dir, 'bar/current.js') }
 
           it 'uses a relative import path' do
             expect(subject).to eq(<<-EOS.strip)
@@ -1894,16 +1755,15 @@ foo
       context 'with local configuration defined in the main config file' do
         let(:pattern) { 'foo/**' }
         let(:existing_files) { ['bar/foo.jsx'] }
+        let(:path_to_current_file) { 'foo/bar.js' }
         let(:configuration) do
-          [{
-            'applies_to' => pattern,
-            'declaration_keyword' => 'var',
-          }]
-        end
-        before do
-          allow_any_instance_of(ImportJS::VIMEditor)
-            .to receive(:path_to_current_file)
-            .and_return('foo/bar.js')
+          [
+            super(),
+            {
+              'applies_to' => pattern,
+              'declaration_keyword' => 'var',
+            },
+          ]
         end
 
         let(:text) { 'foo' }
@@ -1932,22 +1792,16 @@ foo
         end
 
         context 'with an applies_from pattern' do
-          let(:from_pattern) { "#{File.basename(@tmp_dir)}/bar/**" }
-          let(:path_to_current_file) { "#{File.basename(@tmp_dir)}/foo/bar.js" }
+          let(:from_pattern) { "#{File.basename(tmp_dir)}/bar/**" }
+          let(:path_to_current_file) { "#{File.basename(tmp_dir)}/foo/bar.js" }
           let(:configuration) do
-            [{
+            super() << {
               'applies_from' => from_pattern,
               'declaration_keyword' => 'var',
               'import_function' => 'quack',
               'use_relative_paths' => true,
               'strip_file_extensions' => [],
-            }]
-          end
-
-          before do
-            allow_any_instance_of(ImportJS::VIMEditor)
-              .to receive(:path_to_current_file)
-              .and_return(path_to_current_file)
+            }
           end
 
           context 'that matches the path of the file being imported' do
@@ -1960,7 +1814,11 @@ foo
             end
 
             context 'when using `.` as lookup_path' do
-              let(:lookup_paths) { ['.'] }
+              let(:configuration) do
+                [{
+                  'lookup_paths' => ['.'],
+                }].concat(super())
+              end
 
               it 'uses local config' do
                 expect(subject).to eq(<<-EOS.strip)
@@ -1998,8 +1856,8 @@ foo
     end
 
     subject do
-      described_class.new.fix_imports
-      VIM::Buffer.current_buffer.to_s
+      described_class.new(editor).fix_imports
+      editor.current_file_content
     end
 
     it 'calls out to global eslint' do
@@ -2009,13 +1867,8 @@ foo
 
     context 'with eslint_executable configuration' do
       let(:eslint_executable) { 'node_modules/.bin/eslint' }
-
-      before do
-        allow_any_instance_of(ImportJS::Configuration)
-          .to receive(:get).and_call_original
-        allow_any_instance_of(ImportJS::Configuration)
-          .to receive(:get).with('eslint_executable')
-          .and_return(eslint_executable)
+      let(:configuration) do
+        super().merge('eslint_executable' => 'node_modules/.bin/eslint')
       end
 
       it 'calls out to the configured eslint executable' do
@@ -2154,10 +2007,8 @@ var a = <span/>;
       end
 
       context 'when react is available' do
+        let(:package_dependencies) { ['react'] }
         before do
-          allow_any_instance_of(ImportJS::Configuration)
-            .to receive(:package_dependencies).and_return(['react'])
-          allow(File).to receive(:exist?).and_call_original
           allow(File).to receive(:exist?)
             .with('node_modules/react/package.json')
             .and_return(true)
@@ -2411,34 +2262,24 @@ export default function foo() {
 
   describe '#rewrite_imports' do
     let(:existing_files) { ['app/baz.jsx'] }
-    let(:configuration) { {} }
+    let(:configuration) do
+      super().merge('named_exports' => { 'bar' => ['foo'] })
+    end
+    let(:package_dependencies) { ['bar'] }
+    let(:path_to_current_file) { "#{tmp_dir}/app/bilbo/frodo.js" }
 
     before do
-      allow_any_instance_of(ImportJS::Configuration)
-        .to(receive(:load_config))
-        .and_return(configuration)
-
-      allow_any_instance_of(ImportJS::Configuration)
-        .to receive(:package_dependencies).and_return(['bar'])
-      allow(File).to receive(:exist?).and_call_original
       allow(File).to receive(:exist?)
         .with('node_modules/bar/package.json')
         .and_return(true)
       allow(File).to receive(:read)
         .with('node_modules/bar/package.json')
         .and_return('{ "main": "index.jsx" }')
-
-      allow_any_instance_of(ImportJS::Configuration)
-        .to receive(:get).with('named_exports').and_return('bar' => ['foo'])
-
-      allow_any_instance_of(ImportJS::VIMEditor)
-        .to receive(:path_to_current_file)
-        .and_return("#{@tmp_dir}/app/bilbo/frodo.js")
     end
 
     subject do
-      described_class.new.rewrite_imports
-      VIM::Buffer.current_buffer.to_s
+      described_class.new(editor).rewrite_imports
+      editor.current_file_content
     end
 
     context 'when imports exist' do
@@ -2463,9 +2304,7 @@ bar
 
       context 'and `group_imports` is false' do
         let(:configuration) do
-          {
-            'group_imports' => false,
-          }
+          super().merge('group_imports' => false)
         end
 
         it 'sorts imports' do
@@ -2479,7 +2318,9 @@ bar
       end
 
       context 'and we are switching declaration_keyword to `const`' do
-        let(:configuration) { { 'declaration_keyword' => 'const' } }
+        let(:configuration) do
+          super().merge('declaration_keyword' => 'const')
+        end
 
         it 'groups, sorts, and changes imports to use `const`' do
           expect(subject).to eq(<<-EOS.strip)
@@ -2503,7 +2344,9 @@ bar
       EOS
 
       context 'and we are turning relative paths off' do
-        let(:configuration) { { 'use_relative_paths' => false } }
+        let(:configuration) do
+          super().merge('use_relative_paths' => false)
+        end
 
         it 'sorts, groups, and changes to absolute paths' do
           expect(subject).to eq(<<-EOS.strip)
@@ -2526,7 +2369,9 @@ bar
       EOS
 
       context 'and we are turning relative paths on' do
-        let(:configuration) { { 'use_relative_paths' => true } }
+        let(:configuration) do
+          super().merge('use_relative_paths' => true)
+        end
 
         it 'sorts, groups, and changes to relative paths' do
           expect(subject).to eq(<<-EOS.strip)
@@ -2542,15 +2387,16 @@ bar
   end
 
   describe '#goto' do
-    subject { described_class.new.goto }
+    subject do
+      described_class.new(editor).goto
+      editor.goto
+    end
 
     context 'with a variable name that will resolve' do
       let(:existing_files) { ['bar/foo.jsx'] }
 
       it 'opens the file' do
-        expect_any_instance_of(ImportJS::VIMEditor).to receive(
-          :open_file).with("#{File.basename(@tmp_dir)}/bar/foo.jsx")
-        subject
+        expect(subject).to eq("#{File.basename(tmp_dir)}/bar/foo.jsx")
       end
     end
 
@@ -2558,9 +2404,7 @@ bar
       let(:existing_files) { ['bar/goo.jsx'] }
 
       it 'opens nothing' do
-        expect_any_instance_of(ImportJS::VIMEditor).to_not receive(
-          :open_file)
-        subject
+        expect(subject).to be(nil)
       end
 
       context 'when there is a current import for the variable' do
@@ -2572,23 +2416,18 @@ foo
 
         context 'not matching a package dependency' do
           before do
-            allow(File).to receive(:exist?).and_call_original
             allow(File).to receive(:exist?)
               .with('node_modules/some-package/package.json')
               .and_return(false)
           end
 
           it 'opens the import path' do
-            expect_any_instance_of(ImportJS::VIMEditor)
-              .to receive(:open_file)
-              .with('some-package')
-            subject
+            expect(subject).to eq('some-package')
           end
         end
 
         context 'matching a package dependency' do
           before do
-            allow(File).to receive(:exist?).and_call_original
             allow(File).to receive(:exist?)
               .with('node_modules/some-package/package.json')
               .and_return(true)
@@ -2598,20 +2437,15 @@ foo
           end
 
           it 'opens the package main file' do
-            expect_any_instance_of(ImportJS::VIMEditor)
-              .to receive(:open_file)
-              .with('node_modules/some-package/bar.jsx')
-            subject
+            expect(subject).to eq('node_modules/some-package/bar.jsx')
           end
         end
       end
     end
 
     context 'with a variable name that will resolve to a package dependency' do
+      let(:package_dependencies) { ['foo'] }
       before do
-        allow_any_instance_of(ImportJS::Configuration)
-          .to receive(:package_dependencies).and_return(['foo'])
-        allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?)
           .with('node_modules/foo/package.json')
           .and_return(true)
@@ -2621,27 +2455,21 @@ foo
       end
 
       it 'opens the `main` file' do
-        expect_any_instance_of(ImportJS::VIMEditor).to receive(
-          :open_file).with('node_modules/foo/bar.jsx')
-        subject
+        expect(subject).to eq('node_modules/foo/bar.jsx')
       end
     end
 
     context 'with a variable name matching an alias' do
       let(:word) { 'styles' }
-      before do
-        allow_any_instance_of(ImportJS::Configuration)
-          .to(receive(:load_config))
-          .and_return('aliases' => { 'styles' => aliaz })
+      let(:configuration) do
+        super().merge('aliases' => { 'styles' => aliaz })
       end
 
       context 'to a relative resource' do
         let(:aliaz) { './index.scss' }
 
         it 'opens the file relative to the file being edited' do
-          expect_any_instance_of(ImportJS::VIMEditor).to receive(
-            :open_file).with("#{@tmp_dir}/index.scss")
-          subject
+          expect(subject).to eq("#{tmp_dir}/index.scss")
         end
       end
 
@@ -2649,7 +2477,6 @@ foo
         let(:aliaz) { 'stylez' }
 
         before do
-          allow(File).to receive(:exist?).and_call_original
           allow(File).to receive(:exist?)
             .with("node_modules/#{aliaz}/package.json")
             .and_return(true)
@@ -2659,10 +2486,7 @@ foo
         end
 
         it 'opens the alias main file' do
-          expect_any_instance_of(ImportJS::VIMEditor)
-            .to receive(:open_file)
-            .with("node_modules/#{aliaz}/bar.jsx")
-          subject
+          expect(subject).to eq("node_modules/#{aliaz}/bar.jsx")
         end
       end
     end
@@ -2678,25 +2502,24 @@ foo
       context 'when the variable has not been previously imported' do
         it 'displays a message about selecting a module' do
           subject
-          expect(VIM.last_inputlist).to include(
-            "ImportJS: Pick JS module to import for 'foo'")
+          expect(editor.ask_for_selections).to include(
+            word: 'foo',
+            alternatives: [
+              'bar/foo',
+              'car/foo',
+            ]
+          )
         end
 
         it 'does not open the file' do
-          expect_any_instance_of(ImportJS::VIMEditor).to_not receive(
-            :open_file)
-          subject
+          expect(subject).to be(nil)
         end
 
         context 'and the user selects' do
-          before do
-            VIM.current_selection = 1
-          end
+          let(:selections) { { 'foo' => 0 } }
 
           it 'opens the first one' do
-            expect_any_instance_of(ImportJS::VIMEditor).to receive(
-              :open_file).with("#{File.basename(@tmp_dir)}/bar/foo.jsx")
-            subject
+            expect(subject).to eq("#{File.basename(tmp_dir)}/bar/foo.jsx")
           end
         end
       end
@@ -2710,9 +2533,7 @@ foo
           EOS
 
           it 'opens the file' do
-            expect_any_instance_of(ImportJS::VIMEditor).to receive(
-              :open_file).with("#{File.basename(@tmp_dir)}/bar/foo.jsx")
-            subject
+            expect(subject).to eq("#{File.basename(tmp_dir)}/bar/foo.jsx")
           end
 
           context 'and there are other imports' do
@@ -2724,9 +2545,7 @@ import foobar from 'bar/foobar';
 foo
             EOS
             it 'opens the file' do
-              expect_any_instance_of(ImportJS::VIMEditor).to receive(
-                :open_file).with("#{File.basename(@tmp_dir)}/bar/foo.jsx")
-              subject
+              expect(subject).to eq("#{File.basename(tmp_dir)}/bar/foo.jsx")
             end
           end
         end
@@ -2739,9 +2558,7 @@ foo
           EOS
 
           it 'opens the file' do
-            expect_any_instance_of(ImportJS::VIMEditor).to receive(
-              :open_file).with("#{File.basename(@tmp_dir)}/bar/foo.jsx")
-            subject
+            expect(subject).to eq("#{File.basename(tmp_dir)}/bar/foo.jsx")
           end
         end
       end
