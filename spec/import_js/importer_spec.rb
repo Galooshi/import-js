@@ -17,7 +17,7 @@ describe ImportJS::Importer do
       'lookup_paths' => [File.basename(tmp_dir)],
     }
   end
-  let(:selections) {{}}
+  let(:selections) { {} }
 
   let(:editor) do
     ImportJS::CommandLineEditor.new(text.split("\n"),
@@ -45,6 +45,15 @@ describe ImportJS::Importer do
       full_path = File.join(tmp_dir, file)
       FileUtils.mkdir_p(Pathname.new(full_path).dirname)
       FileUtils.touch(full_path)
+    end
+
+    package_dependencies.each do |dep|
+      allow(File).to receive(:exist?)
+        .with("node_modules/#{dep}/package.json")
+        .and_return(true)
+      allow(File).to receive(:read)
+        .with("node_modules/#{dep}/package.json")
+        .and_return("{ \"main\": \"#{dep}.jsx\" }")
     end
 
     if package_json_content
@@ -623,17 +632,6 @@ Readline
         let(:word) { 'fooBar' }
         let(:text) { 'fooBar' }
 
-        before do
-          package_dependencies.each do |dep|
-            allow(File).to receive(:exist?)
-              .with("node_modules/#{dep}/package.json")
-              .and_return(true)
-            allow(File).to receive(:read)
-              .with("node_modules/#{dep}/package.json")
-              .and_return('{ "main": "bar.jsx" }')
-          end
-        end
-
         it 'adds an import to the top of the buffer' do
           expect(subject).to eq(<<-EOS.strip)
 import fooBar from 'foo-bar';
@@ -645,7 +643,7 @@ fooBar
         it 'displays a message about the imported module' do
           subject
           expect(editor.messages).to start_with(
-            'ImportJS: Imported `foo-bar (main: bar.jsx)`')
+            'ImportJS: Imported `foo-bar (main: foo-bar.jsx)`')
         end
 
         context 'with an `ignore_package_prefixes` configuration' do
@@ -2008,14 +2006,6 @@ var a = <span/>;
 
       context 'when react is available' do
         let(:package_dependencies) { ['react'] }
-        before do
-          allow(File).to receive(:exist?)
-            .with('node_modules/react/package.json')
-            .and_return(true)
-          allow(File).to receive(:read)
-            .with('node_modules/react/package.json')
-            .and_return('{ "main": "index.jsx" }')
-        end
 
         it 'imports React' do
           expect(subject).to eq(<<-EOS.strip)
@@ -2268,15 +2258,6 @@ export default function foo() {
     let(:package_dependencies) { ['bar'] }
     let(:path_to_current_file) { "#{tmp_dir}/app/bilbo/frodo.js" }
 
-    before do
-      allow(File).to receive(:exist?)
-        .with('node_modules/bar/package.json')
-        .and_return(true)
-      allow(File).to receive(:read)
-        .with('node_modules/bar/package.json')
-        .and_return('{ "main": "index.jsx" }')
-    end
-
     subject do
       described_class.new(editor).rewrite_imports
       editor.current_file_content
@@ -2415,29 +2396,16 @@ foo
         EOS
 
         context 'not matching a package dependency' do
-          before do
-            allow(File).to receive(:exist?)
-              .with('node_modules/some-package/package.json')
-              .and_return(false)
-          end
-
           it 'opens the import path' do
             expect(subject).to eq('some-package')
           end
         end
 
         context 'matching a package dependency' do
-          before do
-            allow(File).to receive(:exist?)
-              .with('node_modules/some-package/package.json')
-              .and_return(true)
-            allow(File).to receive(:read)
-              .with('node_modules/some-package/package.json')
-              .and_return('{ "main": "bar.jsx" }')
-          end
+          let(:package_dependencies) { ['some-package'] }
 
           it 'opens the package main file' do
-            expect(subject).to eq('node_modules/some-package/bar.jsx')
+            expect(subject).to eq('node_modules/some-package/some-package.jsx')
           end
         end
       end
@@ -2445,17 +2413,9 @@ foo
 
     context 'with a variable name that will resolve to a package dependency' do
       let(:package_dependencies) { ['foo'] }
-      before do
-        allow(File).to receive(:exist?)
-          .with('node_modules/foo/package.json')
-          .and_return(true)
-        allow(File).to receive(:read)
-          .with('node_modules/foo/package.json')
-          .and_return('{ "main": "bar.jsx" }')
-      end
 
       it 'opens the `main` file' do
-        expect(subject).to eq('node_modules/foo/bar.jsx')
+        expect(subject).to eq('node_modules/foo/foo.jsx')
       end
     end
 
@@ -2475,18 +2435,10 @@ foo
 
       context 'to an absolute resource' do
         let(:aliaz) { 'stylez' }
-
-        before do
-          allow(File).to receive(:exist?)
-            .with("node_modules/#{aliaz}/package.json")
-            .and_return(true)
-          allow(File).to receive(:read)
-            .with("node_modules/#{aliaz}/package.json")
-            .and_return('{ "main": "bar.jsx" }')
-        end
+        let(:package_dependencies) { [aliaz] }
 
         it 'opens the alias main file' do
-          expect(subject).to eq("node_modules/#{aliaz}/bar.jsx")
+          expect(subject).to eq("node_modules/#{aliaz}/stylez.jsx")
         end
       end
     end
