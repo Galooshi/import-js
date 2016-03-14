@@ -53,7 +53,7 @@ describe ImportJS::Importer do
         .and_return(true)
       allow(File).to receive(:read)
         .with("node_modules/#{dep}/package.json")
-        .and_return("{ \"main\": \"#{dep}.jsx\" }")
+        .and_return("{ \"main\": \"#{dep}-main.jsx\" }")
     end
 
     if package_json_content
@@ -643,7 +643,7 @@ fooBar
         it 'displays a message about the imported module' do
           subject
           expect(editor.messages).to start_with(
-            'ImportJS: Imported `foo-bar (main: foo-bar.jsx)`')
+            'ImportJS: Imported `foo-bar (main: foo-bar-main.jsx)`')
         end
 
         context 'with an `ignore_package_prefixes` configuration' do
@@ -2405,7 +2405,8 @@ foo
           let(:package_dependencies) { ['some-package'] }
 
           it 'opens the package main file' do
-            expect(subject).to eq('node_modules/some-package/some-package.jsx')
+            expect(subject).to eq(
+              'node_modules/some-package/some-package-main.jsx')
           end
         end
       end
@@ -2415,7 +2416,7 @@ foo
       let(:package_dependencies) { ['foo'] }
 
       it 'opens the `main` file' do
-        expect(subject).to eq('node_modules/foo/foo.jsx')
+        expect(subject).to eq('node_modules/foo/foo-main.jsx')
       end
     end
 
@@ -2438,7 +2439,7 @@ foo
         let(:package_dependencies) { [aliaz] }
 
         it 'opens the alias main file' do
-          expect(subject).to eq("node_modules/#{aliaz}/stylez.jsx")
+          expect(subject).to eq("node_modules/#{aliaz}/stylez-main.jsx")
         end
       end
     end
