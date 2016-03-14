@@ -425,6 +425,7 @@ module ImportJS
         js_modules.map(&:display_name)
       )
       return unless selected_index
+      return unless (0...js_modules.length).cover?(selected_index)
       js_modules[selected_index]
     end
 
