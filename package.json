@@ -1,0 +1,25 @@
+{
+  "name": "import-js",
+  "version": "0.7.0",
+  "description": "A tool to simplify importing JS modules",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trotzig/import-js.git"
+  },
+  "keywords": [
+    "es6",
+    "commonjs",
+    "es2015",
+    "importing"
+  ],
+  "author": "Henric Trotzig",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trotzig/import-js/issues"
+  },
+  "homepage": "https://github.com/trotzig/import-js#readme"
+}
