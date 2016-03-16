@@ -1,10 +1,12 @@
 'use strict';
 
-const AskForSelectionView = require('./AskForSelectionView');
-const getEnv = require('./getEnv');
-
+const getEnv = require('consistent-env').async;
 const BufferedProcess = require('atom').BufferedProcess;
 const CompositeDisposable = require('atom').CompositeDisposable;
+
+const AskForSelectionView = require('./AskForSelectionView');
+
+getEnv();
 
 /**
  * @return {String}
