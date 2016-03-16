@@ -1,17 +1,6 @@
-# Keybindings require three things to be fully defined: A selector that is
-# matched against the focused element, the keystroke and the command to
-# execute.
-#
-# Below is a basic keybinding which registers on all platforms by applying to
-# the root workspace element.
-
-# For more detailed documentation see
 # https://atom.io/docs/latest/behind-atom-keymaps-in-depth
+
 'atom-workspace':
   'cmd-shift-j': 'import-js:import'
   'cmd-shift-k': 'import-js:goto'
   'cmd-shift-i': 'import-js:fix-imports'
-
-# TODO(Joe): I have no idea if these keybindings are any good and didn't give
-# them much thought at all, so we should definitely improve this before
-# shipping.
