@@ -135,7 +135,7 @@ function askForSelections(selectionsToAskFor, previousSelections) {
       .map((selection) => `${selection.word}:${selection.alternativeIndex}`)
       .join(',');
 
-    importWord(selectionsString); // eslint-disable-line no-use-before-define
+    importSelections(selectionsString); // eslint-disable-line no-use-before-define
     return undefined;
   }
 
@@ -166,46 +166,69 @@ function askForSelections(selectionsToAskFor, previousSelections) {
 }
 
 /**
- * @param {String} selections
+ * @param {Object} result
  */
-function importWord(selections) {
-  const args = [];
+function processResultMessages(result) {
+  if (result.messages) {
+    // TODO come up with a better solution for this potential wall of text that
+    // can happen when fixing a lot of imports.
+    atom.notifications.addSuccess(result.messages);
+  }
+}
 
-  if (selections) {
-    // We have selections to import.
-    args.push('--selections', selections);
-  } else {
-    // There are no selections to import, so let's figure out what the current
-    // word is.
-    const word = getCurrentWord();
-    if (!word) {
-      return;
-    }
-    args.push('--word', word);
+/**
+ * @param {Object} result
+ */
+function handleExecResult(result) {
+  if (result.ask_for_selections) {
+    askForSelections(result.ask_for_selections, []);
+    return;
   }
 
-  exec(args)
-    .then((result) => {
-      if (result.ask_for_selections) {
-        askForSelections(result.ask_for_selections, []);
-        return;
-      }
+  const editor = atom.workspace.getActiveTextEditor();
+  if (editor.getText() !== result.output) {
+    editor.buffer.setTextViaDiff(result.output);
+  }
 
-      const editor = atom.workspace.getActiveTextEditor();
-      if (editor.getText() !== result.output) {
-        editor.buffer.setTextViaDiff(result.output);
-      }
-
-      if (result.messages) {
-        atom.notifications.addSuccess(result.messages);
-      }
-    })
-    .catch((error, result) => {
-      const message = result ? result.error.output : error.toString();
-      atom.notifications.addError(message);
-      throw error;
-    });
+  processResultMessages(result);
 }
+
+/**
+ * @param {Error} error
+ * @param {Object} result
+ */
+function handleExecError(error, result) {
+  const message = result ? result.error.output : error.toString();
+  atom.notifications.addError(message);
+  throw error;
+}
+
+function importWord() {
+  const word = getCurrentWord();
+  if (!word) {
+    return;
+  }
+
+  exec(['--word', word])
+    .then(handleExecResult)
+    .catch(handleExecError);
+}
+
+function fixImports() {
+  exec()
+    .then(handleExecResult)
+    .catch(handleExecError);
+}
+
+/**
+ * @param {String} selections
+ */
+function importSelections(selections) {
+  exec(['--selections', selections])
+    .then(handleExecResult)
+    .catch(handleExecError);
+}
+
 
 function gotoWord() {
   const word = getCurrentWord();
@@ -218,48 +241,9 @@ function gotoWord() {
       const path = `${getCurrentWorkingDirectory()}/${result.output}`;
       atom.open({ pathsToOpen: [path], newWindow: false });
 
-      if (result.messages) {
-        atom.notifications.addSuccess(result.messages);
-      }
+      processResultMessages(result);
     })
-    .catch((error, result) => {
-      const message = result ? result.error.output : error.toString();
-      atom.notifications.addError(message);
-      throw error;
-    });
-}
-
-/**
- * @param {String} selections
- */
-function fixImports(selections) {
-  const args = [];
-  if (selections) {
-    args.push('--selections', selections);
-  }
-
-  exec(args)
-    .then((result) => {
-      if (result.ask_for_selections) {
-        askForSelections(result.ask_for_selections, []);
-        return;
-      }
-
-      const editor = atom.workspace.getActiveTextEditor();
-      if (editor.getText() !== result.output) {
-        editor.buffer.setTextViaDiff(result.output);
-      }
-
-      if (result.messages) {
-        // TODO improve the format of this potential wall of text
-        atom.notifications.addSuccess(result.messages);
-      }
-    })
-    .catch((error, result) => {
-      const message = result ? result.error.output : error.toString();
-      atom.notifications.addError(message);
-      throw error;
-    });
+    .catch(handleExecError);
 }
 
 const ImportJS = {
