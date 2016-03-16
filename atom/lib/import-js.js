@@ -135,9 +135,7 @@ function askForSelections(selectionsToAskFor, previousSelections) {
       .map((selection) => `${selection.word}:${selection.alternativeIndex}`)
       .join(',');
 
-    /* eslint-disable no-use-before-define */
-    importWord(selectionsString);
-    /* eslint-enable no-use-before-define */
+    importWord(selectionsString); // eslint-disable-line no-use-before-define
     return undefined;
   }
 
