@@ -1,3 +1,4 @@
 {
-  "environments": ["node"]
+  "environments": ["node"],
+  "declaration_keyword": "const"
 }
