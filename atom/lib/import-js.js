@@ -130,12 +130,7 @@ function askForSelections(selectionsToAskFor, previousSelections) {
       return undefined;
     }
 
-    // Foo:0,Bar:1
-    const selectionsString = selections
-      .map((selection) => `${selection.word}:${selection.alternativeIndex}`)
-      .join(',');
-
-    importSelections(selectionsString); // eslint-disable-line no-use-before-define
+    importSelections(selections); // eslint-disable-line no-use-before-define
     return undefined;
   }
 
@@ -221,10 +216,23 @@ function fixImports() {
 }
 
 /**
- * @param {String} selections
+ * @param {Array<Object>} selections
  */
 function importSelections(selections) {
-  exec(['--selections', selections])
+  // Foo:0,Bar:1
+  const selectionsString = selections
+    .map((selection) => `${selection.word}:${selection.alternativeIndex}`)
+    .join(',');
+
+  const args = ['--selections', selectionsString];
+
+  // TODO we shouldn't need to include --word, but with the way that the CLI
+  // currently works, we do need to include it.
+  if (selections.length === 1) {
+    args.push('--word', selections[0].word);
+  }
+
+  exec(args)
     .then(handleExecResult)
     .catch(handleExecError);
 }
