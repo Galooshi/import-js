@@ -24,5 +24,8 @@
   "homepage": "https://github.com/trotzig/import-js#readme",
   "devDependencies": {
     "jest-cli": "^0.9.2"
+  },
+  "dependencies": {
+    "StringScanner": "0.0.3"
   }
 }
