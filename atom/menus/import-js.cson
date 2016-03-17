@@ -3,15 +3,15 @@
 'context-menu':
   'atom-text-editor': [
     {
-      'label': 'Import'
+      'label': 'Import word under cursor'
       'command': 'import-js:import'
     }
     {
-      'label': 'Goto'
+      'label': 'Goto word under cursor'
       'command': 'import-js:goto'
     }
     {
-      'label': 'Fix Imports'
+      'label': 'Fix all imports'
       'command': 'import-js:fix-imports'
     }
   ]
@@ -22,15 +22,15 @@
       'label': 'ImportJS'
       'submenu': [
         {
-          'label': 'Import'
+          'label': 'Import word under cursor'
           'command': 'import-js:import'
         }
         {
-          'label': 'Goto'
+          'label': 'Goto word under cursor'
           'command': 'import-js:goto'
         }
         {
-          'label': 'Fix Imports'
+          'label': 'Fix all imports'
           'command': 'import-js:fix-imports'
         }
       ]
