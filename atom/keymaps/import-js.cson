@@ -1,0 +1,6 @@
+# https://atom.io/docs/latest/behind-atom-keymaps-in-depth
+
+'atom-workspace':
+  'cmd-shift-j': 'import-js:import'
+  'cmd-shift-k': 'import-js:goto'
+  'cmd-shift-i': 'import-js:fix-imports'

@@ -46,7 +46,7 @@ Vim:
 Make a symlink inside your pathogen bundles folder to the local copy of
 import-js to make it easier to try out your changes.
 
-```bash
+```sh
 ln -s ~/import-js import-js
 ```
 
@@ -61,24 +61,46 @@ Make a symlink inside your Sublime packages folder to the local copy of
 import-js. Every time you change the `import_js.py` file the plugin will
 reload.
 
-```bash
+```sh
 cd ~/Library/Application Support/Sublime Text 3/Packages
 ln -s ~/import-js import-js
 ```
 
-### Build and install the gem locally
+## Developing for Atom
 
-Since the Sublime plugin uses the `import-js` CLI tool, you need to rebuild and
-install the `import_js` Ruby gem whenever you make changes to the Ruby code
-powering import-js.
+To make it simpler to test a local copy of import-js in Atom:
+
+```sh
+cd ~/import-js/atom
+apm link
+```
+
+After making changes to the plugin, you can reload Atom by opening the console
+(`CMD+OPTION+i`) and then refreshing (`CMD+r`).
+
+## Build and install the gem locally
+
+Since the Sublime and Atom plugins use the `import-js` CLI tool, you need to
+rebuild and install the `import_js` Ruby gem whenever you make changes to the
+Ruby code powering import-js.
 
 First, update `lib/import_js/version.rb` and bump the version number.
 
-```
+```sh
 gem build import_js.gemspec && gem install --local import_js-__version__.gem
 ```
 
 Replace `__version__` with the bumped version number.
+
+If you just need to make some small changes to the gem for debugging purposes,
+you can open the installed gem:
+
+```sh
+gem open import_js
+```
+
+Note that any changes made here will only affect the installed gem and not the
+import-js codebase.
 
 ## Code of conduct
 

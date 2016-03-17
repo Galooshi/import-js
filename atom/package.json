@@ -1,0 +1,33 @@
+{
+  "name": "atom-import-js",
+  "version": "0.1.0",
+  "description": "Run Import-JS in Atom",
+  "main": "./lib/import-js",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "npm run --silent lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trotzig/import-js.git"
+  },
+  "keywords": [
+    "atom",
+    "import-js",
+    "javascript"
+  ],
+  "author": "Joe Lencioni",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trotzig/import-js/issues"
+  },
+  "homepage": "https://github.com/trotzig/import-js#readme",
+  "devDependencies": {
+    "eslint": "^2.4.0",
+    "eslint-config-airbnb": "^6.1.0"
+  },
+  "dependencies": {
+    "atom-space-pen-views": "^2.2.0",
+    "consistent-env": "^1.1.2"
+  }
+}
