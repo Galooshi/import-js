@@ -15,7 +15,7 @@ and hit `<leader>j` (Vim), or `(M-x) import-js-import` (Emacs), or select
 
 import-js comes with plugins for the following editors:
 
-- [Atom](atom/README.md)
+- [Atom](https://github.com/galooshi/atom-import-js)
 - [Emacs](EMACS.md) (Thanks to
   [@kevinkehl](https://github.com/kevinkehl)!)
 - [Vim](VIM.md)

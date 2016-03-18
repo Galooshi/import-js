@@ -71,7 +71,7 @@ ln -s ~/import-js import-js
 To make it simpler to test a local copy of import-js in Atom:
 
 ```sh
-cd ~/import-js/atom
+cd ~/atom-import-js
 apm link
 ```
 
