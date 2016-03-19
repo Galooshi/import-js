@@ -95,7 +95,7 @@ module ImportJS
 
     # @param import_path [String]
     def initialize(import_path: nil)
-      self.import_path = import_path
+      @import_path = import_path
     end
 
     # @param make_relative_to [String]
@@ -114,25 +114,25 @@ module ImportJS
       # Strip out the lookup_path
       make_relative_to.sub!(%r{^#{Regexp.escape(lookup_path)}/}, '')
 
-      path = Pathname.new(import_path).relative_path_from(
+      path = Pathname.new(@import_path).relative_path_from(
         Pathname.new(File.dirname(make_relative_to))
       ).to_s
 
       # `Pathname.relative_path_from` will not add "./" automatically
       path = './' + path unless path.start_with?('.')
 
-      self.import_path = path
+      @import_path = path
     end
 
     # @param prefix [String]
     def strip_from_path!(prefix)
       return unless prefix
-      import_path.sub!(/^#{Regexp.escape(prefix)}/, '')
+      @import_path.sub!(/^#{Regexp.escape(prefix)}/, '')
     end
 
     # @return [String] a readable description of the module
     def display_name
-      parts = [import_path]
+      parts = [@import_path]
       parts << " (main: #{@main_file})" if @main_file
       parts.join('')
     end
@@ -186,7 +186,7 @@ module ImportJS
         default_import: default_import,
         import_function: config.get('import_function', from_file: file_path),
         named_imports: named_imports,
-        path: import_path
+        path: @import_path
       )
     end
   end
