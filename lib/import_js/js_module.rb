@@ -95,44 +95,44 @@ module ImportJS
 
     # @param import_path [String]
     def initialize(import_path: nil)
-      self.import_path = import_path
+      @import_path = import_path
     end
 
-    # @param make_relative_to [String]
-    def make_relative_to(make_relative_to)
-      return unless lookup_path
+    # @param make_relative_to_path [String]
+    def make_relative_to(make_relative_to_path)
+      return unless @lookup_path
 
       # Prevent mutating the argument that was passed in
-      make_relative_to = make_relative_to.dup
+      make_relative_to_path = make_relative_to_path.dup
 
       # First, strip out any absolute path up until the current directory
-      make_relative_to.sub!("#{Dir.pwd}/", '')
+      make_relative_to_path.sub!("#{Dir.pwd}/", '')
 
       # Ignore if the file to relate to is part of a different lookup_path
-      return unless make_relative_to.start_with? lookup_path
+      return unless make_relative_to_path.start_with? @lookup_path
 
       # Strip out the lookup_path
-      make_relative_to.sub!(%r{^#{Regexp.escape(lookup_path)}/}, '')
+      make_relative_to_path.sub!(%r{^#{Regexp.escape(@lookup_path)}/}, '')
 
-      path = Pathname.new(import_path).relative_path_from(
-        Pathname.new(File.dirname(make_relative_to))
+      path = Pathname.new(@import_path).relative_path_from(
+        Pathname.new(File.dirname(make_relative_to_path))
       ).to_s
 
       # `Pathname.relative_path_from` will not add "./" automatically
       path = './' + path unless path.start_with?('.')
 
-      self.import_path = path
+      @import_path = path
     end
 
     # @param prefix [String]
     def strip_from_path!(prefix)
       return unless prefix
-      import_path.sub!(/^#{Regexp.escape(prefix)}/, '')
+      @import_path.sub!(/^#{Regexp.escape(prefix)}/, '')
     end
 
     # @return [String] a readable description of the module
     def display_name
-      parts = [import_path]
+      parts = [@import_path]
       parts << " (main: #{@main_file})" if @main_file
       parts.join('')
     end
@@ -186,7 +186,7 @@ module ImportJS
         default_import: default_import,
         import_function: config.get('import_function', from_file: file_path),
         named_imports: named_imports,
-        path: import_path
+        path: @import_path
       )
     end
   end
