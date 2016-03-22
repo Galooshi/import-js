@@ -1,8 +1,14 @@
-{
-  "environments": ["node"],
-  "declaration_keyword": "const",
-  "aliases": {
-    "_": "underscore"
+[
+  {
+    "environments": ["node"],
+    "declaration_keyword": "const",
+    "aliases": {
+      "_": "underscore"
+    },
+    "use_relative_paths": true
   },
-  "use_relative_paths": true
-}
+  {
+    "applies_to": "tests/*",
+    "import_dev_dependencies": true
+  }
+]
