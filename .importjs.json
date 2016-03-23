@@ -2,9 +2,7 @@
   {
     "environments": ["node"],
     "declaration_keyword": "const",
-    "aliases": {
-      "_": "underscore"
-    },
+    "ignore_package_prefixes": ["lodash."],
     "use_relative_paths": true
   },
   {
