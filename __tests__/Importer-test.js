@@ -1,7 +1,6 @@
 'use strict';
 
-jest.unmock('../lib/CommandLineEditor');
-jest.unmock('../lib/Importer');
+jest.autoMockOff();
 
 const childProcess = require('child_process');
 const fs = require('fs');
