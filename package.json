@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "StringScanner": "0.0.3",
+    "lodash.escaperegexp": "^4.1.1",
     "lodash.flattendeep": "^4.1.0",
     "lodash.partition": "^4.2.0",
     "lodash.uniqwith": "^4.2.0",
