@@ -32,7 +32,7 @@ describe('Importer', () => {
     const allow = (object, methodName, matrix) => {
       spyOn(object, methodName).and.callFake(
         function fakeMethod(original, arg) { // eslint-disable-line prefer-arrow-callback
-          if (Object.keys(matrix).includes(arg)) {
+          if (Object.keys(matrix).indexOf(arg) !== -1) {
             return matrix[arg];
           }
           return original(arg);
