@@ -1,3 +1,3 @@
-var baz = require('foo/bar/baz.js.jsx');
-foobar
-baz
+const baz = require('./app/foo/bar/baz.js');
+
+baz();

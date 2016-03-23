@@ -32,12 +32,13 @@ describe('Importer', () => {
   beforeEach(() => {
     const allow = (object, methodName, matrix) => {
       spyOn(object, methodName).and.callFake(
-        function (original, arg) { // eslint-disable-line func-names
-        if (Object.keys(matrix).includes(arg)) {
-          return matrix[arg];
-        }
-        return original(arg);
-      }.bind(object, object[methodName]));
+        function fakeMethod(original, arg) { // eslint-disable-line prefer-arrow-callback
+          if (Object.keys(matrix).includes(arg)) {
+            return matrix[arg];
+          }
+          return original(arg);
+        }.bind(object, object[methodName])
+      );
     };
 
     const fileContents = {
@@ -52,18 +53,18 @@ describe('Importer', () => {
     allow(fs, 'readFileSync', fileContents);
 
     const existingFiles = {};
-    Object.keys(fileContents).forEach((file) => existingFiles[file] = true);
+    Object.keys(fileContents).forEach((file) => { existingFiles[file] = true; });
     allow(fs, 'existsSync', existingFiles);
 
     this.existingFiles.forEach((file) => {
-      const fullPath = this.tmpDir + '/' + file;
+      const fullPath = `${this.tmpDir}/${file}`;
       mkdirp.sync(path.dirname(fullPath));
       fs.closeSync(fs.openSync(fullPath, 'w')); // touch
     });
 
     if (this.packageJsonContent) {
-      mkdirp.sync(this.tmpDir + 'Foo');
-      fs.writeFileSync(this.tmpDir + '/Foo/package.json',
+      mkdirp.sync(`${this.tmpDir}Foo`);
+      fs.writeFileSync(`${this.tmpDir}/Foo/package.json`,
                        JSON.stringify(this.packageJsonContent));
     }
   });
