@@ -96,7 +96,7 @@ describe('Importer', () => {
     });
 
     describe('with a variable name that will not resolve', () => {
-      fit('leaves the buffer unchanged', () => {
+      it('leaves the buffer unchanged', () => {
         expect(this.subject()).toEqual(this.text);
       });
 
