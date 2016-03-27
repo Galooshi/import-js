@@ -15,20 +15,31 @@ const CommandLineEditor = require('../lib/CommandLineEditor');
 const Importer = require('../lib/Importer');
 
 describe('Importer', () => {
-  beforeEach(() => {
-    this.tmpDir = './tmp';
-    fs.mkdirSync(this.tmpDir);
+  let tmpDir;
+  let word;
+  let text;
+  let existingFiles;
+  let packageJsonContent;
+  let packageDependencies;
+  let pathToCurrentFile;
+  let configuration;
+  let selections;
+  let setup;
 
-    this.word = 'foo';
-    this.text = 'foo';
-    this.existingFiles = [];
-    this.packageJsonContent = undefined;
-    this.packageDependencies = [];
-    this.pathToCurrentFile = `${this.tmpDir}/test.js`;
-    this.configuration = {
-      lookup_paths: [path.basename(this.tmpDir)],
+  beforeEach(() => {
+    tmpDir = './tmp';
+    fs.mkdirSync(tmpDir);
+
+    word = 'foo';
+    text = 'foo';
+    existingFiles = [];
+    packageJsonContent = undefined;
+    packageDependencies = [];
+    pathToCurrentFile = `${tmpDir}/test.js`;
+    configuration = {
+      lookup_paths: [path.basename(tmpDir)],
     };
-    this.selections = {};
+    selections = {};
   });
 
   beforeEach(() => {
@@ -45,26 +56,26 @@ describe('Importer', () => {
 
     FileUtils.readJsonFile.mockImplementation((file) => {
       if (file === '.importjs.json') {
-        return this.configuration;
+        return configuration;
       } else if (file === 'package.json') {
-        return this.packageDependencies;
-      } else if (this.packageDependencies.indexOf(file) !== -1) {
+        return packageDependencies;
+      } else if (packageDependencies.indexOf(file) !== -1) {
         return { main: `${file}-main.jsx` };
       }
       return null;
     });
 
-    this.setup = () => {
-      this.existingFiles.forEach((file) => {
-        const fullPath = `${this.tmpDir}/${file}`;
+    setup = () => {
+      existingFiles.forEach((file) => {
+        const fullPath = `${tmpDir}/${file}`;
         mkdirp.sync(path.dirname(fullPath));
         fs.closeSync(fs.openSync(fullPath, 'w')); // touch
       });
 
-      if (this.packageJsonContent) {
-        mkdirp.sync(`${this.tmpDir}Foo`);
-        fs.writeFileSync(`${this.tmpDir}/Foo/package.json`,
-                         JSON.stringify(this.packageJsonContent));
+      if (packageJsonContent) {
+        mkdirp.sync(`${tmpDir}Foo`);
+        fs.writeFileSync(`${tmpDir}/Foo/package.json`,
+                         JSON.stringify(packageJsonContent));
       }
     };
   });
@@ -74,53 +85,56 @@ describe('Importer', () => {
   });
 
   describe('#import', () => {
+    let subject;
+    let editor;
+
     beforeEach(() => {
-      this.subject = () => {
-        this.setup();
-        this.editor = new CommandLineEditor(this.text.split('\n'), {
-          word: this.word,
-          pathToFile: this.pathToCurrentFile,
-          selections: this.selections,
+      subject = () => {
+        setup();
+        editor = new CommandLineEditor(text.split('\n'), {
+          word,
+          pathToFile: pathToCurrentFile,
+          selections,
         });
-        new Importer(this.editor).import();
-        return this.editor.currentFileContent();
+        new Importer(editor).import();
+        return editor.currentFileContent();
       };
     });
 
     describe('when lookup_paths is just an empty string', () => {
       beforeEach(() => {
-        this.configuration = { lookup_paths: [''] };
+        configuration = { lookup_paths: [''] };
       });
 
       it('throws an error', () => {
-        expect(this.subject).toThrowError(/empty/);
+        expect(subject).toThrowError(/empty/);
       });
     });
 
     describe('with a variable name that will not resolve', () => {
       it('leaves the buffer unchanged', () => {
-        expect(this.subject()).toEqual(this.text);
+        expect(subject()).toEqual(text);
       });
 
       it('displays a message', () => {
-        this.subject();
-        expect(this.editor.messages()).toMatch(
-          RegExp(`ImportJS: No JS module to import for variable \`${this.word}\``));
+        subject();
+        expect(editor.messages()).toMatch(
+          RegExp(`ImportJS: No JS module to import for variable \`${word}\``));
       });
     });
 
     describe('with no word under the cursor', () => {
       beforeEach(() => {
-        this.word = '';
+        word = '';
       });
 
       it('leaves the buffer unchanged', () => {
-        expect(this.subject()).toEqual(this.text);
+        expect(subject()).toEqual(text);
       });
 
       it('displays a message', () => {
-        this.subject();
-        expect(this.editor.messages()).toEqual(
+        subject();
+        expect(editor.messages()).toEqual(
           'ImportJS: No variable to import. Place your cursor on a variable, ' +
           'then try again.');
       });
@@ -128,11 +142,11 @@ describe('Importer', () => {
 
     describe('with a variable name that will resolve', () => {
       beforeEach(() => {
-        this.existingFiles = ['bar/foo.jsx'];
+        existingFiles = ['bar/foo.jsx'];
       });
 
       it('adds an import to the top of the buffer', () => {
-        expect(this.subject()).toEqual(`
+        expect(subject()).toEqual(`
 import foo from 'bar/foo';
 
 foo
@@ -140,14 +154,14 @@ foo
       });
 
       it('displays a message about the imported module', () => {
-        this.subject();
-        expect(this.editor.messages()).toEqual(
+        subject();
+        expect(editor.messages()).toEqual(
           'ImportJS: Imported `bar/foo`');
       });
 
       describe('when that import is already imported', () => {
         beforeEach(() => {
-          this.text = `
+          text = `
 import foo from 'bar/foo';
 
 foo
@@ -155,12 +169,12 @@ foo
         });
 
         it('leaves the buffer unchanged', () => {
-          expect(this.subject()).toEqual(this.text);
+          expect(subject()).toEqual(text);
         });
 
         describe('when there is a blank line above the import', () => {
           beforeEach(() => {
-            this.text = `
+            text = `
 
 import foo from 'bar/foo';
 
@@ -168,14 +182,14 @@ foo`;
           });
 
           it('removes the blank line from the top', () => {
-            expect(this.subject()).toEqual(this.text.trim());
+            expect(subject()).toEqual(text.trim());
           });
         });
       });
 
       describe("when 'use strict' is at the top of the file", () => {
         beforeEach(() => {
-          this.text = `
+          text = `
 'use strict';
 
 foo
@@ -183,7 +197,7 @@ foo
         });
 
         it('adds the import below', () => {
-          expect(this.subject()).toEqual(`
+          expect(subject()).toEqual(`
 'use strict';
 
 import foo from 'bar/foo';
@@ -195,7 +209,7 @@ foo
 
         describe("when 'use strict' is at the top of the file twice", () => {
           beforeEach(() => {
-            this.text = `;
+            text = `;
 'use strict';
 'use strict';
 
@@ -204,7 +218,7 @@ foo
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 'use strict';
 'use strict';
 
@@ -218,7 +232,7 @@ foo
 
         describe('when a one-line comment is at the top of the file', () => {
           beforeEach(() => {
-            this.text = `;
+            text = `;
 // One-line comment
 
 foo
@@ -226,7 +240,7 @@ foo
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 // One-line comment
 
 import foo from 'bar/foo';
@@ -239,7 +253,7 @@ foo
 
         describe('when multiple one-line comments are at the top of the file', () => {
           beforeEach(() => {
-            this.text = `
+            text = `
 // One-line comment
 // Another one-line comment
 
@@ -248,7 +262,7 @@ foo
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 // One-line comment
 // Another one-line comment
 
@@ -262,13 +276,13 @@ foo
 
         describe('when just an empty line is at the top', () => {
           beforeEach(() => {
-            this.text = `
+            text = `
 
 foo`;
           });
 
           it('does not preserve the empty line', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 import foo from 'bar/foo';
 
 foo
@@ -279,7 +293,7 @@ foo
 
         describe('when an empty line precedes a comment', () => {
           beforeEach(() => {
-            this.text = `
+            text = `
 
 // One-line comment
 
@@ -287,7 +301,7 @@ foo`;
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 
 // One-line comment
 
@@ -301,7 +315,7 @@ foo
 
         describe('when one-line comments with empty lines are at the top', () => {
           beforeEach(() => {
-            this.text = `;
+            text = `;
 // One-line comment
 
 // Another one-line comment
@@ -311,7 +325,7 @@ foo
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 // One-line comment
 
 // Another one-line comment
@@ -326,7 +340,7 @@ foo
 
         describe('when a multi-line comment is at the top of the file', () => {
           beforeEach(() => {
-            this.text = `;
+            text = `;
 /* Multi-line comment */
 
 foo
@@ -334,7 +348,7 @@ foo
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 /* Multi-line comment */
 
 import foo from 'bar/foo';
@@ -347,7 +361,7 @@ foo
 
         describe('when a multi-line comment that spans lines is at the top', () => {
           beforeEach(() => {
-            this.text = `;
+            text = `;
 /*
   Multi-line comment
   that spans multiple lines
@@ -358,7 +372,7 @@ foo
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 /*
   Multi-line comment
   that spans multiple lines
@@ -374,7 +388,7 @@ foo
 
         describe('when a multi-line comment is stacked weirdly', () => {
           beforeEach(() => {
-            this.text = `;
+            text = `;
 /* Single-line multi-line comment *//*
   Multi-line comment
   that spans multiple lines
@@ -385,7 +399,7 @@ foo
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 /* Single-line multi-line comment *//*
   Multi-line comment
   that spans multiple lines
@@ -401,7 +415,7 @@ foo
 
         describe('when both comment styles are at the top of the file', () => {
           beforeEach(() => {
-            this.text = `;
+            text = `;
 // One-line comment
 /* Multi-line comment */
 
@@ -410,7 +424,7 @@ foo
           });
 
           it('adds the import below', () => {
-            expect(this.subject()).toEqual(`
+            expect(subject()).toEqual(`
 // One-line comment
 /* Multi-line comment */
 
@@ -427,7 +441,7 @@ foo
 });
 
 //         describe("when comments and 'use strict' are at the top of the file", () => {
-//           this.text = `;
+//           text = `;
 // 'use strict';
 // // One-line comment
 // /* Multi-line comment */
@@ -436,7 +450,7 @@ foo
 //           `.trim();
 //
 //           it('adds the import below', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // 'use strict';
 // // One-line comment
 // /* Multi-line comment */
@@ -449,12 +463,12 @@ foo
 //         });
 //
 //         describe('when the variable name matches last folder+filename', () => {
-//           this.existing_files = ['sko/bar/foo.jsx'];
-//           this.word = 'barFoo';
-//           this.text = 'barFoo';
+//           existingFiles = ['sko/bar/foo.jsx'];
+//           word = 'barFoo';
+//           text = 'barFoo';
 //
 //           it('resolves the import', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import barFoo from 'sko/bar/foo';
 //
 // barFoo
@@ -462,10 +476,10 @@ foo
 //           });
 //
 //           describe('when the last folder });s with an "s"', () => {
-//             this.existing_files = ['sko/bars/foo.jsx'];
+//             existingFiles = ['sko/bars/foo.jsx'];
 //
 //             it('resolves the import', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import barFoo from 'sko/bars/foo';
 //
 // barFoo
@@ -473,11 +487,11 @@ foo
 //             });
 //
 //             describe('when the variable also has "s" at the });', () => {
-//               this.word = 'barsFoo';
-//               this.text = 'barsFoo';
+//               word = 'barsFoo';
+//               text = 'barsFoo';
 //
 //               it('resolves the import', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // import barsFoo from 'sko/bars/foo';
 //
 // barsFoo
@@ -487,12 +501,12 @@ foo
 //           });
 //
 //           describe('when the last folder });s with "es"', () => {
-//             this.existing_files = ['sko/statuses/foo.jsx'];
-//             this.word = 'statusFoo';
-//             this.text = 'statusFoo';
+//             existingFiles = ['sko/statuses/foo.jsx'];
+//             word = 'statusFoo';
+//             text = 'statusFoo';
 //
 //             it('resolves the import', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import statusFoo from 'sko/statuses/foo';
 //
 // statusFoo
@@ -500,11 +514,11 @@ foo
 //             });
 //
 //             describe('when the variable also has "es" at the });', () => {
-//               this.word = 'statusesFoo';
-//               this.text = 'statusesFoo';
+//               word = 'statusesFoo';
+//               text = 'statusesFoo';
 //
 //               it('resolves the import', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // import statusesFoo from 'sko/statuses/foo';
 //
 // statusesFoo
@@ -515,12 +529,12 @@ foo
 //         });
 //
 //         describe('when the variable name matches a few folders + filename', () => {
-//           this.existing_files = ['sko/bar/foo/ta.jsx'];
-//           this.word = 'BarFooTa';
-//           this.text = 'BarFooTa';
+//           existingFiles = ['sko/bar/foo/ta.jsx'];
+//           word = 'BarFooTa';
+//           text = 'BarFooTa';
 //
 //           it('resolves the import', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import BarFooTa from 'sko/bar/foo/ta';
 //
 // BarFooTa
@@ -528,10 +542,10 @@ foo
 //           });
 //
 //           describe('when the folders }); with "s"', () => {
-//             this.existing_files = ['sko/bars/foos/ta.jsx'];
+//             existingFiles = ['sko/bars/foos/ta.jsx'];
 //
 //             it('resolves the import', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import BarFooTa from 'sko/bars/foos/ta';
 //
 // BarFooTa
@@ -539,11 +553,11 @@ foo
 //             });
 //
 //             describe('when the variable also has "s"', () => {
-//               this.word = 'BarsFoosTa';
-//               this.text = 'BarsFoosTa';
+//               word = 'BarsFoosTa';
+//               text = 'BarsFoosTa';
 //
 //               it('resolves the import', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // import BarsFoosTa from 'sko/bars/foos/ta';
 //
 // BarsFoosTa
@@ -553,12 +567,12 @@ foo
 //           });
 //
 //           describe('when the folders }); with "es"', () => {
-//             this.existing_files = ['sko/statuses/buses/ta.jsx'];
-//             this.word = 'statusBusTa';
-//             this.text = 'statusBusTa';
+//             existingFiles = ['sko/statuses/buses/ta.jsx'];
+//             word = 'statusBusTa';
+//             text = 'statusBusTa';
 //
 //             it('resolves the import', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import statusBusTa from 'sko/statuses/buses/ta';
 //
 // statusBusTa
@@ -566,11 +580,11 @@ foo
 //             });
 //
 //             describe('when the variable also has "es"', () => {
-//               this.word = 'StatusesBusesTa';
-//               this.text = 'StatusesBusesTa';
+//               word = 'StatusesBusesTa';
+//               text = 'StatusesBusesTa';
 //
 //               it('resolves the import', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // import StatusesBusesTa from 'sko/statuses/buses/ta';
 //
 // StatusesBusesTa
@@ -581,7 +595,7 @@ foo
 //         });
 //
 //         describe("when there are other imports under 'use strict'", () => {
-//           this.text = `;
+//           text = `;
 // 'use strict';
 // import bar from 'bar';
 //
@@ -589,7 +603,7 @@ foo
 //           `.trim();
 //
 //           it('adds the import at the right place', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // 'use strict';
 // import bar from 'bar';
 // import foo from 'bar/foo';
@@ -600,13 +614,13 @@ foo
 //         });
 //
 //         describe("when there is no newline under a lonely 'use strict'", () => {
-//           this.text = `;
+//           text = `;
 // 'use strict';
 // foo + bar
 //           `.trim();
 //
 //           it('adds a newline as part of importing ', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // 'use strict';
 // import foo from 'bar/foo';
 //
@@ -616,14 +630,14 @@ foo
 //         });
 //
 //         describe('when "use strict" is within double quotes', () => {
-//           this.text = `;
+//           text = `;
 // "use strict";
 //
 // foo
 //           `.trim();
 //
 //           it('adds the import below', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // "use strict";
 //
 // import foo from 'bar/foo';
@@ -635,10 +649,10 @@ foo
 //       });
 //
 //       describe('when the variable resolves to a node.js conventional module', () => {
-//         this.existing_files = ['Foo/index.jsx'];
+//         existingFiles = ['Foo/index.jsx'];
 //
 //         it('adds an import to the top of the buffer', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'Foo';
 //
 // foo
@@ -652,12 +666,12 @@ foo
 //         });
 //
 //         describe('when that module has a dot in its name', () => {
-//           this.existing_files = ['Foo.io/index.jsx'];
-//           this.word = 'FooIO';
-//           this.text = 'FooIO';
+//           existingFiles = ['Foo.io/index.jsx'];
+//           word = 'FooIO';
+//           text = 'FooIO';
 //
 //           it('imports that module with the dot', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import FooIO from 'Foo.io';
 //
 // FooIO
@@ -667,15 +681,15 @@ foo
 //       });
 //
 //       describe('in a node environment', () => {
-//         this.word = 'Readline';
-//         this.text = 'Readline';
+//         word = 'Readline';
+//         text = 'Readline';
 //
 //         let(:configuration) do
 //           super().merge('environments' => ['node'])
 //         });
 //
 //         it('adds an import to the top of the buffer', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import Readline from 'readline';
 //
 // Readline
@@ -684,13 +698,13 @@ foo
 //       });
 //
 //       describe('when the import resolves to a dependency from package.json', () => {
-//         this.existing_files = [];
-//         this.package_dependencies = ['foo-bar'];
-//         this.word = 'fooBar';
-//         this.text = 'fooBar';
+//         existingFiles = [];
+//         packageDependencies = ['foo-bar'];
+//         word = 'fooBar';
+//         text = 'fooBar';
 //
 //         it('adds an import to the top of the buffer', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import fooBar from 'foo-bar';
 //
 // fooBar
@@ -710,7 +724,7 @@ foo
 //
 //           describe('when the variable has the prefix', () => {
 //             it('still imports the package', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import fooBar from 'foo-bar';
 //
 // fooBar
@@ -719,11 +733,11 @@ foo
 //           });
 //
 //           describe('when the variable does not have the prefix', () => {
-//             this.word = 'bar';
-//             this.text = 'bar';
+//             word = 'bar';
+//             text = 'bar';
 //
 //             it('imports the package', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import bar from 'foo-bar';
 //
 // bar
@@ -732,11 +746,11 @@ foo
 //           });
 //
 //           describe('when a package matches the prefix but not the word', () => {
-//             this.word = 'baz';
-//             this.text = 'baz';
+//             word = 'baz';
+//             text = 'baz';
 //
 //             it('leaves the buffer unchanged', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // baz
 //               `.trim();
 //             });
@@ -745,7 +759,7 @@ foo
 //       });
 //
 //       describe('when other imports exist', () => {
-//         this.text = `;
+//         text = `;
 // import zoo from 'foo/zoo';
 // import bar from 'foo/bar';
 //
@@ -753,7 +767,7 @@ foo
 //         `.trim();
 //
 //         it('adds the import and sorts the entire list', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import bar from 'foo/bar';
 // import foo from 'bar/foo';
 // import zoo from 'foo/zoo';
@@ -764,7 +778,7 @@ foo
 //
 //         describe('when there are unconventional imports in the list', () => {
 //           # e.g. added through using the `import_function` configuration option
-//           this.text = `;
+//           text = `;
 // const sko = customImportFunction('sko');
 // import zoo from 'foo/zoo';
 // import bar from 'foo/bar';
@@ -773,7 +787,7 @@ foo
 //           `.trim();
 //
 //           it('adds the import and sorts the entire list with groups', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import bar from 'foo/bar';
 // import foo from 'bar/foo';
 // import zoo from 'foo/zoo';
@@ -790,7 +804,7 @@ foo
 //             });
 //
 //             it('adds the import and sorts all of them', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import bar from 'foo/bar';
 // import foo from 'bar/foo';
 // const sko = customImportFunction('sko');
@@ -804,7 +818,7 @@ foo
 //       });
 //
 //       describe('when there is an unconventional import', () => {
-//         this.text = `;
+//         text = `;
 // import zoo from 'foo/zoo';
 // import tsar from 'foo/bar').tsa;
 //
@@ -812,7 +826,7 @@ foo
 //         `.trim();
 //
 //         it('adds the import and moves out the unconventional import', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 // import zoo from 'foo/zoo';
 //
@@ -824,7 +838,7 @@ foo
 //       });
 //
 //       describe('when there is a non-import inline with the imports', () => {
-//         this.text = `;
+//         text = `;
 // import bar from 'bar';
 // import star from
 //   'star';
@@ -839,7 +853,7 @@ foo
 //           # move it up there with the rest. But there's a lot of complexity
 //           # involved in that, so cutting off at the non-import is a simpler
 //           # solution.
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import bar from 'bar';
 // import foo from 'bar/foo';
 // import star from
@@ -854,7 +868,7 @@ foo
 //       });
 //
 //       describe('when there is an import with line-breaks', () => {
-//         this.text = `;
+//         text = `;
 // import zoo from
 //   'foo/zoo';
 // import tsar from 'foo/bar';
@@ -863,7 +877,7 @@ foo
 //         `.trim();
 //
 //         it('adds the import, sorts the entire list and keeps the line-break', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 // import tsar from 'foo/bar';
 // import zoo from
@@ -875,7 +889,7 @@ foo
 //       });
 //
 //       describe('when there is a blank line amongst current imports', () => {
-//         this.text = `;
+//         text = `;
 // import zoo from 'foo/zoo';
 //
 // import bar from 'foo/bar';
@@ -883,7 +897,7 @@ foo
 //         `.trim();
 //
 //         it('adds the import, compacts, and sorts the entire list', () => {
-//           expect(this.subject()).toEqual(`
+//           expect(subject()).toEqual(`
 // import bar from 'foo/bar';
 // import foo from 'bar/foo';
 // import zoo from 'foo/zoo';
@@ -894,7 +908,7 @@ foo
 //       });
 //
 //       describe('when there are multiple blank lines amongst current imports', () => {
-//         this.text = `;
+//         text = `;
 // import zoo from 'foo/zoo';
 //
 // import frodo from 'bar/frodo';
@@ -906,7 +920,7 @@ foo
 //         `.trim();
 //
 //         it('compacts the list', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import bar from 'foo/bar';
 // import foo from 'bar/foo';
 // import frodo from 'bar/frodo';
@@ -949,7 +963,7 @@ foo
 //             this.selection = 0;
 //
 //             it('picks the first one', () => {
-//               expect(this.subject()).toEqual(<<-eos.strip)});
+//               expect(subject()).toEqual(<<-eos.strip)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -961,7 +975,7 @@ foo
 //             this.selection = 1;
 //
 //             it('picks the second one', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import foo from 'zoo/foo';
 //
 // foo
@@ -974,7 +988,7 @@ foo
 //             this.selection = 5;
 //
 //             it('picks nothing', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // foo
 //               `.trim();
 //             });
@@ -984,7 +998,7 @@ foo
 //             this.selection = -1;
 //
 //             it('picks nothing', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // foo
 //               `.trim();
 //             });
@@ -1022,7 +1036,7 @@ foo
 //     });
 //
 //     describe('importing a module with a package.json file', () => {
-//       this.existing_files = ['Foo/package.json', 'Foo/build/main.js'];
+//       existingFiles = ['Foo/package.json', 'Foo/build/main.js'];
 //
 //       describe('when `main` points to a JS file', () => {
 //         let(:package_json_content) do
@@ -1032,7 +1046,7 @@ foo
 //         });
 //
 //         it('adds an import to the top of the buffer', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'Foo';
 //
 // foo
@@ -1041,7 +1055,7 @@ foo
 //       });
 //
 //       describe('when `main` points to index.js in the same folder', () => {
-//         this.existing_files = ['Foo/package.json', 'Foo/index.js'];
+//         existingFiles = ['Foo/package.json', 'Foo/index.js'];
 //
 //         let(:package_json_content) do
 //           {
@@ -1050,7 +1064,7 @@ foo
 //         });
 //
 //         it('adds an import to the top of the buffer', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'Foo';
 //
 // foo
@@ -1059,9 +1073,9 @@ foo
 //       });
 //
 //       describe('when the module is named something.js', () => {
-//         this.existing_files = ['Foo.js/package.json', 'Foo.js/main.js'];
-//         this.text = 'FooJS';
-//         this.word = 'FooJS';
+//         existingFiles = ['Foo.js/package.json', 'Foo.js/main.js'];
+//         text = 'FooJS';
+//         word = 'FooJS';
 //
 //         before do
 //           File.open(File.join(tmp_dir, 'Foo.js/package.json'), 'w') do |f|
@@ -1070,7 +1084,7 @@ foo
 //         });
 //
 //         it('keeps the .js in the import', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import FooJS from 'Foo.js';
 //
 // FooJS
@@ -1079,10 +1093,10 @@ foo
 //       });
 //
 //       describe('when `main` is missing', () => {
-//         this.package_json_content = {};
+//         packageJsonContent = {};
 //
 //         it('does not add an import', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // foo
 //           `.trim();
 //         });
@@ -1100,13 +1114,13 @@ foo
 //
 //       describe('when lines exceed the configured max width', () => {
 //         this.max_line_length = 40;
-//         this.existing_files = ['fiz/bar/biz/baz/fiz/buz/boz/foo.jsx'];
+//         existingFiles = ['fiz/bar/biz/baz/fiz/buz/boz/foo.jsx'];
 //
 //         describe('when configured to use a tab character', () => {
 //           this.tab = "\t";
 //
 //           it('wraps them and indents with a tab', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import foo from
 // 	'fiz/bar/biz/baz/fiz/buz/boz/foo';
 //
@@ -1119,7 +1133,7 @@ foo
 //           this.tab = '  ';
 //
 //           it('wraps them and indents with two spaces', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import foo from
 //   'fiz/bar/biz/baz/fiz/buz/boz/foo';
 //
@@ -1131,10 +1145,10 @@ foo
 //
 //       describe('when lines do not exceed the configured max width', () => {
 //         this.max_line_length = 80;
-//         this.existing_files = ['bar/foo.jsx'];
+//         existingFiles = ['bar/foo.jsx'];
 //
 //         it('does not wrap them', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1148,11 +1162,11 @@ foo
 //         let(:configuration) do
 //           super().merge('aliases' => { '$' => 'jquery' })
 //         });
-//         this.text = '$';
-//         this.word = '$';
+//         text = '$';
+//         word = '$';
 //
 //         it('resolves aliased imports to the aliases', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import $ from 'jquery';
 //
 // $
@@ -1163,12 +1177,12 @@ foo
 //           let(:configuration) do
 //             super().merge('aliases' => { 'styles' => './{filename}.scss' })
 //           });
-//           this.text = 'styles';
-//           this.word = 'styles';
-//           this.path_to_current_file = 'bar/foo.jsx';
+//           text = 'styles';
+//           word = 'styles';
+//           pathToCurrentFile = 'bar/foo.jsx';
 //
 //           it('uses the filename of the current file', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import styles from './foo.scss';
 //
 // styles
@@ -1177,10 +1191,10 @@ foo
 //
 //           describe('when editing an anonymous file', () => {
 //             describe('that is nil', () => {
-//               this.path_to_current_file = nil;
+//               pathToCurrentFile = nil;
 //
 //               it('does not replace the dynamic part', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // import styles from './{filename}.scss';
 //
 // styles
@@ -1189,10 +1203,10 @@ foo
 //             });
 //
 //             describe('that is an empty string', () => {
-//               this.path_to_current_file = '';
+//               pathToCurrentFile = '';
 //
 //               it('does not replace the dynamic part', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // import styles from './{filename}.scss';
 //
 // styles
@@ -1209,7 +1223,7 @@ foo
 //           });
 //
 //           it('keeps the slash in the alias path', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import $ from 'jquery/jquery';
 //
 // $
@@ -1229,11 +1243,11 @@ foo
 //             }
 //           )
 //         });
-//         this.text = 'foo';
-//         this.word = 'foo';
+//         text = 'foo';
+//         word = 'foo';
 //
 //         it('resolves that import using named imports', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import { foo } from 'lib/utils';
 //
 // foo
@@ -1256,11 +1270,11 @@ foo
 //             }
 //           )
 //         });
-//         this.text = '_';
-//         this.word = '_';
+//         text = '_';
+//         word = '_';
 //
 //         it('resolves the main alias without destructuring', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // var _ = require('underscore');
 //
 // _
@@ -1268,14 +1282,14 @@ foo
 //         });
 //
 //         describe('when a named import exists for the same module', () => {
-//           this.text = `;
+//           text = `;
 // var { memoize } = require('underscore');
 //
 // _
 //           `.trim();
 //
 //           it('adds the default import', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // var _ = require('underscore');
 // var { memoize } = require('underscore');
 //
@@ -1285,11 +1299,11 @@ foo
 //         });
 //
 //         describe('when importing a named export', () => {
-//           this.text = 'memoize';
-//           this.word = 'memoize';
+//           text = 'memoize';
+//           word = 'memoize';
 //
 //           it('resolves that import using destructuring', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // var { memoize } = require('underscore');
 //
 // memoize
@@ -1303,14 +1317,14 @@ foo
 //           });
 //
 //           describe('when the default import exists for the same module', () => {
-//             this.text = `;
+//             text = `;
 // var _ = require('underscore');
 //
 // memoize
 //             `.trim();
 //
 //             it('adds the destructuring on a new line', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // var _ = require('underscore');
 // var { memoize } = require('underscore');
 //
@@ -1320,7 +1334,7 @@ foo
 //           });
 //
 //           describe('when the default is already imported for destructured var', () => {
-//             this.text = `;
+//             text = `;
 // var _ = require('underscore');
 // var foo = require('foo');
 //
@@ -1328,7 +1342,7 @@ foo
 //             `.trim();
 //
 //             it('adds the destructuring on a new line', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // var _ = require('underscore');
 // var { memoize } = require('underscore');
 // var foo = require('foo');
@@ -1339,7 +1353,7 @@ foo
 //           });
 //
 //           describe('with other imports', () => {
-//             this.text = `;
+//             text = `;
 // const bar = require('foo/bar');
 // var { xyz } = require('alphabet');
 //
@@ -1347,7 +1361,7 @@ foo
 //             `.trim();
 //
 //             it('places the import at the right place', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // const bar = require('foo/bar');
 //
 // var { memoize } = require('underscore');
@@ -1359,14 +1373,14 @@ foo
 //           });
 //
 //           describe('when other destructured imports exist for the same module', () => {
-//             this.text = `;
+//             text = `;
 // var { xyz, debounce } = require('underscore');
 //
 // memoize
 //             `.trim();
 //
 //             it('combines the destructured import and sorts items', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // var { debounce, memoize, xyz } = require('underscore');
 //
 // memoize
@@ -1374,14 +1388,14 @@ foo
 //             });
 //
 //             describe('when the module is already in the destructured object', () => {
-//               this.text = `;
+//               text = `;
 // var { debounce, memoize } = require('underscore');
 //
 // memoize
 //               `.trim();
 //
 //               it('does not add a duplicate', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // var { debounce, memoize } = require('underscore');
 //
 // memoize
@@ -1407,11 +1421,11 @@ foo
 //             },
 //           }
 //         });
-//         this.text = '_';
-//         this.word = '_';
+//         text = '_';
+//         word = '_';
 //
 //         it('resolves the main alias without a named import', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import _ from 'underscore';
 //
 // _
@@ -1419,14 +1433,14 @@ foo
 //         });
 //
 //         describe('when a named import exists for the same module', () => {
-//           this.text = `;
+//           text = `;
 // import { memoize } from 'underscore';
 //
 // _
 //           `.trim();
 //
 //           it('adds the default import', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import _, { memoize } from 'underscore';
 //
 // _
@@ -1435,11 +1449,11 @@ foo
 //         });
 //
 //         describe('when importing a named export', () => {
-//           this.text = 'memoize';
-//           this.word = 'memoize';
+//           text = 'memoize';
+//           word = 'memoize';
 //
 //           it('uses a named import', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import { memoize } from 'underscore';
 //
 // memoize
@@ -1447,7 +1461,7 @@ foo
 //           });
 //
 //           describe('with other imports', () => {
-//             this.text = `;
+//             text = `;
 // import bar from 'foo/bar';
 // import { xyz } from 'alphabet';
 //
@@ -1455,7 +1469,7 @@ foo
 //             `.trim();
 //
 //             it('places the import at the right place', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import { memoize } from 'underscore';
 // import { xyz } from 'alphabet';
 // import bar from 'foo/bar';
@@ -1466,14 +1480,14 @@ foo
 //           });
 //
 //           describe('when other named imports exist for the same module', () => {
-//             this.text = `;
+//             text = `;
 // import { xyz, debounce } from 'underscore';
 //
 // memoize
 //             `.trim();
 //
 //             it('combines the named import and sorts items', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import { debounce, memoize, xyz } from 'underscore';
 //
 // memoize
@@ -1481,14 +1495,14 @@ foo
 //             });
 //
 //             describe('when the module is already in the named imports', () => {
-//               this.text = `;
+//               text = `;
 // import { debounce, memoize, xyz } from 'underscore';
 //
 // memoize
 //               `.trim();
 //
 //               it('does not add a duplicate', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // import { debounce, memoize, xyz } from 'underscore';
 //
 // memoize
@@ -1498,14 +1512,14 @@ foo
 //           });
 //
 //           describe('when a default import exists for the same module', () => {
-//             this.text = `;
+//             text = `;
 // import _ from 'underscore';
 //
 // memoize
 //             `.trim();
 //
 //             it('adds the named import', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import _, { memoize } from 'underscore';
 //
 // memoize
@@ -1513,14 +1527,14 @@ foo
 //             });
 //
 //             describe('when the module is already in the named import', () => {
-//               this.text = `;
+//               text = `;
 // import _, { memoize } from 'underscore';
 //
 // memoize
 //               `.trim();
 //
 //               it('does not add a duplicate', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // import _, { memoize } from 'underscore';
 //
 // memoize
@@ -1532,7 +1546,7 @@ foo
 //       });
 //
 //       describe('with a custom `import_function`', () => {
-//         this.existing_files = ['bar/foo.js'];
+//         existingFiles = ['bar/foo.js'];
 //
 //         describe('and `declaration_keyword=import`', () => {
 //           let(:configuration) do
@@ -1543,7 +1557,7 @@ foo
 //           });
 //
 //           it('does nothing special', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1560,7 +1574,7 @@ foo
 //           });
 //
 //           it('uses the custom import function instead of "require"', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // const foo = myRequire('bar/foo');
 //
 // foo
@@ -1570,13 +1584,13 @@ foo
 //       });
 //
 //       describe('when strip_file_extensions is empty', () => {
-//         this.existing_files = ['bar/foo.js'];
+//         existingFiles = ['bar/foo.js'];
 //         let(:configuration) do
 //           super().merge('strip_file_extensions' => [])
 //         });
 //
 //         it('keeps the file });ing in the import', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'bar/foo.js';
 //
 // foo
@@ -1585,13 +1599,13 @@ foo
 //       });
 //
 //       describe('with excludes', () => {
-//         this.existing_files = ['bar/foo/foo.js'];
+//         existingFiles = ['bar/foo/foo.js'];
 //         let(:configuration) do
 //           super().merge('excludes' => ['**/foo/**'])
 //         });
 //
 //         it('does not add an import', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // foo
 //           `.trim();
 //         });
@@ -1609,10 +1623,10 @@ foo
 //         });
 //
 //         describe('with a variable name that will resolve', () => {
-//           this.existing_files = ['bar/foo.jsx'];
+//           existingFiles = ['bar/foo.jsx'];
 //
 //           it('adds an import to the top using the declaration_keyword', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // const foo = require('bar/foo');
 //
 // foo
@@ -1620,14 +1634,14 @@ foo
 //           });
 //
 //           describe('when that variable is already imported using `var`', () => {
-//             this.text = `;
+//             text = `;
 // var foo = require('bar/foo');
 //
 // foo
 //             `.trim();
 //
 //             it('changes the `var` to declaration_keyword', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // const foo = require('bar/foo');
 //
 // foo
@@ -1636,7 +1650,7 @@ foo
 //           });
 //
 //           describe('when the import contains a line-break', () => {
-//             this.text = `;
+//             text = `;
 // var foo =
 //   require('bar/foo');
 //
@@ -1644,7 +1658,7 @@ foo
 //             `.trim();
 //
 //             it('changes the `var` to declaration_keyword and removes space', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // const foo = require('bar/foo');
 //
 // foo
@@ -1653,7 +1667,7 @@ foo
 //           });
 //
 //           describe('when other imports exist', () => {
-//             this.text = `;
+//             text = `;
 // var zoo = require('foo/zoo');
 // let bar = require('foo/bar');
 //
@@ -1661,7 +1675,7 @@ foo
 //             `.trim();
 //
 //             it('adds the import and sorts and groups the entire list', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // const foo = require('bar/foo');
 //
 // var zoo = require('foo/zoo');
@@ -1681,17 +1695,17 @@ foo
 //         });
 //
 //         describe('with a variable name that will resolve', () => {
-//           this.existing_files = ['bar/foo.jsx', 'bar/fromfoo.jsx'];
+//           existingFiles = ['bar/foo.jsx', 'bar/fromfoo.jsx'];
 //
 //           describe('when that variable is already imported using `var`', () => {
-//             this.text = `;
+//             text = `;
 // var foo = require('bar/foo');
 //
 // foo
 //             `.trim();
 //
 //             it('changes the `var` to declaration_keyword', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1700,14 +1714,14 @@ foo
 //           });
 //
 //           describe('when that variable already exists with a different style', () => {
-//             this.text = `;
+//             text = `;
 // var foo = require("bar/foo");
 //
 // foo
 //             `.trim();
 //
 //             it('changes `var` to declaration_keyword and doubles to singles', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1716,15 +1730,15 @@ foo
 //           });
 //
 //           describe('when the imported variable has "from" in it', () => {
-//             this.word = 'fromfoo';
-//             this.text = `;
+//             word = 'fromfoo';
+//             text = `;
 // var fromfoo = require('bar/fromfoo');
 //
 // fromfoo
 //             `.trim();
 //
 //             it('changes the `var` to declaration_keyword', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import fromfoo from 'bar/fromfoo';
 //
 // fromfoo
@@ -1733,7 +1747,7 @@ foo
 //           });
 //
 //           describe('when the import contains a line-break', () => {
-//             this.text = `;
+//             text = `;
 // var foo =
 //   require('bar/foo');
 //
@@ -1741,7 +1755,7 @@ foo
 //             `.trim();
 //
 //             it('changes the `var` to declaration_keyword and removes space', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1750,7 +1764,7 @@ foo
 //           });
 //
 //           describe('when other imports exist', () => {
-//             this.text = `;
+//             text = `;
 // var zoo = require('foo/zoo');
 // let bar = require('foo/bar');
 //
@@ -1758,7 +1772,7 @@ foo
 //             `.trim();
 //
 //             it('adds the import and sorts and groups the entire list', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // var zoo = require('foo/zoo');
@@ -1773,8 +1787,8 @@ foo
 //       });
 //
 //       describe('with `use_relative_paths=true`', () => {
-//         this.existing_files = ['bar/foo.jsx'];
-//         this.text = `;
+//         existingFiles = ['bar/foo.jsx'];
+//         text = `;
 // foo
 //         `.trim();
 //
@@ -1783,10 +1797,10 @@ foo
 //         });
 //
 //         describe('when the current file is in the same lookup_path', () => {
-//           this.path_to_current_file = File.join(tmp_dir, 'bar/current.js');
+//           pathToCurrentFile = File.join(tmp_dir, 'bar/current.js');
 //
 //           it('uses a relative import path', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import foo from './foo';
 //
 // foo
@@ -1795,10 +1809,10 @@ foo
 //         });
 //
 //         describe('when the current file is not in the same lookup_path', () => {
-//           this.path_to_current_file = '/foo/bar/current.js';
+//           pathToCurrentFile = '/foo/bar/current.js';
 //
 //           it('does not use a relative import path', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1809,8 +1823,8 @@ foo
 //
 //       describe('with local configuration defined in the main config file', () => {
 //         this.pattern = 'foo/**';
-//         this.existing_files = ['bar/foo.jsx'];
-//         this.path_to_current_file = 'foo/bar.js';
+//         existingFiles = ['bar/foo.jsx'];
+//         pathToCurrentFile = 'foo/bar.js';
 //         let(:configuration) do
 //           [
 //             super(),
@@ -1821,12 +1835,12 @@ foo
 //           ]
 //         });
 //
-//         this.text = 'foo';
-//         this.word = 'foo';
+//         text = 'foo';
+//         word = 'foo';
 //
 //         describe('when the pattern matches the file being edited', () => {
 //           it('uses local config', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // var foo = require('bar/foo');
 //
 // foo
@@ -1838,7 +1852,7 @@ foo
 //           this.pattern = 'car/**';
 //
 //           it('falls back to default config', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1848,7 +1862,7 @@ foo
 //
 //         describe('with an applies_from pattern', () => {
 //           this.from_pattern = `${File.basename(tmp_dir)}/bar/**`;
-//           this.path_to_current_file = `${File.basename(tmp_dir)}/foo/bar.js`;
+//           pathToCurrentFile = `${File.basename(tmp_dir)}/foo/bar.js`;
 //           let(:configuration) do
 //             super() << {
 //               'applies_from' => from_pattern,
@@ -1861,7 +1875,7 @@ foo
 //
 //           describe('that matches the path of the file being imported', () => {
 //             it('uses local config', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // var foo = quack('../bar/foo.jsx');
 //
 // foo
@@ -1876,7 +1890,7 @@ foo
 //               });
 //
 //               it('uses local config', () => {
-//                 expect(this.subject()).toEqual(`)});
+//                 expect(subject()).toEqual(`)});
 // var foo = quack('../bar/foo.jsx');
 //
 // foo
@@ -1889,7 +1903,7 @@ foo
 //             this.from_pattern = 'foo/**';
 //
 //             it('falls back to default config', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1945,7 +1959,7 @@ foo
 //
 //     describe('when no undefined variables exist', () => {
 //       it('leaves the buffer unchanged', () => {
-//         expect(this.subject()).toEqual(text)});
+//         expect(subject()).toEqual(text)});
 //       });
 //     });
 //
@@ -1960,13 +1974,13 @@ foo
 //     });
 //
 //     describe('when one undefined variable exists', () => {
-//       this.existing_files = ['bar/foo.jsx'];
+//       existingFiles = ['bar/foo.jsx'];
 //       let(:eslint_result) do
 //         'stdin:3:11: "foo" is not defined. [Error/no-undef]'
 //       });
 //
 //       it('imports that variable', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1981,7 +1995,7 @@ foo
 //         });
 //
 //         it('imports that import', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -1997,7 +2011,7 @@ foo
 //         });
 //
 //         it('still imports the import', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -2007,8 +2021,8 @@ foo
 //     });
 //
 //     describe('when multiple undefined variables exist', () => {
-//       this.existing_files = ['bar/foo.jsx', 'bar.js'];
-//       this.text = 'var a = foo + bar;';
+//       existingFiles = ['bar/foo.jsx', 'bar.js'];
+//       text = 'var a = foo + bar;';
 //
 //       let(:eslint_result) do
 //         "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
@@ -2016,7 +2030,7 @@ foo
 //       });
 //
 //       it('imports all variables', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import bar from 'bar';
 // import foo from 'bar/foo';
 //
@@ -2026,8 +2040,8 @@ foo
 //     });
 //
 //     describe('when the list of undefined variables has duplicates', () => {
-//       this.existing_files = ['bar/foo.jsx', 'bar.js'];
-//       this.text = 'var a = foo + bar;';
+//       existingFiles = ['bar/foo.jsx', 'bar.js'];
+//       text = 'var a = foo + bar;';
 //
 //       let(:eslint_result) do
 //         "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
@@ -2037,7 +2051,7 @@ foo
 //       });
 //
 //       it('imports all variables', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import bar from 'bar';
 // import foo from 'bar/foo';
 //
@@ -2047,7 +2061,7 @@ foo
 //     });
 //
 //     describe('when an implicit React import is missing', () => {
-//       this.text = 'var a = <span/>;';
+//       text = 'var a = <span/>;';
 //
 //       let(:eslint_result) do
 //         "stdin:3:11: 'React' must be in scope when using JSX\n"
@@ -2055,17 +2069,17 @@ foo
 //
 //       describe('when react is not available', () => {
 //         it('leaves the buffer unchanged', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // var a = <span/>;
 //           `.trim();
 //         });
 //       });
 //
 //       describe('when react is available', () => {
-//         this.package_dependencies = ['react'];
+//         packageDependencies = ['react'];
 //
 //         it('imports React', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import React from 'react';
 //
 // var a = <span/>;
@@ -2076,12 +2090,12 @@ foo
 //
 //     describe('when no unused variables exist', () => {
 //       it('leaves the buffer unchanged', () => {
-//         expect(this.subject()).toEqual(text)});
+//         expect(subject()).toEqual(text)});
 //       });
 //     });
 //
 //     describe('when one unused import exists', () => {
-//       this.text = `;
+//       text = `;
 // import foo from 'bar/foo';
 // import zar from 'foo/zar';
 //
@@ -2092,7 +2106,7 @@ foo
 //       });
 //
 //       it('removes that import', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import zar from 'foo/zar';
 //
 // bar
@@ -2100,20 +2114,20 @@ foo
 //       });
 //
 //       describe('when that import is the last one', () => {
-//         this.text = `;
+//         text = `;
 // import foo from 'bar/foo';
 //
 // bar
 //         `.trim();
 //
 //         it('removes that import and leaves no whitespace', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // bar
 //           `.trim();
 //         });
 //
 //         describe('and there is a comment above', () => {
-//           this.text = `;
+//           text = `;
 // // I'm a comment
 // import foo from 'bar/foo';
 //
@@ -2125,14 +2139,14 @@ foo
 //           });
 //
 //           it('removes that import and leaves no whitespace', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // // I'm a comment
 // bar
 //             `.trim();
 //           });
 //
 //           describe('with whitespace after the comment', () => {
-//             this.text = `;
+//             text = `;
 // // I'm a comment
 //
 // import foo from 'bar/foo';
@@ -2145,7 +2159,7 @@ foo
 //             });
 //
 //             it('removes that import and leaves one newline', () => {
-//               expect(this.subject()).toEqual(`)});
+//               expect(subject()).toEqual(`)});
 // // I'm a comment
 //
 // bar
@@ -2155,13 +2169,13 @@ foo
 //         });
 //
 //         describe('and there is no previous whitespace', () => {
-//           this.text = `;
+//           text = `;
 // import foo from 'bar/foo';
 // bar
 //           `.trim();
 //
 //           it('removes that import and leaves no whitespace', () => {
-//             expect(this.subject()).toEqual(`)});
+//             expect(subject()).toEqual(`)});
 // bar
 //             `.trim();
 //           });
@@ -2170,7 +2184,7 @@ foo
 //     });
 //
 //     describe('when one unused import exists and eslint uses single quotes', () => {
-//       this.text = `;
+//       text = `;
 // import bar from 'foo/bar';
 // import foo from 'bar/foo';
 //
@@ -2181,7 +2195,7 @@ foo
 //       });
 //
 //       it('removes that import', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import bar from 'foo/bar';
 //
 // bar
@@ -2190,7 +2204,7 @@ foo
 //     });
 //
 //     describe('when multiple unused imports exist', () => {
-//       this.text = `;
+//       text = `;
 // import bar from 'foo/bar';
 // import baz from 'bar/baz';
 // import foo from 'bar/foo';
@@ -2205,7 +2219,7 @@ foo
 //       });
 //
 //       it('removes all unused imports', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import baz from 'bar/baz';
 //
 // baz
@@ -2214,8 +2228,8 @@ foo
 //     });
 //
 //     describe('when an unused import and an undefined import exists', () => {
-//       this.existing_files = ['bar/foo.jsx'];
-//       this.text = `;
+//       existingFiles = ['bar/foo.jsx'];
+//       text = `;
 // import bar from 'foo/bar';
 //
 // foo
@@ -2228,7 +2242,7 @@ foo
 //       });
 //
 //       it('removes the unused import and adds the missing one', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import foo from 'bar/foo';
 //
 // foo
@@ -2237,7 +2251,7 @@ foo
 //     });
 //
 //     describe('when a named import has an unused variable', () => {
-//       this.text = `;
+//       text = `;
 // import { bar, foo } from 'baz';
 //
 // bar
@@ -2249,7 +2263,7 @@ foo
 //       });
 //
 //       it('removes that variable from the named imports list', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import { bar } from 'baz';
 //
 // bar
@@ -2258,7 +2272,7 @@ foo
 //     });
 //
 //     describe('when the last import is removed from a named import', () => {
-//       this.text = `;
+//       text = `;
 // import bar from 'bar';
 // import { foo } from 'baz';
 //
@@ -2271,7 +2285,7 @@ foo
 //       });
 //
 //       it('removes the whole import', () => {
-//         expect(this.subject()).toEqual(`)});
+//         expect(subject()).toEqual(`)});
 // import bar from 'bar';
 //
 // bar
@@ -2280,7 +2294,7 @@ foo
 //     });
 //
 //     describe('when an unused variable that shares its name with an import exists', () => {
-//       this.text = `;
+//       text = `;
 // import uuid from 'uuid';
 //
 // function bar() {
@@ -2302,18 +2316,18 @@ foo
 //       });
 //
 //       it('does not remove the import', () => {
-//         expect(this.subject()).toEqual(text)});
+//         expect(subject()).toEqual(text)});
 //       });
 //     });
 //   });
 //
 //   describe '#rewrite_imports' do
-//     this.existing_files = ['app/baz.jsx'];
+//     existingFiles = ['app/baz.jsx'];
 //     let(:configuration) do
 //       super().merge('named_exports' => { 'bar' => ['foo'] })
 //     });
-//     this.package_dependencies = ['bar'];
-//     this.path_to_current_file = `${tmp_dir}/app/bilbo/frodo.js`;
+//     packageDependencies = ['bar'];
+//     pathToCurrentFile = `${tmp_dir}/app/bilbo/frodo.js`;
 //
 //     subject do
 //       described_class.new(editor).rewrite_imports
@@ -2321,7 +2335,7 @@ foo
 //     });
 //
 //     describe('when imports exist', () => {
-//       this.text = `;
+//       text = `;
 // import baz from 'app/baz';
 // import bar, { foo } from 'bar';
 //
@@ -2330,7 +2344,7 @@ foo
 //
 //       describe('and we are not changing anything in config', () => {
 //         it('only sorts and groups imports', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import bar, { foo } from 'bar';
 //
 // import baz from 'app/baz';
@@ -2346,7 +2360,7 @@ foo
 //         });
 //
 //         it('sorts imports', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import bar, { foo } from 'bar';
 // import baz from 'app/baz';
 //
@@ -2361,7 +2375,7 @@ foo
 //         });
 //
 //         it('groups, sorts, and changes imports to use `const`', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // const bar = require('bar');
 // const { foo } = require('bar');
 //
@@ -2374,7 +2388,7 @@ foo
 //     });
 //
 //     describe('when imports use a mix of relative and normal paths', () => {
-//       this.text = `;
+//       text = `;
 // import bar, { foo } from 'bar';
 // import baz from '../baz';
 //
@@ -2387,7 +2401,7 @@ foo
 //         });
 //
 //         it('sorts, groups, and changes to absolute paths', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import bar, { foo } from 'bar';
 //
 // import baz from 'app/baz';
@@ -2399,7 +2413,7 @@ foo
 //     });
 //
 //     describe('when imports use normal paths', () => {
-//       this.text = `;
+//       text = `;
 // import bar, { foo } from 'bar';
 // import baz from 'app/baz';
 //
@@ -2412,7 +2426,7 @@ foo
 //         });
 //
 //         it('sorts, groups, and changes to relative paths', () => {
-//           expect(this.subject()).toEqual(`)});
+//           expect(subject()).toEqual(`)});
 // import bar, { foo } from 'bar';
 //
 // import baz from '../baz';
@@ -2431,22 +2445,22 @@ foo
 //     });
 //
 //     describe('with a variable name that will resolve', () => {
-//       this.existing_files = ['bar/foo.jsx'];
+//       existingFiles = ['bar/foo.jsx'];
 //
 //       it('opens the file', () => {
-//         expect(this.subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
+//         expect(subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
 //       });
 //     });
 //
 //     describe('with a variable name that will not resolve', () => {
-//       this.existing_files = ['bar/goo.jsx'];
+//       existingFiles = ['bar/goo.jsx'];
 //
 //       it('opens nothing', () => {
 //         expect(subject).to be(nil)
 //       });
 //
 //       describe('when there is a current import for the variable', () => {
-//         this.text = `;
+//         text = `;
 // import foo from 'some-package';
 //
 // foo
@@ -2454,12 +2468,12 @@ foo
 //
 //         describe('not matching a package dependency', () => {
 //           it('opens the import path', () => {
-//             expect(this.subject()).toEqual('some-package')});
+//             expect(subject()).toEqual('some-package')});
 //           });
 //         });
 //
 //         describe('matching a package dependency', () => {
-//           this.package_dependencies = ['some-package'];
+//           packageDependencies = ['some-package'];
 //
 //           it('opens the package main file', () => {
 //             expect(subject).to eq(
@@ -2470,15 +2484,15 @@ foo
 //     });
 //
 //     describe('with a variable name that will resolve to a package dependency', () => {
-//       this.package_dependencies = ['foo'];
+//       packageDependencies = ['foo'];
 //
 //       it('opens the `main` file', () => {
-//         expect(this.subject()).toEqual('node_modules/foo/foo-main.jsx')});
+//         expect(subject()).toEqual('node_modules/foo/foo-main.jsx')});
 //       });
 //     });
 //
 //     describe('with a variable name matching an alias', () => {
-//       this.word = 'styles';
+//       word = 'styles';
 //       let(:configuration) do
 //         super().merge('aliases' => { 'styles' => aliaz })
 //       });
@@ -2487,16 +2501,16 @@ foo
 //         this.aliaz = './index.scss';
 //
 //         it('opens the file relative to the file being edited', () => {
-//           expect(this.subject()).toEqual(`${tmp_dir}/index.scss`)});
+//           expect(subject()).toEqual(`${tmp_dir}/index.scss`)});
 //         });
 //       });
 //
 //       describe('to an absolute resource', () => {
 //         this.aliaz = 'stylez';
-//         this.package_dependencies = [aliaz];
+//         packageDependencies = [aliaz];
 //
 //         it('opens the alias main file', () => {
-//           expect(this.subject()).toEqual(`node_modules/${aliaz}/stylez-main.jsx`)});
+//           expect(subject()).toEqual(`node_modules/${aliaz}/stylez-main.jsx`)});
 //         });
 //       });
 //     });
@@ -2526,28 +2540,28 @@ foo
 //         });
 //
 //         describe('and the user selects', () => {
-//           this.selections = { 'foo' => 0 };
+//           selections = { 'foo' => 0 };
 //
 //           it('opens the first one', () => {
-//             expect(this.subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
+//             expect(subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
 //           });
 //         });
 //       });
 //
 //       describe('when the variable has been previously imported', () => {
 //         describe('as a default import', () => {
-//           this.text = `;
+//           text = `;
 // import foo from 'bar/foo';
 //
 // foo
 //           `.trim();
 //
 //           it('opens the file', () => {
-//             expect(this.subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
+//             expect(subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
 //           });
 //
 //           describe('and there are other imports', () => {
-//             this.text = `;
+//             text = `;
 // import bar from 'foo/bar';
 // import foo from 'bar/foo';
 // import foobar from 'bar/foobar';
@@ -2555,20 +2569,20 @@ foo
 // foo
 //             `.trim();
 //             it('opens the file', () => {
-//               expect(this.subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
+//               expect(subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
 //             });
 //           });
 //         });
 //
 //         describe('as a named import', () => {
-//           this.text = `;
+//           text = `;
 // import { foo } from 'bar/foo';
 //
 // foo
 //           `.trim();
 //
 //           it('opens the file', () => {
-//             expect(this.subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
+//             expect(subject()).toEqual(`${File.basename(tmp_dir)}/bar/foo.jsx`)});
 //           });
 //         });
 //       });
