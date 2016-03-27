@@ -1,6 +1,9 @@
 'use strict';
 
+const FileUtils = require('../lib/FileUtils');
+
 jest.autoMockOff();
+jest.mock('../lib/FileUtils');
 
 const childProcess = require('child_process');
 const fs = require('fs');
@@ -23,7 +26,7 @@ describe('Importer', () => {
     this.packageDependencies = [];
     this.pathToCurrentFile = `${this.tmpDir}/test.js`;
     this.configuration = {
-      lookup_paths: path.basename(this.tmpDir),
+      lookup_paths: [path.basename(this.tmpDir)],
     };
     this.selections = {};
   });
@@ -40,32 +43,30 @@ describe('Importer', () => {
       );
     };
 
-    const fileContents = {
-      '.importjs.json': JSON.stringify(this.configuration),
-      'package.json': JSON.stringify({
-        dependencies: this.packageDependencies,
-      }),
+    FileUtils.readJsonFile.mockImplementation((file) => {
+      if (file === '.importjs.json') {
+        return this.configuration;
+      } else if (file === 'package.json') {
+        return this.packageDependencies;
+      } else if (this.packageDependencies.indexOf(file) !== -1) {
+        return { main: `${file}-main.jsx` };
+      }
+      return null;
+    });
+
+    this.setup = () => {
+      this.existingFiles.forEach((file) => {
+        const fullPath = `${this.tmpDir}/${file}`;
+        mkdirp.sync(path.dirname(fullPath));
+        fs.closeSync(fs.openSync(fullPath, 'w')); // touch
+      });
+
+      if (this.packageJsonContent) {
+        mkdirp.sync(`${this.tmpDir}Foo`);
+        fs.writeFileSync(`${this.tmpDir}/Foo/package.json`,
+                         JSON.stringify(this.packageJsonContent));
+      }
     };
-    this.packageDependencies.forEach((dep) => {
-      fileContents[dep] = JSON.stringify({ main: `${dep}-main.jsx` });
-    });
-    allow(fs, 'readFileSync', fileContents);
-
-    const existingFiles = {};
-    Object.keys(fileContents).forEach((file) => { existingFiles[file] = true; });
-    allow(fs, 'existsSync', existingFiles);
-
-    this.existingFiles.forEach((file) => {
-      const fullPath = `${this.tmpDir}/${file}`;
-      mkdirp.sync(path.dirname(fullPath));
-      fs.closeSync(fs.openSync(fullPath, 'w')); // touch
-    });
-
-    if (this.packageJsonContent) {
-      mkdirp.sync(`${this.tmpDir}Foo`);
-      fs.writeFileSync(`${this.tmpDir}/Foo/package.json`,
-                       JSON.stringify(this.packageJsonContent));
-    }
   });
 
   afterEach(() => {
@@ -75,6 +76,7 @@ describe('Importer', () => {
   describe('#import', () => {
     beforeEach(() => {
       this.subject = () => {
+        this.setup();
         this.editor = new CommandLineEditor(this.text.split('\n'), {
           word: this.word,
           pathToFile: this.pathToCurrentFile,
