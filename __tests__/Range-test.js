@@ -6,10 +6,12 @@ const Range = require('../lib/Range');
 
 describe('Range', () => {
   let subject;
-  const start = 2;
-  const end = 4;
+  let start;
+  let end;
 
   beforeEach(() => {
+    start = 2;
+    end = 4;
     subject = () => new Range(start, end);
   });
 
@@ -21,8 +23,21 @@ describe('Range', () => {
     expect(subject().end).toEqual(4);
   });
 
-  it('has a size', () => {
-    expect(subject().size()).toEqual(3);
+  describe('.size()', () => {
+    it('is inclusive of `end`', () => {
+      expect(subject().size()).toEqual(3);
+    });
+
+    describe('when start and end are equal', () => {
+      beforeEach(() => {
+        start = 2;
+        end = 2;
+      });
+
+      it('has a size of zero', () => {
+        expect(subject().size()).toEqual(0);
+      });
+    });
   });
 
   describe('.includes()', () => {
@@ -56,6 +71,19 @@ describe('Range', () => {
       const numbers = [];
       subject().forEach((i) => numbers.push(i));
       expect(numbers).toEqual([2, 3, 4]);
+    });
+
+    describe('when start and end are equal', () => {
+      beforeEach(() => {
+        start = 2;
+        end = 2;
+      });
+
+      it('does not iterate', () => {
+        const numbers = [];
+        subject().forEach((i) => numbers.push(i));
+        expect(numbers).toEqual([]);
+      });
     });
   });
 });
