@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
-    "test": "npm run --silent lint; jest"
+    "jest": "jest",
+    "test": "npm run --silent lint; npm run --silent jest"
   },
   "repository": {
     "type": "git",
