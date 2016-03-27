@@ -39,32 +39,19 @@ describe('Importer', () => {
       lookup_paths: [path.basename(tmpDir)],
     };
     selections = {};
-  });
-
-  beforeEach(() => {
-    const allow = (object, methodName, matrix) => {
-      spyOn(object, methodName).and.callFake(
-        function fakeMethod(original, arg) { // eslint-disable-line prefer-arrow-callback
-          if (Object.keys(matrix).indexOf(arg) !== -1) {
-            return matrix[arg];
-          }
-          return original(arg);
-        }.bind(object, object[methodName])
-      );
-    };
-
-    FileUtils.readJsonFile.mockImplementation((file) => {
-      if (file === '.importjs.json') {
-        return configuration;
-      } else if (file === 'package.json') {
-        return packageDependencies;
-      } else if (packageDependencies.indexOf(file) !== -1) {
-        return { main: `${file}-main.jsx` };
-      }
-      return null;
-    });
 
     setup = () => {
+      FileUtils.readJsonFile.mockImplementation((file) => {
+        if (file === '.importjs.json') {
+          return configuration;
+        } else if (file === 'package.json') {
+          return packageDependencies;
+        } else if (packageDependencies.indexOf(file) !== -1) {
+          return { main: `${file}-main.jsx` };
+        }
+        return null;
+      });
+
       existingFiles.forEach((file) => {
         const fullPath = `${tmpDir}/${file}`;
         mkdirp.sync(path.dirname(fullPath));
