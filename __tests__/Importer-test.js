@@ -15,7 +15,7 @@ const CommandLineEditor = require('../lib/CommandLineEditor');
 const Importer = require('../lib/Importer');
 
 describe('Importer', () => {
-  let tmpDir;
+  const tmpDir = './tmp';
   let word;
   let text;
   let existingFiles;
@@ -27,7 +27,6 @@ describe('Importer', () => {
   let setup;
 
   beforeEach(() => {
-    tmpDir = './tmp';
     fs.mkdirSync(tmpDir);
 
     word = 'foo';
@@ -69,11 +68,11 @@ describe('Importer', () => {
       existingFiles.forEach((file) => {
         const fullPath = `${tmpDir}/${file}`;
         mkdirp.sync(path.dirname(fullPath));
-        fs.closeSync(fs.openSync(fullPath, 'w')); // touch
+        fs.closeSync(fs.openSync(fullPath, 'w')); // create empty file
       });
 
       if (packageJsonContent) {
-        mkdirp.sync(`${tmpDir}Foo`);
+        mkdirp.sync(`${tmpDir}/Foo`);
         fs.writeFileSync(`${tmpDir}/Foo/package.json`,
                          JSON.stringify(packageJsonContent));
       }
@@ -81,7 +80,7 @@ describe('Importer', () => {
   });
 
   afterEach(() => {
-    childProcess.execSync('rm -r ./tmp');
+    childProcess.execSync(`rm -r ${tmpDir}`);
   });
 
   describe('#import', () => {
