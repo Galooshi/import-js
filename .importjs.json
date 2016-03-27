@@ -6,7 +6,7 @@
     "use_relative_paths": true
   },
   {
-    "applies_to": "tests/*",
+    "applies_to": "__tests__/*",
     "import_dev_dependencies": true
   }
 ]
