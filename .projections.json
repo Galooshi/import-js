@@ -12,9 +12,11 @@
   "lib/*.js": {
     "alternate": "__tests__/{}-test.js",
     "type": "source",
+    "dispatch": "npm run --silent jest __tests__/{}-test.js"
   },
   "__tests__/*-test.js": {
     "alternate": "lib/{}.js",
     "type": "test",
+    "dispatch": "npm run --silent jest {file}"
   }
 }
