@@ -416,102 +416,113 @@ foo
 import foo from 'bar/foo';
 
 foo
-              `.trim()
-            );
+              `.trim());
+          });
+        });
+
+        describe("when comments and 'use strict' are at the top of the file", () => {
+          beforeEach(() => {
+            text = `
+'use strict';
+// One-line comment
+/* Multi-line comment */
+
+foo
+            `.trim();
+          });
+
+          it('adds the import below', () => {
+            expect(subject()).toEqual(`
+'use strict';
+// One-line comment
+/* Multi-line comment */
+
+import foo from 'bar/foo';
+
+foo
+            `.trim());
+          });
+        });
+
+        describe('when the variable name matches last folder+filename', () => {
+          beforeEach(() => {
+            existingFiles = ['sko/bar/foo.jsx'];
+            word = 'barFoo';
+            text = 'barFoo';
+          });
+
+          it('resolves the import', () => {
+            expect(subject()).toEqual(`
+import barFoo from 'sko/bar/foo';
+
+barFoo
+            `.trim());
+          });
+
+          describe('when the last folder });s with an "s"', () => {
+            beforeEach(() => {
+              existingFiles = ['sko/bars/foo.jsx'];
+            });
+
+            it('resolves the import', () => {
+              expect(subject()).toEqual(`
+import barFoo from 'sko/bars/foo';
+
+barFoo
+              `.trim());
+            });
+
+            describe('when the variable also has "s" at the });', () => {
+              beforeEach(() => {
+                word = 'barsFoo';
+                text = 'barsFoo';
+              });
+
+              it('resolves the import', () => {
+                expect(subject()).toEqual(`
+import barsFoo from 'sko/bars/foo';
+
+barsFoo
+                `.trim());
+              });
+            });
+          });
+
+          describe('when the last folder });s with "es"', () => {
+            beforeEach(() => {
+              existingFiles = ['sko/statuses/foo.jsx'];
+              word = 'statusFoo';
+              text = 'statusFoo';
+            });
+
+            it('resolves the import', () => {
+              expect(subject()).toEqual(`
+import statusFoo from 'sko/statuses/foo';
+
+statusFoo
+              `.trim());
+            });
+
+            describe('when the variable also has "es" at the });', () => {
+              beforeEach(() => {
+                word = 'statusesFoo';
+                text = 'statusesFoo';
+              });
+
+              it('resolves the import', () => {
+                expect(subject()).toEqual(`
+import statusesFoo from 'sko/statuses/foo';
+
+statusesFoo
+                `.trim());
+              });
+            });
           });
         });
       });
     });
   });
 });
-
-//         describe("when comments and 'use strict' are at the top of the file", () => {
-//           text = `;
-// 'use strict';
-// // One-line comment
-// /* Multi-line comment */
-//
-// foo
-//           `.trim();
-//
-//           it('adds the import below', () => {
-//             expect(subject()).toEqual(`)});
-// 'use strict';
-// // One-line comment
-// /* Multi-line comment */
-//
-// import foo from 'bar/foo';
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//
-//         describe('when the variable name matches last folder+filename', () => {
-//           existingFiles = ['sko/bar/foo.jsx'];
-//           word = 'barFoo';
-//           text = 'barFoo';
-//
-//           it('resolves the import', () => {
-//             expect(subject()).toEqual(`)});
-// import barFoo from 'sko/bar/foo';
-//
-// barFoo
-//             `.trim();
-//           });
-//
-//           describe('when the last folder });s with an "s"', () => {
-//             existingFiles = ['sko/bars/foo.jsx'];
-//
-//             it('resolves the import', () => {
-//               expect(subject()).toEqual(`)});
-// import barFoo from 'sko/bars/foo';
-//
-// barFoo
-//               `.trim();
-//             });
-//
-//             describe('when the variable also has "s" at the });', () => {
-//               word = 'barsFoo';
-//               text = 'barsFoo';
-//
-//               it('resolves the import', () => {
-//                 expect(subject()).toEqual(`)});
-// import barsFoo from 'sko/bars/foo';
-//
-// barsFoo
-//                 `.trim();
-//               });
-//             });
-//           });
-//
-//           describe('when the last folder });s with "es"', () => {
-//             existingFiles = ['sko/statuses/foo.jsx'];
-//             word = 'statusFoo';
-//             text = 'statusFoo';
-//
-//             it('resolves the import', () => {
-//               expect(subject()).toEqual(`)});
-// import statusFoo from 'sko/statuses/foo';
-//
-// statusFoo
-//               `.trim();
-//             });
-//
-//             describe('when the variable also has "es" at the });', () => {
-//               word = 'statusesFoo';
-//               text = 'statusesFoo';
-//
-//               it('resolves the import', () => {
-//                 expect(subject()).toEqual(`)});
-// import statusesFoo from 'sko/statuses/foo';
-//
-// statusesFoo
-//                 `.trim();
-//               });
-//             });
-//           });
-//         });
 //
 //         describe('when the variable name matches a few folders + filename', () => {
 //           existingFiles = ['sko/bar/foo/ta.jsx'];
