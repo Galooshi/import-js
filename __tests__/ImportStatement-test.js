@@ -412,43 +412,75 @@ import foo {
       expect(subject().isEmpty()).toBe(true);
     });
   });
+
+  describe('.variables()', () => {
+    let importStatement;
+    let defaultImport;
+    let namedImports;
+    let subject;
+
+    beforeEach(() => {
+      subject = () => {
+        importStatement = new ImportStatement();
+        if (defaultImport) {
+          importStatement.defaultImport = defaultImport;
+        }
+        if (namedImports) {
+          importStatement.namedImports = namedImports;
+        }
+
+        return importStatement;
+      };
+    });
+
+    describe('without a default import or named imports', () => {
+      beforeEach(() => {
+        defaultImport = null;
+        namedImports = null;
+      });
+
+      it('is an empty array', () => {
+        expect(subject().variables()).toEqual([]);
+      });
+    });
+
+    describe('with a default import', () => {
+      beforeEach(() => {
+        defaultImport = 'foo';
+        namedImports = null;
+      });
+
+      it('has the default import', () => {
+        expect(subject().variables()).toEqual(['foo']);
+      });
+    });
+
+    describe('with named imports', () => {
+      beforeEach(() => {
+        defaultImport = null;
+        namedImports = ['foo', 'bar', 'baz'];
+      });
+
+      it('has the named imports', () => {
+        expect(subject().variables()).toEqual(['foo', 'bar', 'baz']);
+      });
+    });
+
+    describe('with a default import and named imports', () => {
+      beforeEach(() => {
+        defaultImport = 'foo';
+        namedImports = ['bar', 'baz'];
+      });
+
+      it('has the default import and named imports', () => {
+        expect(subject().variables()).toEqual(['foo', 'bar', 'baz']);
+      });
+    });
+  });
 });
 
-//describe ImportJS::ImportStatement do
-  //describe '#variables' do
-    //importStatement = described_class.new;
-    //defaultImport = null;
-    //namedImports = null;
-
-    //beforeEach(() => {
-      //importStatement.defaultImport = defaultImport if defaultImport
-      //importStatement.namedImports = namedImports if namedImports
-    //});
-
-    //subject { importStatement.variables }
-
-    //describe('without a default import or named imports', () => {
-      //it { should eq([]) }
-    //});
-
-    //describe('with a default import', () => {
-      //defaultImport = 'foo';
-      //it { should eq(['foo']) }
-    //});
-
-    //describe('with named imports', () => {
-      //namedImports = %w[foo bar baz];
-      //it { should eq(%w[foo bar baz]) }
-    //});
-
-    //describe('with a default import and named imports', () => {
-      //defaultImport = 'foo';
-      //namedImports = %w[bar baz];
-      //it { should eq(%w[foo bar baz]) }
-    //});
-  //});
-
-  //describe '#merge' do
+//describe(ImportJS::ImportStatement, () => {
+  //describe('.merge()', () => {
     //existing_importStatement = described_class.new;
     //new_importStatement = described_class.new;
     //existing_defaultImport = null;
@@ -539,7 +571,7 @@ import foo {
     //});
   //});
 
-  //describe '#to_import_strings' do
+  //describe('.to_import_strings()', () => {
     //importStatement = described_class.new;
     //import_function = 'require';
     //path = 'path';
