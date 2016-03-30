@@ -161,7 +161,6 @@ foo
         describe('when there is a blank line above the import', () => {
           beforeEach(() => {
             text = `
-
 import foo from 'bar/foo';
 
 foo`;
@@ -195,7 +194,7 @@ foo
 
         describe("when 'use strict' is at the top of the file twice", () => {
           beforeEach(() => {
-            text = `;
+            text = `
 'use strict';
 'use strict';
 
@@ -218,7 +217,7 @@ foo
 
         describe('when a one-line comment is at the top of the file', () => {
           beforeEach(() => {
-            text = `;
+            text = `
 // One-line comment
 
 foo
@@ -263,7 +262,6 @@ foo
         describe('when just an empty line is at the top', () => {
           beforeEach(() => {
             text = `
-
 foo`;
           });
 
@@ -283,7 +281,8 @@ foo
 
 // One-line comment
 
-foo`;
+foo
+            `.trimRight();
           });
 
           it('adds the import below', () => {
@@ -294,14 +293,14 @@ foo`;
 import foo from 'bar/foo';
 
 foo
-              `.trim()
+              `.trimRight()
             );
           });
         });
 
         describe('when one-line comments with empty lines are at the top', () => {
           beforeEach(() => {
-            text = `;
+            text = `
 // One-line comment
 
 // Another one-line comment
@@ -326,7 +325,7 @@ foo
 
         describe('when a multi-line comment is at the top of the file', () => {
           beforeEach(() => {
-            text = `;
+            text = `
 /* Multi-line comment */
 
 foo
@@ -347,7 +346,7 @@ foo
 
         describe('when a multi-line comment that spans lines is at the top', () => {
           beforeEach(() => {
-            text = `;
+            text = `
 /*
   Multi-line comment
   that spans multiple lines
@@ -374,7 +373,7 @@ foo
 
         describe('when a multi-line comment is stacked weirdly', () => {
           beforeEach(() => {
-            text = `;
+            text = `
 /* Single-line multi-line comment *//*
   Multi-line comment
   that spans multiple lines
@@ -401,7 +400,7 @@ foo
 
         describe('when both comment styles are at the top of the file', () => {
           beforeEach(() => {
-            text = `;
+            text = `
 // One-line comment
 /* Multi-line comment */
 
