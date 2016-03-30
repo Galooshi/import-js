@@ -270,36 +270,36 @@ import foo {
           importStatement.namedImports = namedImports;
         }
 
-        return importStatement.hasNamedImports();
+        return importStatement;
       };
     });
 
     it('is false without a default import or named imports', () => {
-      expect(subject()).toBe(false);
+      expect(subject().hasNamedImports()).toBe(false);
     });
 
     it('is false with a default import', () => {
       defaultImport = 'foo';
-      expect(subject()).toBe(false);
+      expect(subject().hasNamedImports()).toBe(false);
     });
 
     it('is false when a default import is removed', () => {
       defaultImport = 'foo';
       subject();
       importStatement.deleteVariable('foo');
-      expect(subject()).toBe(false);
+      expect(importStatement.hasNamedImports()).toBe(false);
     });
 
     it('is true with named imports', () => {
       namedImports = ['foo'];
-      expect(subject()).toBe(true);
+      expect(subject().hasNamedImports()).toBe(true);
     });
 
     it('is false when named imports are all removed', () => {
       namedImports = ['foo'];
       subject();
       importStatement.deleteVariable('foo');
-      expect(subject()).toBe(false);
+      expect(importStatement.hasNamedImports()).toBe(false);
     });
   });
 
@@ -347,51 +347,74 @@ import foo {
       });
     });
   });
+
+  describe('.isEmpty()', () => {
+    let importStatement;
+    let defaultImport;
+    let namedImports;
+    let subject;
+
+    beforeEach(() => {
+      subject = () => {
+        importStatement = new ImportStatement();
+        if (defaultImport) {
+          importStatement.defaultImport = defaultImport;
+        }
+        if (namedImports) {
+          importStatement.namedImports = namedImports;
+        }
+
+        return importStatement;
+      };
+    });
+
+    it('is true without a default import or named imports', () => {
+      expect(subject().isEmpty()).toBe(true);
+    });
+
+    describe('with a default import', () => {
+      beforeEach(() => {
+        defaultImport = 'foo';
+        namedImports = null;
+      });
+
+      it('is false', () => {
+        expect(subject().isEmpty()).toBe(false);
+      });
+
+      it('is true when default import is removed', () => {
+        subject();
+        importStatement.deleteVariable(defaultImport);
+        expect(importStatement.isEmpty()).toBe(true);
+      });
+    });
+
+    describe('with named imports', () => {
+      beforeEach(() => {
+        defaultImport = null;
+        namedImports = ['foo'];
+      });
+
+      it('is false', () => {
+        expect(subject().isEmpty()).toBe(false);
+      });
+
+      it('is true when all named imports are removed', () => {
+        subject();
+        importStatement.deleteVariable(namedImports[0]);
+        expect(importStatement.isEmpty()).toBe(true);
+      });
+    });
+
+    it('is true with an empty array of named imports', () => {
+      defaultImport = null;
+      namedImports = [];
+      expect(subject().isEmpty()).toBe(true);
+    });
+  });
 });
 
 //describe ImportJS::ImportStatement do
-  //describe '#empty?' do
-    //importStatement = described_class.new;
-    //defaultImport = null;
-    //namedImports = null;
-
-    //beforeEach(() => {
-      //importStatement.defaultImport = defaultImport if defaultImport
-      //importStatement.namedImports = namedImports if namedImports
-    //});
-
-    //subject { importStatement.empty? }
-
-    //describe('without a default import or named imports', () => {
-      //it { should eq(true) }
-    //});
-
-    //describe('with a default import', () => {
-      //defaultImport = 'foo';
-      //it { should eq(false) }
-
-      //describe('when default import is removed', () => {
-        //before { importStatement.delete_variable!('foo') }
-        //it { should eq(true) }
-      //});
-    //});
-
-    //describe('with named imports', () => {
-      //namedImports = ['foo'];
-      //it { should eq(false) }
-
-      //describe('when named imports are removed', () => {
-        //before { importStatement.delete_variable!('foo') }
-        //it { should eq(true) }
-      //});
-    //});
-
-    //describe('with an empty array of named imports', () => {
-      //namedImports = [];
-      //it { should eq(true) }
-    //});
-  //});
-
   //describe '#variables' do
     //importStatement = described_class.new;
     //defaultImport = null;
