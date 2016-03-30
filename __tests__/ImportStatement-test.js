@@ -302,40 +302,54 @@ import foo {
       expect(subject()).toBe(false);
     });
   });
+
+  describe('.isParsedAndUntouched()', () => {
+    let importStatement;
+    let subject;
+
+    beforeEach(() => {
+      subject = () => importStatement.isParsedAndUntouched();
+    });
+
+    describe('for parsed statements', () => {
+      beforeEach(() => {
+        importStatement = ImportStatement.parse(
+          "import foo, { bar } from './lib/foo';");
+      });
+
+      it('is true', () => {
+        expect(subject()).toBe(true);
+      });
+
+      it('is false when a default import is deleted', () => {
+        importStatement.deleteVariable('foo');
+        expect(subject()).toBe(false);
+      });
+
+      it('s false when a named import is deleted', () => {
+        importStatement.deleteVariable('bar');
+        expect(subject()).toBe(false);
+      });
+
+      it('is true when nothing is deleted', () => {
+        importStatement.deleteVariable('somethingElse');
+        expect(subject()).toBe(true);
+      });
+    });
+
+    describe('for statements created through the constructor', () => {
+      beforeEach(() => {
+        importStatement = new ImportStatement();
+      });
+
+      it('is false', () => {
+        expect(subject()).toBe(false);
+      });
+    });
+  });
 });
 
 //describe ImportJS::ImportStatement do
-  //describe '#parsed_and_untouched?' do
-    //subject { statement.parsed_and_untouched? }
-
-    //describe('for parsed statements', () => {
-      //let(:statement) do
-        //described_class.parse("import foo, { bar } from 'foo';")
-      //});
-      //it { should be_truthy }
-
-      //describe('when a default import is deleted', () => {
-        //before { statement.delete_variable!('foo') }
-        //it { should be_falsy }
-      //});
-
-      //describe('when a named import is deleted', () => {
-        //before { statement.delete_variable!('bar') }
-        //it { should be_falsy }
-      //});
-
-      //describe('when nothing is deleted', () => {
-        //before { statement.delete_variable!('somethingElse') }
-        //it { should be_truthy }
-      //});
-    //});
-
-    //describe('for statements created through the constructor', () => {
-      //statement = described_class.new;
-      //it { should be_falsy }
-    //});
-  //});
-
   //describe '#empty?' do
     //importStatement = described_class.new;
     //defaultImport = null;
