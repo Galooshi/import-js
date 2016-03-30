@@ -6,475 +6,302 @@ const ImportStatement = require('../lib/ImportStatement');
 
 describe('ImportStatement', () => {
   describe('.parse()', () => {
-    let string;
-    let subject;
+    const subject = ImportStatement.parse;
 
-    beforeEach(() => {
-      subject = () => ImportStatement.parse(string);
+    it('is valid with a valid ES6 default import', () => {
+      const statement = subject("import foo from './lib/foo';");
+
+      expect(statement.assignment).toEqual('foo');
+      expect(statement.path).toEqual('./lib/foo');
     });
 
-    describe('when the string is a valid es6 default import', () => {
+    it('is valid with a non-alphanumeric default import', () => {
+      const statement = subject("import $ from 'jquery';");
+
+      expect(statement.assignment).toEqual('$');
+      expect(statement.path).toEqual('jquery');
+    });
+
+    it('it is valid with a default import with line breaks', () => {
+      const statement = subject("import foo from\n  './lib/foo';");
+
+      expect(statement.assignment).toEqual('foo');
+      expect(statement.path).toEqual('./lib/foo');
+    });
+
+    it('is valid with a valid ES6 named import', () => {
+      const statement = subject("import { foo } from './lib/foo';");
+
+      expect(statement.assignment).toEqual('{ foo }');
+      expect(statement.path).toEqual('./lib/foo');
+      expect(statement.defaultImport).toEqual(undefined);
+      expect(statement.hasNamedImports()).toBe(true);
+      expect(statement.namedImports).toEqual(['foo']);
+    });
+
+    it('is valid with a named import with line breaks', () => {
+      const statement = subject("import {\n  foo,\n  bar,\n} from './lib/foo';");
+
+      expect(statement.assignment).toEqual('{\n  foo,\n  bar,\n}');
+      expect(statement.path).toEqual('./lib/foo');
+      expect(statement.defaultImport).toEqual(undefined);
+      expect(statement.hasNamedImports()).toBe(true);
+      expect(statement.namedImports).toEqual(['foo', 'bar']);
+    });
+
+    it('is valid with a valid ES6 default and named import', () => {
+      const statement = subject("import foo, { bar } from './lib/foo';");
+
+      expect(statement.assignment).toEqual('foo, { bar }');
+      expect(statement.path).toEqual('./lib/foo');
+      expect(statement.defaultImport).toEqual('foo');
+      expect(statement.hasNamedImports()).toBe(true);
+      expect(statement.namedImports).toEqual(['bar']);
+    });
+
+    it('is valid with a default and named import with line breaks', () => {
+      const statement = subject(
+        "import foo, {\n  bar,\n  baz,\n} from './lib/foo';");
+
+      expect(statement.assignment).toEqual('foo, {\n  bar,\n  baz,\n}');
+      expect(statement.path).toEqual('./lib/foo');
+      expect(statement.defaultImport).toEqual('foo');
+      expect(statement.hasNamedImports()).toBe(true);
+      expect(statement.namedImports).toEqual(['bar', 'baz']);
+    });
+
+    it('is valid with a valid require using const', () => {
+      const statement = subject("const foo = require('./lib/foo');");
+
+      expect(statement.assignment).toEqual('foo');
+      expect(statement.path).toEqual('./lib/foo');
+      expect(statement.importFunction).toEqual('require');
+    });
+
+    describe('with a require using const and line breaks', () => {
+      let statement;
+
       beforeEach(() => {
-        string = "import foo from './lib/foo';";
+        statement = subject("const foo = \n  require('./lib/foo');");
       });
 
       it('returns a valid ImportStatement instance', () => {
-        expect(subject().assignment).toEqual('foo');
-        expect(subject().path).toEqual('./lib/foo');
+        expect(statement.assignment).toEqual('foo');
+        expect(statement.path).toEqual('./lib/foo');
+        expect(statement.importFunction).toEqual('require');
       });
 
-      describe('and it has a non-alphanumeric variable name', () => {
-        beforeEach(() => {
-          string = "import $ from 'jquery';";
-        });
-
-        it('returns a valid ImportStatement instance', () => {
-          expect(subject().assignment).toEqual('$');
-          expect(subject().path).toEqual('jquery');
-        });
-      });
-
-      describe('and it has line breaks', () => {
-        beforeEach(() => {
-          string = "import foo from\n  './lib/foo';";
-        });
-
-        it('returns a valid ImportStatement instance', () => {
-          expect(subject().assignment).toEqual('foo');
-          expect(subject().path).toEqual('./lib/foo');
-        });
+      it('does not have named imports', () => {
+        expect(statement.hasNamedImports()).toBe(false);
       });
     });
 
-    describe('when the string is a valid es6 named import', () => {
-      beforeEach(() => {
-        string = "import { foo } from './lib/foo';";
-      });
+    it('is valid with a custom `import_function`', () => {
+      const statement = subject("const foo = customRequire('./lib/foo');");
 
-      it('returns a valid ImportStatement instance', () => {
-        expect(subject().assignment).toEqual('{ foo }');
-        expect(subject().path).toEqual('./lib/foo');
-        expect(subject().defaultImport).toEqual(undefined);
-        expect(subject().hasNamedImports()).toBe(true);
-        expect(subject().namedImports).toEqual(['foo']);
-      });
-
-      describe('and it has line breaks', () => {
-        beforeEach(() => {
-          string = "import {\n  foo,\n  bar,\n} from './lib/foo';";
-        });
-
-        it('returns a valid ImportStatement instance', () => {
-          expect(subject().assignment).toEqual('{\n  foo,\n  bar,\n}');
-          expect(subject().path).toEqual('./lib/foo');
-          expect(subject().defaultImport).toEqual(undefined);
-          expect(subject().hasNamedImports()).toBe(true);
-          expect(subject().namedImports).toEqual(['foo', 'bar']);
-        });
-      });
+      expect(statement.assignment).toEqual('foo');
+      expect(statement.path).toEqual('./lib/foo');
+      expect(statement.importFunction).toEqual('customRequire');
     });
 
-    describe('when the string is a valid es6 default and named import', () => {
-      beforeEach(() => {
-        string = "import foo, { bar } from './lib/foo';";
-      });
-
-      it('returns a valid ImportStatement instance', () => {
-        expect(subject().assignment).toEqual('foo, { bar }');
-        expect(subject().path).toEqual('./lib/foo');
-        expect(subject().defaultImport).toEqual('foo');
-        expect(subject().hasNamedImports()).toBe(true);
-        expect(subject().namedImports).toEqual(['bar']);
-      });
-
-      describe('and it has line breaks', () => {
-        beforeEach(() => {
-          string = "import foo, {\n  bar,\n  baz,\n} from './lib/foo';";
-        });
-
-        it('returns a valid ImportStatement instance', () => {
-          expect(subject().assignment).toEqual('foo, {\n  bar,\n  baz,\n}');
-          expect(subject().path).toEqual('./lib/foo');
-          expect(subject().defaultImport).toEqual('foo');
-          expect(subject().hasNamedImports()).toBe(true);
-          expect(subject().namedImports).toEqual(['bar', 'baz']);
-        });
-      });
+    it('is valid with a require using const and destructuring', () => {
+      const statement = subject("const { foo } = require('./lib/foo');");
+      expect(statement.assignment).toEqual('{ foo }');
+      expect(statement.path).toEqual('./lib/foo');
+      expect(statement.hasNamedImports()).toBe(true);
+      expect(statement.defaultImport).toEqual(undefined);
+      expect(statement.namedImports).toEqual(['foo']);
     });
 
-    describe('when the string is a valid import using const', () => {
-      beforeEach(() => {
-        string = "const foo = require('./lib/foo');";
-      });
+    it('is valid when using const, destructuring, and line breaks', () => {
+      const statement = subject(
+        "const {\n  foo,\n  bar,\n} = require('./lib/foo');");
 
-      it('returns a valid ImportStatement instance', () => {
-        expect(subject().assignment).toEqual('foo');
-        expect(subject().path).toEqual('./lib/foo');
-        expect(subject().importFunction).toEqual('require');
-      });
-
-      describe('and it has line breaks', () => {
-        beforeEach(() => {
-          string = "const foo = \n  require('./lib/foo');";
-        });
-
-        it('returns a valid ImportStatement instance', () => {
-          expect(subject().assignment).toEqual('foo');
-          expect(subject().path).toEqual('./lib/foo');
-          expect(subject().importFunction).toEqual('require');
-        });
-
-        it('does not have named imports', () => {
-          expect(subject().hasNamedImports()).toBe(false);
-        });
-      });
-
-      describe('and it is using a custom `import_function`', () => {
-        beforeEach(() => {
-          string = "const foo = customRequire('./lib/foo');";
-        });
-
-        it('returns a valid ImportStatement instance', () => {
-          expect(subject().assignment).toEqual('foo');
-          expect(subject().path).toEqual('./lib/foo');
-          expect(subject().importFunction).toEqual('customRequire');
-        });
-      });
+      expect(statement.assignment).toEqual('{\n  foo,\n  bar,\n}');
+      expect(statement.path).toEqual('./lib/foo');
+      expect(statement.hasNamedImports()).toBe(true);
+      expect(statement.defaultImport).toEqual(undefined);
+      expect(statement.namedImports).toEqual(['foo', 'bar']);
     });
 
-    describe('when a string is a valid import using const and destructuring ', () => {
-      beforeEach(() => {
-        string = "const { foo } = require('./lib/foo');";
-      });
-
-      it('returns a valid ImportStatement instance', () => {
-        expect(subject().assignment).toEqual('{ foo }');
-        expect(subject().path).toEqual('./lib/foo');
-        expect(subject().hasNamedImports()).toBe(true);
-        expect(subject().defaultImport).toEqual(undefined);
-        expect(subject().namedImports).toEqual(['foo']);
-      });
-
-      describe('and it has line breaks', () => {
-        beforeEach(() => {
-          string = "const {\n  foo,\n  bar,\n} = require('./lib/foo');";
-        });
-
-        it('returns a valid ImportStatement instance', () => {
-          expect(subject().assignment).toEqual('{\n  foo,\n  bar,\n}');
-          expect(subject().path).toEqual('./lib/foo');
-          expect(subject().hasNamedImports()).toBe(true);
-          expect(subject().defaultImport).toEqual(undefined);
-          expect(subject().namedImports).toEqual(['foo', 'bar']);
-        });
-      });
+    it('is null with an invalid import', () => {
+      const statement = subject('var foo = bar.hello;');
+      expect(statement).toBe(null);
     });
 
-    describe('when the string is not a valid import', () => {
-      beforeEach(() => {
-        string = 'var foo = bar.hello;';
-      });
+    it('is null with const and newlines before the semicolon', () => {
+      const statement = subject("const foo = require('./lib/foo')\n'bar';");
+      expect(statement).toBe(null);
+    });
 
-      it('returns null', () => {
-        expect(subject()).toBe(null);
-      });
+    it('is null with import and newlines before the semicolon', () => {
+      const statement = subject("import foo from './lib/foo'\n'bar';");
+      expect(statement).toBe(null);
+    });
 
-      describe('with const and newlines before semicolon', () => {
-        beforeEach(() => {
-          string = "const foo = require('./lib/foo')\n'bar';";
-        });
+    it('is null with spaces where the require function is', () => {
+      const statement = subject("const foo = my custom require('./lib/foo');");
+      expect(statement).toBe(null);
+    });
 
-        it('returns null', () => {
-          expect(subject()).toBe(null);
-        });
-      });
-
-      describe('with import and newlines before semicolon', () => {
-        beforeEach(() => {
-          string = "import foo from './lib/foo'\n'bar';";
-        });
-
-        it('returns null', () => {
-          expect(subject()).toBe(null);
-        });
-      });
-
-      describe('with spaces where the require function is', () => {
-        beforeEach(() => {
-          string = "const foo = my custom require('./lib/foo');";
-        });
-
-        it('returns null', () => {
-          expect(subject()).toBe(null);
-        });
-      });
-
-      describe('with const and a require inside an object', () => {
-        beforeEach(() => {
-          string = `
+    it('is null with const and require inside an object', () => {
+      const statement = subject(`
 const foo = {
   doIt() {
     const goo = require('foo');
-          `;
-        });
+  }
+};
+      `);
+      expect(statement).toBe(null);
+    });
 
-        it('returns null', () => {
-          expect(subject()).toBe(null);
-        });
-      });
-
-      describe('with a comment containing curlies', () => {
-        beforeEach(() => {
-          string = `
+    it('is null with a comment containing curlies', () => {
+      const statement = subject(`
 const foo = {
-  *
-    Significant comment: {baz} bar
-  bar() {
+  /**
+   * Significant comment: {baz} bar
+   */
+  doIt() {
     const doo = require('doo');
-          `;
-        });
+  }
+};
+      `);
+      expect(statement).toBe(null);
+    });
 
-        it('returns null', () => {
-          expect(subject()).toBe(null);
-        });
-      });
-
-      describe('with import and a from inside an object', () => {
-        beforeEach(() => {
-          string = `
+    it('is null with an import inside an object', () => {
+      const statement = subject(`
 import foo {
   import goo from 'foo';
-          `;
-        });
-
-        it('returns null', () => {
-          expect(subject()).toBe(null);
-        });
-      });
+}
+      `);
+      expect(statement).toBe(null);
     });
   });
 
   describe('.hasNamedImports()', () => {
-    let importStatement;
-    let defaultImport;
-    let namedImports;
-    let subject;
-
-    beforeEach(() => {
-      subject = () => {
-        importStatement = new ImportStatement();
-        if (defaultImport) {
-          importStatement.defaultImport = defaultImport;
-        }
-        if (namedImports) {
-          importStatement.namedImports = namedImports;
-        }
-
-        return importStatement;
-      };
-    });
-
     it('is false without a default import or named imports', () => {
-      expect(subject().hasNamedImports()).toBe(false);
+      const statement = new ImportStatement();
+      expect(statement.hasNamedImports()).toBe(false);
     });
 
     it('is false with a default import', () => {
-      defaultImport = 'foo';
-      expect(subject().hasNamedImports()).toBe(false);
+      const statement = new ImportStatement({ defaultImport: 'foo' });
+      expect(statement.hasNamedImports()).toBe(false);
     });
 
     it('is false when a default import is removed', () => {
-      defaultImport = 'foo';
-      subject();
-      importStatement.deleteVariable('foo');
-      expect(importStatement.hasNamedImports()).toBe(false);
+      const statement = new ImportStatement({ defaultImport: 'foo' });
+      statement.deleteVariable('foo');
+      expect(statement.hasNamedImports()).toBe(false);
     });
 
     it('is true with named imports', () => {
-      namedImports = ['foo'];
-      expect(subject().hasNamedImports()).toBe(true);
+      const statement = new ImportStatement({ namedImports: ['foo'] });
+      expect(statement.hasNamedImports()).toBe(true);
     });
 
     it('is false when named imports are all removed', () => {
-      namedImports = ['foo'];
-      subject();
-      importStatement.deleteVariable('foo');
-      expect(importStatement.hasNamedImports()).toBe(false);
+      const statement = new ImportStatement({ namedImports: ['foo'] });
+      statement.deleteVariable('foo');
+      expect(statement.hasNamedImports()).toBe(false);
     });
   });
 
   describe('.isParsedAndUntouched()', () => {
-    let importStatement;
-    let subject;
-
-    beforeEach(() => {
-      subject = () => importStatement.isParsedAndUntouched();
+    it('is true for parsed statements', () => {
+      const statement = ImportStatement.parse(
+        "import foo, { bar } from './lib/foo';");
+      expect(statement.isParsedAndUntouched()).toBe(true);
     });
 
-    describe('for parsed statements', () => {
-      beforeEach(() => {
-        importStatement = ImportStatement.parse(
-          "import foo, { bar } from './lib/foo';");
-      });
-
-      it('is true', () => {
-        expect(subject()).toBe(true);
-      });
-
-      it('is false when a default import is deleted', () => {
-        importStatement.deleteVariable('foo');
-        expect(subject()).toBe(false);
-      });
-
-      it('s false when a named import is deleted', () => {
-        importStatement.deleteVariable('bar');
-        expect(subject()).toBe(false);
-      });
-
-      it('is true when nothing is deleted', () => {
-        importStatement.deleteVariable('somethingElse');
-        expect(subject()).toBe(true);
-      });
+    it('is false when a default import is deleted from a parsed statement', () => {
+      const statement = ImportStatement.parse(
+        "import foo, { bar } from './lib/foo';");
+      statement.deleteVariable('foo');
+      expect(statement.isParsedAndUntouched()).toBe(false);
     });
 
-    describe('for statements created through the constructor', () => {
-      beforeEach(() => {
-        importStatement = new ImportStatement();
-      });
+    it('is false when a named import is deleted from a parsed statement', () => {
+      const statement = ImportStatement.parse(
+        "import foo, { bar } from './lib/foo';");
+      statement.deleteVariable('bar');
+      expect(statement.isParsedAndUntouched()).toBe(false);
+    });
 
-      it('is false', () => {
-        expect(subject()).toBe(false);
-      });
+    it('is true when nothing is deleted from a parsed statement', () => {
+      const statement = ImportStatement.parse(
+        "import foo, { bar } from './lib/foo';");
+      statement.deleteVariable('somethingElse');
+      expect(statement.isParsedAndUntouched()).toBe(true);
+    });
+
+    it('is false for statements created through the constructor', () => {
+      const statement = new ImportStatement();
+      expect(statement.isParsedAndUntouched()).toBe(false);
     });
   });
 
   describe('.isEmpty()', () => {
-    let importStatement;
-    let defaultImport;
-    let namedImports;
-    let subject;
-
-    beforeEach(() => {
-      subject = () => {
-        importStatement = new ImportStatement();
-        if (defaultImport) {
-          importStatement.defaultImport = defaultImport;
-        }
-        if (namedImports) {
-          importStatement.namedImports = namedImports;
-        }
-
-        return importStatement;
-      };
-    });
-
     it('is true without a default import or named imports', () => {
-      expect(subject().isEmpty()).toBe(true);
+      const statement = new ImportStatement();
+      expect(statement.isEmpty()).toBe(true);
     });
 
-    describe('with a default import', () => {
-      beforeEach(() => {
-        defaultImport = 'foo';
-        namedImports = null;
-      });
-
-      it('is false', () => {
-        expect(subject().isEmpty()).toBe(false);
-      });
-
-      it('is true when default import is removed', () => {
-        subject();
-        importStatement.deleteVariable(defaultImport);
-        expect(importStatement.isEmpty()).toBe(true);
-      });
+    it('is false with a default import', () => {
+      const statement = new ImportStatement({ defaultImport: 'foo' });
+      expect(statement.isEmpty()).toBe(false);
     });
 
-    describe('with named imports', () => {
-      beforeEach(() => {
-        defaultImport = null;
-        namedImports = ['foo'];
-      });
+    it('is true when default import is removed', () => {
+      const statement = new ImportStatement({ defaultImport: 'foo' });
+      statement.deleteVariable('foo');
+      expect(statement.isEmpty()).toBe(true);
+    });
 
-      it('is false', () => {
-        expect(subject().isEmpty()).toBe(false);
-      });
+    it('is false with named imports', () => {
+      const statement = new ImportStatement({ namedImports: ['foo'] });
+      expect(statement.isEmpty()).toBe(false);
+    });
 
-      it('is true when all named imports are removed', () => {
-        subject();
-        importStatement.deleteVariable(namedImports[0]);
-        expect(importStatement.isEmpty()).toBe(true);
-      });
+    it('is true when all named imports are removed', () => {
+      const statement = new ImportStatement({ namedImports: ['foo'] });
+      statement.deleteVariable('foo');
+      expect(statement.isEmpty()).toBe(true);
     });
 
     it('is true with an empty array of named imports', () => {
-      defaultImport = null;
-      namedImports = [];
-      expect(subject().isEmpty()).toBe(true);
+      const statement = new ImportStatement({ namedImports: [] });
+      expect(statement.isEmpty()).toBe(true);
     });
   });
 
   describe('.variables()', () => {
-    let importStatement;
-    let defaultImport;
-    let namedImports;
-    let subject;
-
-    beforeEach(() => {
-      subject = () => {
-        importStatement = new ImportStatement();
-        if (defaultImport) {
-          importStatement.defaultImport = defaultImport;
-        }
-        if (namedImports) {
-          importStatement.namedImports = namedImports;
-        }
-
-        return importStatement;
-      };
+    it('is an empty array without a default or named imports', () => {
+      const statement = new ImportStatement();
+      expect(statement.variables()).toEqual([]);
     });
 
-    describe('without a default import or named imports', () => {
-      beforeEach(() => {
-        defaultImport = null;
-        namedImports = null;
-      });
-
-      it('is an empty array', () => {
-        expect(subject().variables()).toEqual([]);
-      });
+    it('has the default import', () => {
+      const statement = new ImportStatement({ defaultImport: 'foo' });
+      expect(statement.variables()).toEqual(['foo']);
     });
 
-    describe('with a default import', () => {
-      beforeEach(() => {
-        defaultImport = 'foo';
-        namedImports = null;
+    it('has named imports', () => {
+      const statement = new ImportStatement({
+        namedImports: ['foo', 'bar', 'baz'],
       });
 
-      it('has the default import', () => {
-        expect(subject().variables()).toEqual(['foo']);
-      });
+      expect(statement.variables()).toEqual(['foo', 'bar', 'baz']);
     });
 
-    describe('with named imports', () => {
-      beforeEach(() => {
-        defaultImport = null;
-        namedImports = ['foo', 'bar', 'baz'];
+    it('has default and named imports', () => {
+      const statement = new ImportStatement({
+        defaultImport: 'foo',
+        namedImports: ['bar', 'baz'],
       });
 
-      it('has the named imports', () => {
-        expect(subject().variables()).toEqual(['foo', 'bar', 'baz']);
-      });
-    });
-
-    describe('with a default import and named imports', () => {
-      beforeEach(() => {
-        defaultImport = 'foo';
-        namedImports = ['bar', 'baz'];
-      });
-
-      it('has the default import and named imports', () => {
-        expect(subject().variables()).toEqual(['foo', 'bar', 'baz']);
-      });
+      expect(statement.variables()).toEqual(['foo', 'bar', 'baz']);
     });
   });
 });
