@@ -304,100 +304,60 @@ import foo {
       expect(statement.variables()).toEqual(['foo', 'bar', 'baz']);
     });
   });
+
+  describe('.merge()', () => {
+    it('uses the existing default import without a new default import', () => {
+      const existing = new ImportStatement({ defaultImport: 'foo' });
+      const newStatement = new ImportStatement();
+      existing.merge(newStatement);
+      expect(existing.defaultImport).toEqual('foo');
+    });
+
+    it('uses the new default import without an existing default import', () => {
+      const existing = new ImportStatement();
+      const newStatement = new ImportStatement({ defaultImport: 'foo' });
+      existing.merge(newStatement);
+      expect(existing.defaultImport).toEqual('foo');
+    });
+
+    it('uses the new default import when an existing and new one exist', () => {
+      const existing = new ImportStatement({ defaultImport: 'foo' });
+      const newStatement = new ImportStatement({ defaultImport: 'bar' });
+      existing.merge(newStatement);
+      expect(existing.defaultImport).toEqual('bar');
+    });
+
+    it('uses the existing named imports without a new named imports', () => {
+      const existing = new ImportStatement({ namedImports: ['foo'] });
+      const newStatement = new ImportStatement();
+      existing.merge(newStatement);
+      expect(existing.namedImports).toEqual(['foo']);
+    });
+
+    it('uses the new named imports without existing named imports', () => {
+      const existing = new ImportStatement();
+      const newStatement = new ImportStatement({ namedImports: ['foo'] });
+      existing.merge(newStatement);
+      expect(existing.namedImports).toEqual(['foo']);
+    });
+
+    it('merges the named imports when both existing and new ones exist', () => {
+      const existing = new ImportStatement({ namedImports: ['foo'] });
+      const newStatement = new ImportStatement({ namedImports: ['bar'] });
+      existing.merge(newStatement);
+      expect(existing.namedImports).toEqual(['bar', 'foo']);
+    });
+
+    it('does not duplicate named imports', () => {
+      const existing = new ImportStatement({ namedImports: ['foo'] });
+      const newStatement = new ImportStatement({ namedImports: ['foo'] });
+      existing.merge(newStatement);
+      expect(existing.namedImports).toEqual(['foo']);
+    });
+  });
 });
 
 //describe(ImportJS::ImportStatement, () => {
-  //describe('.merge()', () => {
-    //existing_importStatement = described_class.new;
-    //new_importStatement = described_class.new;
-    //existing_defaultImport = null;
-    //existing_namedImports = null;
-    //new_defaultImport = null;
-    //new_namedImports = null;
-
-    //beforeEach(() => {
-      //if existing_defaultImport
-        //existing_importStatement.defaultImport = existing_defaultImport
-      //});
-
-      //if existing_namedImports
-        //existing_importStatement.namedImports = existing_namedImports
-      //});
-
-      //if new_defaultImport
-        //new_importStatement.defaultImport = new_defaultImport
-      //});
-
-      //if new_namedImports
-        //new_importStatement.namedImports = new_namedImports
-      //});
-    //});
-
-    //subject do
-      //existing_importStatement.merge(new_importStatement)
-      //existing_importStatement
-    //});
-
-    //describe('without a new default import', () => {
-      //existing_defaultImport = 'foo';
-
-      //it('uses the existing default import', () => {
-        //expect(subject().defaultImport).toEqual('foo');
-      //});
-    //});
-
-    //describe('without an existing default import', () => {
-      //new_defaultImport = 'foo';
-
-      //it('uses the new default import', () => {
-        //expect(subject().defaultImport).toEqual('foo');
-      //});
-    //});
-
-    //describe('with both default imports', () => {
-      //existing_defaultImport = 'foo';
-      //new_defaultImport = 'bar';
-
-      //it('uses the new default import', () => {
-        //expect(subject().defaultImport).toEqual('bar');
-      //});
-    //});
-
-    //describe('without new named imports', () => {
-      //existing_namedImports = ['foo'];
-
-      //it('uses the existing named imports', () => {
-        //expect(subject().namedImports).toEqual(['foo']);
-      //});
-    //});
-
-    //describe('without existing named imports', () => {
-      //new_namedImports = ['foo'];
-
-      //it('uses the new named imports', () => {
-        //expect(subject().namedImports).toEqual(['foo']);
-      //});
-    //});
-
-    //describe('with both named imports', () => {
-      //existing_namedImports = ['foo'];
-      //new_namedImports = ['bar'];
-
-      //it('uses the new named imports', () => {
-        //expect(subject().namedImports).toEqual(%w[bar foo]);
-      //});
-    //});
-
-    //describe('when the new named import is the same as the existing', () => {
-      //existing_namedImports = ['foo'];
-      //new_namedImports = ['foo'];
-
-      //it('does not duplicate', () => {
-        //expect(subject().namedImports).toEqual(['foo']);
-      //});
-    //});
-  //});
-
   //describe('.to_import_strings()', () => {
     //importStatement = described_class.new;
     //import_function = 'require';
