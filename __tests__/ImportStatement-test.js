@@ -253,51 +253,58 @@ import foo {
       });
     });
   });
+
+  describe('.hasNamedImports()', () => {
+    let importStatement;
+    let defaultImport;
+    let namedImports;
+    let subject;
+
+    beforeEach(() => {
+      subject = () => {
+        importStatement = new ImportStatement();
+        if (defaultImport) {
+          importStatement.defaultImport = defaultImport;
+        }
+        if (namedImports) {
+          importStatement.namedImports = namedImports;
+        }
+
+        return importStatement.hasNamedImports();
+      };
+    });
+
+    it('is false without a default import or named imports', () => {
+      expect(subject()).toBe(false);
+    });
+
+    it('is false with a default import', () => {
+      defaultImport = 'foo';
+      expect(subject()).toBe(false);
+    });
+
+    it('is false when a default import is removed', () => {
+      defaultImport = 'foo';
+      subject();
+      importStatement.deleteVariable('foo');
+      expect(subject()).toBe(false);
+    });
+
+    it('is true with named imports', () => {
+      namedImports = ['foo'];
+      expect(subject()).toBe(true);
+    });
+
+    it('is false when named imports are all removed', () => {
+      namedImports = ['foo'];
+      subject();
+      importStatement.deleteVariable('foo');
+      expect(subject()).toBe(false);
+    });
+  });
 });
 
 //describe ImportJS::ImportStatement do
-  //describe '#hasNamedImports()' do
-    //import_statement = described_class.new;
-    //defaultImport = null;
-    //namedImports = null;
-
-    //before do
-      //import_statement.defaultImport = defaultImport if defaultImport
-      //import_statement.namedImports = namedImports if namedImports
-    //});
-
-    //subject { import_statement.hasNamedImports() }
-
-    //describe('without a default import or named imports', () => {
-      //it { should eq(false) }
-    //});
-
-    //describe('with a default import', () => {
-      //defaultImport = 'foo';
-      //it { should eq(false) }
-
-      //describe('when default import is removed', () => {
-        //before { import_statement.delete_variable!('foo') }
-        //it { should eq(false) }
-      //});
-    //});
-
-    //describe('with named imports', () => {
-      //namedImports = ['foo'];
-      //it { should eq(true) }
-
-      //describe('when named imports are removed', () => {
-        //before { import_statement.delete_variable!('foo') }
-        //it { should eq(false) }
-      //});
-    //});
-
-    //describe('with an empty array of named imports', () => {
-      //namedImports = [];
-      //it { should eq(false) }
-    //});
-  //});
-
   //describe '#parsed_and_untouched?' do
     //subject { statement.parsed_and_untouched? }
 
@@ -330,16 +337,16 @@ import foo {
   //});
 
   //describe '#empty?' do
-    //import_statement = described_class.new;
+    //importStatement = described_class.new;
     //defaultImport = null;
     //namedImports = null;
 
-    //before do
-      //import_statement.defaultImport = defaultImport if defaultImport
-      //import_statement.namedImports = namedImports if namedImports
+    //beforeEach(() => {
+      //importStatement.defaultImport = defaultImport if defaultImport
+      //importStatement.namedImports = namedImports if namedImports
     //});
 
-    //subject { import_statement.empty? }
+    //subject { importStatement.empty? }
 
     //describe('without a default import or named imports', () => {
       //it { should eq(true) }
@@ -350,7 +357,7 @@ import foo {
       //it { should eq(false) }
 
       //describe('when default import is removed', () => {
-        //before { import_statement.delete_variable!('foo') }
+        //before { importStatement.delete_variable!('foo') }
         //it { should eq(true) }
       //});
     //});
@@ -360,7 +367,7 @@ import foo {
       //it { should eq(false) }
 
       //describe('when named imports are removed', () => {
-        //before { import_statement.delete_variable!('foo') }
+        //before { importStatement.delete_variable!('foo') }
         //it { should eq(true) }
       //});
     //});
@@ -372,16 +379,16 @@ import foo {
   //});
 
   //describe '#variables' do
-    //import_statement = described_class.new;
+    //importStatement = described_class.new;
     //defaultImport = null;
     //namedImports = null;
 
-    //before do
-      //import_statement.defaultImport = defaultImport if defaultImport
-      //import_statement.namedImports = namedImports if namedImports
+    //beforeEach(() => {
+      //importStatement.defaultImport = defaultImport if defaultImport
+      //importStatement.namedImports = namedImports if namedImports
     //});
 
-    //subject { import_statement.variables }
+    //subject { importStatement.variables }
 
     //describe('without a default import or named imports', () => {
       //it { should eq([]) }
@@ -405,34 +412,34 @@ import foo {
   //});
 
   //describe '#merge' do
-    //existing_import_statement = described_class.new;
-    //new_import_statement = described_class.new;
+    //existing_importStatement = described_class.new;
+    //new_importStatement = described_class.new;
     //existing_defaultImport = null;
     //existing_namedImports = null;
     //new_defaultImport = null;
     //new_namedImports = null;
 
-    //before do
+    //beforeEach(() => {
       //if existing_defaultImport
-        //existing_import_statement.defaultImport = existing_defaultImport
+        //existing_importStatement.defaultImport = existing_defaultImport
       //});
 
       //if existing_namedImports
-        //existing_import_statement.namedImports = existing_namedImports
+        //existing_importStatement.namedImports = existing_namedImports
       //});
 
       //if new_defaultImport
-        //new_import_statement.defaultImport = new_defaultImport
+        //new_importStatement.defaultImport = new_defaultImport
       //});
 
       //if new_namedImports
-        //new_import_statement.namedImports = new_namedImports
+        //new_importStatement.namedImports = new_namedImports
       //});
     //});
 
     //subject do
-      //existing_import_statement.merge(new_import_statement)
-      //existing_import_statement
+      //existing_importStatement.merge(new_importStatement)
+      //existing_importStatement
     //});
 
     //describe('without a new default import', () => {
@@ -496,7 +503,7 @@ import foo {
   //});
 
   //describe '#to_import_strings' do
-    //import_statement = described_class.new;
+    //importStatement = described_class.new;
     //import_function = 'require';
     //path = 'path';
     //defaultImport = null;
@@ -504,17 +511,17 @@ import foo {
     //max_line_length = 80;
     //tab = '  ';
 
-    //before do
-      //import_statement.path = path
+    //beforeEach(() => {
+      //importStatement.path = path
 
-      //import_statement.defaultImport = defaultImport if defaultImport
-      //import_statement.namedImports = namedImports if namedImports
+      //importStatement.defaultImport = defaultImport if defaultImport
+      //importStatement.namedImports = namedImports if namedImports
     //});
 
     //subject do
-      //import_statement.declaration_keyword = declaration_keyword
-      //import_statement.import_function = import_function
-      //import_statement.to_import_strings(max_line_length, tab)
+      //importStatement.declaration_keyword = declaration_keyword
+      //importStatement.import_function = import_function
+      //importStatement.to_import_strings(max_line_length, tab)
     //});
 
     //describe('with import declaration keyword', () => {
