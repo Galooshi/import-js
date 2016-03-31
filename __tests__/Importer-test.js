@@ -45,9 +45,14 @@ describe('Importer', () => {
         if (file === '.importjs.json') {
           return configuration;
         } else if (file === 'package.json') {
-          return packageDependencies;
-        } else if (packageDependencies.indexOf(file) !== -1) {
-          return { main: `${file}-main.jsx` };
+          return { dependencies: packageDependencies };
+        }
+
+        for (let i = 0; i < packageDependencies.length; i++) {
+          const dep = packageDependencies[i];
+          if (file.indexOf(dep) !== -1) {
+            return { main: `${dep}-main.jsx` };
+          }
         }
         return null;
       });
@@ -655,119 +660,127 @@ StatusesBusesTa
           });
         });
       });
+
+      describe('when the variable resolves to a node.js conventional module', () => {
+        beforeEach(() => {
+          existingFiles = ['Foo/index.jsx'];
+        });
+
+        it('adds an import to the top of the buffer', () => {
+          expect(subject()).toEqual(`
+import foo from 'Foo';
+
+foo
+          `.trim());
+        });
+
+        it('displays a message about the imported module', () => {
+          subject();
+          expect(editor.messages()).toEqual(
+            'ImportJS: Imported \`Foo (main: index.jsx)\`');
+        });
+
+        describe('when that module has a dot in its name', () => {
+          beforeEach(() => {
+            existingFiles = ['Foo.io/index.jsx'];
+            word = 'FooIO';
+            text = 'FooIO';
+          });
+
+          it('imports that module with the dot', () => {
+            expect(subject()).toEqual(`
+import FooIO from 'Foo.io';
+
+FooIO
+            `.trim());
+          });
+        });
+      });
+
+      describe('in a node environment', () => {
+        beforeEach(() => {
+          word = 'Readline';
+          text = 'Readline';
+          configuration.environments = ['node'];
+        });
+
+        it('adds an import to the top of the buffer', () => {
+          expect(subject()).toEqual(`
+import Readline from 'readline';
+
+Readline
+          `.trim());
+        });
+      });
+
+      describe('when the import resolves to a dependency from package.json', () => {
+        beforeEach(() => {
+          packageDependencies = ['foo-bar'];
+          word = 'fooBar';
+          text = 'fooBar';
+        });
+
+        it('adds an import to the top of the buffer', () => {
+          expect(subject()).toEqual(`
+import fooBar from 'foo-bar';
+
+fooBar
+          `.trim());
+        });
+
+        it('displays a message about the imported module', () => {
+          subject();
+          expect(editor.messages()).toEqual(
+            'ImportJS: Imported `foo-bar (main: foo-bar-main.jsx)`');
+        });
+
+        describe('with an `ignore_package_prefixes` configuration', () => {
+          beforeEach(() => {
+            configuration.ignore_package_prefixes = ['foo-'];
+          });
+
+          describe('when the variable has the prefix', () => {
+            it('still imports the package', () => {
+              expect(subject()).toEqual(`
+import fooBar from 'foo-bar';
+
+fooBar
+              `.trim());
+            });
+          });
+
+          describe('when the variable does not have the prefix', () => {
+            beforeEach(() => {
+              word = 'bar';
+              text = 'bar';
+            });
+
+            it('imports the package', () => {
+              expect(subject()).toEqual(`
+import bar from 'foo-bar';
+
+bar
+              `.trim());
+            });
+          });
+
+          describe('when a package matches the prefix but not the word', () => {
+            beforeEach(() => {
+              word = 'baz';
+              text = 'baz';
+            });
+
+            it('leaves the buffer unchanged', () => {
+              expect(subject()).toEqual(`
+baz
+              `.trim());
+            });
+          });
+        });
+      });
     });
   });
 });
-//
-//       describe('when the variable resolves to a node.js conventional module', () => {
-//         existingFiles = ['Foo/index.jsx'];
-//
-//         it('adds an import to the top of the buffer', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'Foo';
-//
-// foo
-//           `.trim();
-//         });
-//
-//         it('displays a message about the imported module', () => {
-//           subject
-//           expect(editor.messages).to start_with(
-//             'ImportJS: Imported `Foo (main: index.jsx)`')
-//         });
-//
-//         describe('when that module has a dot in its name', () => {
-//           existingFiles = ['Foo.io/index.jsx'];
-//           word = 'FooIO';
-//           text = 'FooIO';
-//
-//           it('imports that module with the dot', () => {
-//             expect(subject()).toEqual(`)});
-// import FooIO from 'Foo.io';
-//
-// FooIO
-//             `.trim();
-//           });
-//         });
-//       });
-//
-//       describe('in a node environment', () => {
-//         word = 'Readline';
-//         text = 'Readline';
-//
-//         let(:configuration) do
-//           super().merge('environments' => ['node'])
-//         });
-//
-//         it('adds an import to the top of the buffer', () => {
-//           expect(subject()).toEqual(`)});
-// import Readline from 'readline';
-//
-// Readline
-//           `.trim();
-//         });
-//       });
-//
-//       describe('when the import resolves to a dependency from package.json', () => {
-//         existingFiles = [];
-//         packageDependencies = ['foo-bar'];
-//         word = 'fooBar';
-//         text = 'fooBar';
-//
-//         it('adds an import to the top of the buffer', () => {
-//           expect(subject()).toEqual(`)});
-// import fooBar from 'foo-bar';
-//
-// fooBar
-//           `.trim();
-//         });
-//
-//         it('displays a message about the imported module', () => {
-//           subject
-//           expect(editor.messages).to start_with(
-//             'ImportJS: Imported `foo-bar (main: foo-bar-main.jsx)`')
-//         });
-//
-//         describe('with an `ignore_package_prefixes` configuration', () => {
-//           let(:configuration) do
-//             super().merge('ignore_package_prefixes' => ['foo-'])
-//           });
-//
-//           describe('when the variable has the prefix', () => {
-//             it('still imports the package', () => {
-//               expect(subject()).toEqual(`)});
-// import fooBar from 'foo-bar';
-//
-// fooBar
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when the variable does not have the prefix', () => {
-//             word = 'bar';
-//             text = 'bar';
-//
-//             it('imports the package', () => {
-//               expect(subject()).toEqual(`)});
-// import bar from 'foo-bar';
-//
-// bar
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when a package matches the prefix but not the word', () => {
-//             word = 'baz';
-//             text = 'baz';
-//
-//             it('leaves the buffer unchanged', () => {
-//               expect(subject()).toEqual(`)});
-// baz
-//               `.trim();
-//             });
-//           });
-//         });
-//       });
 //
 //       describe('when other imports exist', () => {
 //         text = `;
