@@ -459,7 +459,7 @@ barFoo
             `.trim());
           });
 
-          describe('when the last folder });s with an "s"', () => {
+          describe('when the last folder ends with an "s"', () => {
             beforeEach(() => {
               existingFiles = ['sko/bars/foo.jsx'];
             });
@@ -472,7 +472,7 @@ barFoo
               `.trim());
             });
 
-            describe('when the variable also has "s" at the });', () => {
+            describe('when the variable also has "s" at the end', () => {
               beforeEach(() => {
                 word = 'barsFoo';
                 text = 'barsFoo';
@@ -488,7 +488,7 @@ barsFoo
             });
           });
 
-          describe('when the last folder });s with "es"', () => {
+          describe('when the last folder ends with "es"', () => {
             beforeEach(() => {
               existingFiles = ['sko/statuses/foo.jsx'];
               word = 'statusFoo';
@@ -503,7 +503,7 @@ statusFoo
               `.trim());
             });
 
-            describe('when the variable also has "es" at the });', () => {
+            describe('when the variable also has "es" at the end', () => {
               beforeEach(() => {
                 word = 'statusesFoo';
                 text = 'statusesFoo';
@@ -519,76 +519,86 @@ statusesFoo
             });
           });
         });
+
+        describe('when the variable name matches a few folders + filename', () => {
+          beforeEach(() => {
+            existingFiles = ['sko/bar/foo/ta.jsx'];
+            word = 'BarFooTa';
+            text = 'BarFooTa';
+          });
+
+          it('resolves the import', () => {
+            expect(subject()).toEqual(`
+import BarFooTa from 'sko/bar/foo/ta';
+
+BarFooTa
+            `.trim());
+          });
+
+          describe('when the folders end with "s"', () => {
+            beforeEach(() => {
+              existingFiles = ['sko/bars/foos/ta.jsx'];
+            });
+
+            it('resolves the import', () => {
+              expect(subject()).toEqual(`
+import BarFooTa from 'sko/bars/foos/ta';
+
+BarFooTa
+              `.trim());
+            });
+
+            describe('when the variable also has "s"', () => {
+              beforeEach(() => {
+                word = 'BarsFoosTa';
+                text = 'BarsFoosTa';
+              });
+
+              it('resolves the import', () => {
+                expect(subject()).toEqual(`
+import BarsFoosTa from 'sko/bars/foos/ta';
+
+BarsFoosTa
+                `.trim());
+              });
+            });
+          });
+
+          describe('when the folders end with "es"', () => {
+            beforeEach(() => {
+              existingFiles = ['sko/statuses/buses/ta.jsx'];
+              word = 'statusBusTa';
+              text = 'statusBusTa';
+            });
+
+            it('resolves the import', () => {
+              expect(subject()).toEqual(`
+import statusBusTa from 'sko/statuses/buses/ta';
+
+statusBusTa
+              `.trim());
+            });
+
+            describe('when the variable also has "es"', () => {
+              beforeEach(() => {
+                word = 'StatusesBusesTa';
+                text = 'StatusesBusesTa';
+              });
+
+              it('resolves the import', () => {
+                expect(subject()).toEqual(`
+import StatusesBusesTa from 'sko/statuses/buses/ta';
+
+StatusesBusesTa
+                `.trim());
+              });
+            });
+          });
+        });
       });
     });
   });
 });
-//
-//         describe('when the variable name matches a few folders + filename', () => {
-//           existingFiles = ['sko/bar/foo/ta.jsx'];
-//           word = 'BarFooTa';
-//           text = 'BarFooTa';
-//
-//           it('resolves the import', () => {
-//             expect(subject()).toEqual(`)});
-// import BarFooTa from 'sko/bar/foo/ta';
-//
-// BarFooTa
-//             `.trim();
-//           });
-//
-//           describe('when the folders }); with "s"', () => {
-//             existingFiles = ['sko/bars/foos/ta.jsx'];
-//
-//             it('resolves the import', () => {
-//               expect(subject()).toEqual(`)});
-// import BarFooTa from 'sko/bars/foos/ta';
-//
-// BarFooTa
-//               `.trim();
-//             });
-//
-//             describe('when the variable also has "s"', () => {
-//               word = 'BarsFoosTa';
-//               text = 'BarsFoosTa';
-//
-//               it('resolves the import', () => {
-//                 expect(subject()).toEqual(`)});
-// import BarsFoosTa from 'sko/bars/foos/ta';
-//
-// BarsFoosTa
-//                 `.trim();
-//               });
-//             });
-//           });
-//
-//           describe('when the folders }); with "es"', () => {
-//             existingFiles = ['sko/statuses/buses/ta.jsx'];
-//             word = 'statusBusTa';
-//             text = 'statusBusTa';
-//
-//             it('resolves the import', () => {
-//               expect(subject()).toEqual(`)});
-// import statusBusTa from 'sko/statuses/buses/ta';
-//
-// statusBusTa
-//               `.trim();
-//             });
-//
-//             describe('when the variable also has "es"', () => {
-//               word = 'StatusesBusesTa';
-//               text = 'StatusesBusesTa';
-//
-//               it('resolves the import', () => {
-//                 expect(subject()).toEqual(`)});
-// import StatusesBusesTa from 'sko/statuses/buses/ta';
-//
-// StatusesBusesTa
-//                 `.trim();
-//               });
-//             });
-//           });
-//         });
 //
 //         describe("when there are other imports under 'use strict'", () => {
 //           text = `;
