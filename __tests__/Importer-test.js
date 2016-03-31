@@ -215,6 +215,65 @@ foo
           });
         });
 
+        describe("when there are other imports under 'use strict'", () => {
+          beforeEach(() => {
+            text = `
+'use strict';
+import bar from 'bar';
+
+foo + bar
+            `.trim();
+          });
+
+          it('adds the import at the right place', () => {
+            expect(subject()).toEqual(`
+'use strict';
+import bar from 'bar';
+import foo from 'bar/foo';
+
+foo + bar
+            `.trim());
+          });
+        });
+
+        describe("when there is no newline under a lonely 'use strict'", () => {
+          beforeEach(() => {
+            text = `
+'use strict';
+foo + bar
+            `.trim();
+          });
+
+          it('adds a newline as part of importing ', () => {
+            expect(subject()).toEqual(`
+'use strict';
+import foo from 'bar/foo';
+
+foo + bar
+            `.trim());
+          });
+        });
+
+        describe('when "use strict" is within double quotes', () => {
+          beforeEach(() => {
+            text = `
+"use strict";
+
+foo
+            `.trim();
+          });
+
+          it('adds the import below', () => {
+            expect(subject()).toEqual(`
+"use strict";
+
+import foo from 'bar/foo';
+
+foo
+            `.trim());
+          });
+        });
+
         describe('when a one-line comment is at the top of the file', () => {
           beforeEach(() => {
             text = `
@@ -599,60 +658,6 @@ StatusesBusesTa
     });
   });
 });
-//
-//         describe("when there are other imports under 'use strict'", () => {
-//           text = `;
-// 'use strict';
-// import bar from 'bar';
-//
-// foo + bar
-//           `.trim();
-//
-//           it('adds the import at the right place', () => {
-//             expect(subject()).toEqual(`)});
-// 'use strict';
-// import bar from 'bar';
-// import foo from 'bar/foo';
-//
-// foo + bar
-//             `.trim();
-//           });
-//         });
-//
-//         describe("when there is no newline under a lonely 'use strict'", () => {
-//           text = `;
-// 'use strict';
-// foo + bar
-//           `.trim();
-//
-//           it('adds a newline as part of importing ', () => {
-//             expect(subject()).toEqual(`)});
-// 'use strict';
-// import foo from 'bar/foo';
-//
-// foo + bar
-//             `.trim();
-//           });
-//         });
-//
-//         describe('when "use strict" is within double quotes', () => {
-//           text = `;
-// "use strict";
-//
-// foo
-//           `.trim();
-//
-//           it('adds the import below', () => {
-//             expect(subject()).toEqual(`)});
-// "use strict";
-//
-// import foo from 'bar/foo';
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//       });
 //
 //       describe('when the variable resolves to a node.js conventional module', () => {
 //         existingFiles = ['Foo/index.jsx'];
