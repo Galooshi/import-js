@@ -778,68 +778,72 @@ baz
           });
         });
       });
+
+      describe('when other imports exist', () => {
+        beforeEach(() => {
+          text = `
+import zoo from 'foo/zoo';
+import bar from 'foo/bar';
+
+foo
+          `.trim();
+        });
+
+        it('adds the import and sorts the entire list', () => {
+          expect(subject()).toEqual(`
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+import zoo from 'foo/zoo';
+
+foo
+          `.trim());
+        });
+
+        describe('when there are unconventional imports in the list', () => {
+          // e.g. added through using the `import_function` configuration option
+          beforeEach(() => {
+            text = `
+const sko = customImportFunction('sko');
+import zoo from 'foo/zoo';
+import bar from 'foo/bar';
+
+foo
+            `.trim();
+          });
+
+          it('adds the import and sorts the entire list with groups', () => {
+            expect(subject()).toEqual(`
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+import zoo from 'foo/zoo';
+
+const sko = customImportFunction('sko');
+
+foo
+            `.trim());
+          });
+
+          describe('and `group_imports` is false', () => {
+            beforeEach(() => {
+              configuration.group_imports = false;
+            });
+
+            it('adds the import and sorts all of them', () => {
+              expect(subject()).toEqual(`
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+const sko = customImportFunction('sko');
+import zoo from 'foo/zoo';
+
+foo
+              `.trim());
+            });
+          });
+        });
+      });
     });
   });
 });
-//
-//       describe('when other imports exist', () => {
-//         text = `;
-// import zoo from 'foo/zoo';
-// import bar from 'foo/bar';
-//
-// foo
-//         `.trim();
-//
-//         it('adds the import and sorts the entire list', () => {
-//           expect(subject()).toEqual(`)});
-// import bar from 'foo/bar';
-// import foo from 'bar/foo';
-// import zoo from 'foo/zoo';
-//
-// foo
-//           `.trim();
-//         });
-//
-//         describe('when there are unconventional imports in the list', () => {
-//           # e.g. added through using the `import_function` configuration option
-//           text = `;
-// const sko = customImportFunction('sko');
-// import zoo from 'foo/zoo';
-// import bar from 'foo/bar';
-//
-// foo
-//           `.trim();
-//
-//           it('adds the import and sorts the entire list with groups', () => {
-//             expect(subject()).toEqual(`)});
-// import bar from 'foo/bar';
-// import foo from 'bar/foo';
-// import zoo from 'foo/zoo';
-//
-// const sko = customImportFunction('sko');
-//
-// foo
-//             `.trim();
-//           });
-//
-//           describe('and `group_imports` is false', () => {
-//             let(:configuration) do
-//               super().merge('group_imports' => false)
-//             });
-//
-//             it('adds the import and sorts all of them', () => {
-//               expect(subject()).toEqual(`)});
-// import bar from 'foo/bar';
-// import foo from 'bar/foo';
-// const sko = customImportFunction('sko');
-// import zoo from 'foo/zoo';
-//
-// foo
-//               `.trim();
-//             });
-//           });
-//         });
-//       });
 //
 //       describe('when there is an unconventional import', () => {
 //         text = `;
