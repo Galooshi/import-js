@@ -841,198 +841,216 @@ foo
           });
         });
       });
+
+      describe('when there is an unconventional import', () => {
+        beforeEach(() => {
+          text = `
+import zoo from 'foo/zoo';
+import tsar from 'foo/bar').tsa;
+
+foo
+          `.trim();
+        });
+
+        it('adds the import and moves out the unconventional import', () => {
+          expect(subject()).toEqual(`
+import foo from 'bar/foo';
+import zoo from 'foo/zoo';
+
+import tsar from 'foo/bar').tsa;
+
+foo
+        `.trim());
+        });
+      });
+
+      describe('when there is a non-import inline with the imports', () => {
+        beforeEach(() => {
+          text = `
+import bar from 'bar';
+import star from
+  'star';
+var { STRAWBERRY, CHOCOLATE } = bar.scoops;
+import zoo from 'foo/zoo';
+
+foo
+          `.trim();
+        });
+
+        it('breaks imports at that line', () => {
+          // A better solution would perhaps be to find the `var zoo` import and
+          // move it up there with the rest. But there's a lot of complexity
+          // involved in that, so cutting off at the non-import is a simpler
+          // solution.
+          expect(subject()).toEqual(`
+import bar from 'bar';
+import foo from 'bar/foo';
+import star from
+  'star';
+
+var { STRAWBERRY, CHOCOLATE } = bar.scoops;
+import zoo from 'foo/zoo';
+
+foo
+        `.trim());
+        });
+      });
+
+      describe('when there is an import with line-breaks', () => {
+        beforeEach(() => {
+          text = `
+import zoo from
+  'foo/zoo';
+import tsar from 'foo/bar';
+
+var import_foo = { from: b }
+          `.trim();
+        });
+
+        it('adds the import, sorts the entire list and keeps the line-break', () => {
+          expect(subject()).toEqual(`
+import foo from 'bar/foo';
+import tsar from 'foo/bar';
+import zoo from
+  'foo/zoo';
+
+var import_foo = { from: b }
+        `.trim());
+        });
+      });
+
+      describe('when there is a blank line amongst current imports', () => {
+        beforeEach(() => {
+          text = `
+import zoo from 'foo/zoo';
+
+import bar from 'foo/bar';
+foo
+          `.trim();
+        });
+
+        it('adds the import, compacts, and sorts the entire list', () => {
+          expect(subject()).toEqual(`
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+import zoo from 'foo/zoo';
+
+foo
+          `.trim());
+        });
+      });
+
+      describe('when there are multiple blank lines amongst current imports', () => {
+        beforeEach(() => {
+          text = `
+import zoo from 'foo/zoo';
+
+import frodo from 'bar/frodo';
+
+
+import bar from 'foo/bar';
+
+foo
+          `.trim();
+        });
+
+        it('compacts the list', () => {
+          expect(subject()).toEqual(`
+import bar from 'foo/bar';
+import foo from 'bar/foo';
+import frodo from 'bar/frodo';
+import zoo from 'foo/zoo';
+
+foo
+          `.trim());
+        });
+      });
+
+      describe('when multiple files resolve the variable', () => {
+        beforeEach(() => {
+          existingFiles = [
+            'bar/foo.jsx',
+            'zoo/foo.js',
+            'zoo/goo/Foo/index.js',
+          ];
+        });
+
+        it('records the alternatives to choose from', () => {
+          subject();
+          expect(editor._askForSelections).toEqual([{
+            word: 'foo',
+            alternatives: [
+              'bar/foo',
+              'zoo/foo',
+              'zoo/goo/Foo (main: index.js)',
+            ],
+          }]);
+        });
+
+        describe('and the user selects', () => {
+          const makeSelection = (selection) => {
+            selections = {
+              foo: selection,
+            };
+          };
+
+          describe('the first alternative', () => {
+            beforeEach(() => {
+              makeSelection(0);
+            });
+
+            it('picks the first one', () => {
+              expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+foo
+              `.trim());
+            });
+          });
+
+          describe('the second alternative', () => {
+            beforeEach(() => {
+              makeSelection(1);
+            });
+
+            it('picks the second one', () => {
+              expect(subject()).toEqual(`
+import foo from 'zoo/foo';
+
+foo
+              `.trim());
+            });
+          });
+
+          describe('an index larger than the list', () => {
+            // Not that likely, but good to guard against
+            beforeEach(() => {
+              makeSelection(5);
+            });
+
+            it('picks nothing', () => {
+              expect(subject()).toEqual(`
+foo
+              `.trim());
+            });
+          });
+
+          describe('an index < 0', () => {
+            beforeEach(() => {
+              makeSelection(-1);
+            });
+
+            it('picks nothing', () => {
+              expect(subject()).toEqual(`
+foo
+              `.trim());
+            });
+          });
+        });
+      });
     });
   });
 });
-//
-//       describe('when there is an unconventional import', () => {
-//         text = `;
-// import zoo from 'foo/zoo';
-// import tsar from 'foo/bar').tsa;
-//
-// foo
-//         `.trim();
-//
-//         it('adds the import and moves out the unconventional import', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-// import zoo from 'foo/zoo';
-//
-// import tsar from 'foo/bar').tsa;
-//
-// foo
-//         `.trim();
-//         });
-//       });
-//
-//       describe('when there is a non-import inline with the imports', () => {
-//         text = `;
-// import bar from 'bar';
-// import star from
-//   'star';
-// var { STRAWBERRY, CHOCOLATE } = bar.scoops;
-// import zoo from 'foo/zoo';
-//
-// foo
-//         `.trim();
-//
-//         it('breaks imports at that line', () => {
-//           # A better solution would perhaps be to find the `var zoo` import and
-//           # move it up there with the rest. But there's a lot of complexity
-//           # involved in that, so cutting off at the non-import is a simpler
-//           # solution.
-//           expect(subject()).toEqual(`)});
-// import bar from 'bar';
-// import foo from 'bar/foo';
-// import star from
-//   'star';
-//
-// var { STRAWBERRY, CHOCOLATE } = bar.scoops;
-// import zoo from 'foo/zoo';
-//
-// foo
-//         `.trim();
-//         });
-//       });
-//
-//       describe('when there is an import with line-breaks', () => {
-//         text = `;
-// import zoo from
-//   'foo/zoo';
-// import tsar from 'foo/bar';
-//
-// var import_foo = { from: b }
-//         `.trim();
-//
-//         it('adds the import, sorts the entire list and keeps the line-break', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-// import tsar from 'foo/bar';
-// import zoo from
-//   'foo/zoo';
-//
-// var import_foo = { from: b }
-//         `.trim();
-//         });
-//       });
-//
-//       describe('when there is a blank line amongst current imports', () => {
-//         text = `;
-// import zoo from 'foo/zoo';
-//
-// import bar from 'foo/bar';
-// foo
-//         `.trim();
-//
-//         it('adds the import, compacts, and sorts the entire list', () => {
-//           expect(subject()).toEqual(`
-// import bar from 'foo/bar';
-// import foo from 'bar/foo';
-// import zoo from 'foo/zoo';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//
-//       describe('when there are multiple blank lines amongst current imports', () => {
-//         text = `;
-// import zoo from 'foo/zoo';
-//
-// import frodo from 'bar/frodo';
-//
-//
-// import bar from 'foo/bar';
-//
-// foo
-//         `.trim();
-//
-//         it('compacts the list', () => {
-//           expect(subject()).toEqual(`)});
-// import bar from 'foo/bar';
-// import foo from 'bar/foo';
-// import frodo from 'bar/frodo';
-// import zoo from 'foo/zoo';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//
-//       describe('when multiple files resolve the variable', () => {
-//         let(:existing_files) do
-//           [
-//             'bar/foo.jsx',
-//             'zoo/foo.js',
-//             'zoo/goo/Foo/index.js',
-//           ]
-//         });
-//
-//         it('records the alternatives to choose from', () => {
-//           subject
-//           expect(editor.ask_for_selections).to include(
-//             word: 'foo',
-//             alternatives: [
-//               'bar/foo',
-//               'zoo/foo',
-//               'zoo/goo/Foo (main: index.js)',
-//             ]
-//           )
-//         });
-//
-//         describe('and the user selects', () => {
-//           let(:selections) do
-//             {
-//               'foo' => selection,
-//             }
-//           });
-//
-//           describe('the first alternative', () => {
-//             this.selection = 0;
-//
-//             it('picks the first one', () => {
-//               expect(subject()).toEqual(<<-eos.strip)});
-// import foo from 'bar/foo';
-//
-// foo
-//               eos
-//             });
-//           });
-//
-//           describe('the second alternative', () => {
-//             this.selection = 1;
-//
-//             it('picks the second one', () => {
-//               expect(subject()).toEqual(`)});
-// import foo from 'zoo/foo';
-//
-// foo
-//               `.trim();
-//             });
-//           });
-//
-//           describe('an index larger than the list', () => {
-//             # Apparently, this can happen when you use `inputlist`
-//             this.selection = 5;
-//
-//             it('picks nothing', () => {
-//               expect(subject()).toEqual(`)});
-// foo
-//               `.trim();
-//             });
-//           });
-//
-//           describe('an index < 0', () => {
-//             this.selection = -1;
-//
-//             it('picks nothing', () => {
-//               expect(subject()).toEqual(`)});
-// foo
-//               `.trim();
-//             });
-//           });
-//         });
-//       });
 //
 //       describe('when the same logical file is matched twice', () => {
 //         let(:existing_files) do
