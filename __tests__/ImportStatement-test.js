@@ -355,190 +355,228 @@ import foo {
       expect(existing.namedImports).toEqual(['foo']);
     });
   });
+
+  describe('.toImportStrings()', () => {
+    describe('with the "import" declaration keyword', () => {
+      it('is ok with a default import', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'import',
+          defaultImport: 'foo',
+          path: './lib/foo',
+        });
+        expect(statement.toImportStrings(80, '  '))
+          .toEqual(["import foo from './lib/foo';"]);
+      });
+
+      it('is ok with a default import and an importFunction', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'import',
+          defaultImport: 'foo',
+          path: './lib/foo',
+          importFunction: 'myCustomRequire',
+        });
+        expect(statement.toImportStrings(80, '  '))
+          .toEqual(["import foo from './lib/foo';"]);
+      });
+
+      it('wraps long imports', () => {
+        const defaultImport = 'ReallyReallyReallyReallyLong';
+        const path = 'also_very_long_for_some_reason';
+        const statement = new ImportStatement({
+          declarationKeyword: 'import',
+          defaultImport,
+          path,
+        });
+
+        expect(statement.toImportStrings(50, '  '))
+          .toEqual([`import ${defaultImport} from\n  '${path}';`]);
+      });
+
+      it('uses the provided tab when wrapping', () => {
+        const defaultImport = 'ReallyReallyReallyReallyLong';
+        const path = 'also_very_long_for_some_reason';
+        const statement = new ImportStatement({
+          declarationKeyword: 'import',
+          defaultImport,
+          path,
+        });
+
+        expect(statement.toImportStrings(50, '\t'))
+          .toEqual([`import ${defaultImport} from\n\t'${path}';`]);
+      });
+
+      it('is ok with named imports', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'import',
+          namedImports: ['foo', 'bar'],
+          path: './lib/foo',
+        });
+        expect(statement.toImportStrings(80, '  '))
+          .toEqual(["import { foo, bar } from './lib/foo';"]);
+      });
+
+      it('wraps long imports with named imports', () => {
+        const path = 'also_very_long_for_some_reason';
+        const statement = new ImportStatement({
+          declarationKeyword: 'import',
+          namedImports: ['foo', 'bar', 'baz', 'fizz', 'buzz'],
+          path,
+        });
+
+        expect(statement.toImportStrings(50, '  ')).toEqual([
+          `import {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} from '${path}';`,
+        ]);
+      });
+
+      it('is ok with default import and named imports', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'import',
+          defaultImport: 'foo',
+          namedImports: ['bar', 'baz'],
+          path: './lib/foo',
+        });
+        expect(statement.toImportStrings(80, '  '))
+          .toEqual(["import foo, { bar, baz } from './lib/foo';"]);
+      });
+
+      it('wraps long imports with default and named imports', () => {
+        const path = 'also_very_long_for_some_reason';
+        const statement = new ImportStatement({
+          declarationKeyword: 'import',
+          defaultImport: 'foo',
+          namedImports: ['bar', 'baz', 'fizz', 'buzz'],
+          path,
+        });
+
+        expect(statement.toImportStrings(50, '  ')).toEqual([
+          `import foo, {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} from '${path}';`,
+        ]);
+      });
+    });
+
+    describe('with the "const" declaration keyword', () => {
+      it('is ok with a default import', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          defaultImport: 'foo',
+          path: './lib/foo',
+        });
+        expect(statement.toImportStrings(80, '  '))
+          .toEqual(["const foo = require('./lib/foo');"]);
+      });
+
+      it('is ok with a default import and an importFunction', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          defaultImport: 'foo',
+          path: './lib/foo',
+          importFunction: 'myCustomRequire',
+        });
+        expect(statement.toImportStrings(80, '  '))
+          .toEqual(["const foo = myCustomRequire('./lib/foo');"]);
+      });
+
+      it('wraps long imports', () => {
+        const defaultImport = 'ReallyReallyReallyReallyLong';
+        const path = 'also_very_long_for_some_reason';
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          defaultImport,
+          path,
+        });
+
+        expect(statement.toImportStrings(50, '  '))
+          .toEqual([`const ${defaultImport} =\n  require('${path}');`]);
+      });
+
+      it('uses the provided tab when wrapping', () => {
+        const defaultImport = 'ReallyReallyReallyReallyLong';
+        const path = 'also_very_long_for_some_reason';
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          defaultImport,
+          path,
+        });
+
+        expect(statement.toImportStrings(50, '\t'))
+          .toEqual([`const ${defaultImport} =\n\trequire('${path}');`]);
+      });
+
+      it('is ok with named imports', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          namedImports: ['foo', 'bar'],
+          path: './lib/foo',
+        });
+        expect(statement.toImportStrings(80, '  '))
+          .toEqual(["const { foo, bar } = require('./lib/foo');"]);
+      });
+
+      it('is ok with named imports and an importFunction', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          namedImports: ['foo', 'bar'],
+          path: './lib/foo',
+          importFunction: 'myCustomRequire',
+        });
+        expect(statement.toImportStrings(80, '  '))
+          .toEqual(["const { foo, bar } = myCustomRequire('./lib/foo');"]);
+      });
+
+      it('wraps long imports with named imports', () => {
+        const path = 'also_very_long_for_some_reason';
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          namedImports: ['foo', 'bar', 'baz', 'fizz', 'buzz'],
+          path,
+        });
+
+        expect(statement.toImportStrings(50, '  ')).toEqual([
+          `const {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = require('${path}');`,
+        ]);
+      });
+
+      it('is ok with default import and named imports', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          defaultImport: 'foo',
+          namedImports: ['bar', 'baz'],
+          path: './lib/foo',
+        });
+        expect(statement.toImportStrings(80, '  ')).toEqual([
+          "const foo = require('./lib/foo');",
+          "const { bar, baz } = require('./lib/foo');",
+        ]);
+      });
+
+      it('is ok with default import, named imports, and an importFunction', () => {
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          defaultImport: 'foo',
+          namedImports: ['bar', 'baz'],
+          path: './lib/foo',
+          importFunction: 'myCustomRequire',
+        });
+        expect(statement.toImportStrings(80, '  ')).toEqual([
+          "const foo = myCustomRequire('./lib/foo');",
+          "const { bar, baz } = myCustomRequire('./lib/foo');",
+        ]);
+      });
+
+      it('wraps long imports with default and named imports', () => {
+        const path = 'also_very_long_for_some_reason';
+        const statement = new ImportStatement({
+          declarationKeyword: 'const',
+          defaultImport: 'foo',
+          namedImports: ['bar', 'baz', 'fizz', 'buzz'],
+          path,
+        });
+
+        expect(statement.toImportStrings(50, '  ')).toEqual([
+          `const foo =\n  require('${path}');`,
+          `const {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = require('${path}');`,
+        ]);
+      });
+    });
+  });
 });
-
-//describe(ImportJS::ImportStatement, () => {
-  //describe('.to_import_strings()', () => {
-    //importStatement = described_class.new;
-    //import_function = 'require';
-    //path = 'path';
-    //defaultImport = null;
-    //namedImports = null;
-    //max_line_length = 80;
-    //tab = '  ';
-
-    //beforeEach(() => {
-      //importStatement.path = path
-
-      //importStatement.defaultImport = defaultImport if defaultImport
-      //importStatement.namedImports = namedImports if namedImports
-    //});
-
-    //subject do
-      //importStatement.declaration_keyword = declaration_keyword
-      //importStatement.import_function = import_function
-      //importStatement.to_import_strings(max_line_length, tab)
-    //});
-
-    //describe('with import declaration keyword', () => {
-      //declaration_keyword = 'import';
-
-      //describe('with a default import', () => {
-        //defaultImport = 'foo';
-        //it { should eq(["import foo from 'path';"]) }
-
-        //describe('with `import_function`', () => {
-          //import_function = 'myCustomRequire';
-
-          //# `import_function` only applies to const/var
-          //it { should eq(["import foo from 'path';"]) }
-        //});
-
-        //describe('when longer than max line length', () => {
-          //defaultImport = 'ReallyReallyReallyReallyLong';
-          //path = 'also_very_long_for_some_reason';
-          //max_line_length = 50;
-          //it { should eq(["import #{defaultImport} from\n  '#{path}';"]) }
-
-          //describe('with different tab', () => {
-            //tab = "\t";
-            //it { should eq(["import #{defaultImport} from\n\t'#{path}';"]) }
-          //});
-        //});
-      //});
-
-      //describe('with named imports', () => {
-        //namedImports = %w[foo bar];
-        //it { should eq(["import { foo, bar } from 'path';"]) }
-
-        //describe('when longer than max line length', () => {
-          //namedImports = %w[foo bar baz fizz buzz];
-          //path = 'also_very_long_for_some_reason';
-          //max_line_length = 50;
-          //it do
-            //should eq(
-              //[
-                //"import {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} " \
-                //"from '#{path}';",
-              //]
-            //)
-          //});
-        //});
-      //});
-
-      //describe('with default and named imports', () => {
-        //defaultImport = 'foo';
-        //namedImports = %w[bar baz];
-        //it { should eq(["import foo, { bar, baz } from 'path';"]) }
-
-        //describe('when longer than max line length', () => {
-          //namedImports = %w[bar baz fizz buzz];
-          //path = 'also_very_long_for_some_reason';
-          //max_line_length = 50;
-          //it do
-            //should eq(
-              //[
-                //"import foo, {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} " \
-                //"from '#{path}';",
-              //]
-            //)
-          //});
-        //});
-      //});
-    //});
-
-    //describe('with const declaration keyword', () => {
-      //declaration_keyword = 'const';
-
-      //describe('with a default import', () => {
-        //defaultImport = 'foo';
-        //it { should eq(["const foo = require('path');"]) }
-
-        //describe('with `import_function`', () => {
-          //import_function = 'myCustomRequire';
-          //it { should eq(["const foo = myCustomRequire('path');"]) }
-        //});
-
-        //describe('when longer than max line length', () => {
-          //defaultImport = 'ReallyReallyReallyReallyLong';
-          //path = 'also_very_long_for_some_reason';
-          //max_line_length = 50;
-          //it do
-            //should eq(["const #{defaultImport} =\n  require('#{path}');"])
-          //});
-
-          //describe('with different tab', () => {
-            //tab = "\t";
-            //it do
-              //should eq(["const #{defaultImport} =\n\trequire('#{path}');"])
-            //});
-          //});
-        //});
-      //});
-
-      //describe('with named imports', () => {
-        //namedImports = %w[foo bar];
-        //it { should eq(["const { foo, bar } = require('path');"]) }
-
-        //describe('with `import_function`', () => {
-          //import_function = 'myCustomRequire';
-          //it { should eq(["const { foo, bar } = myCustomRequire('path');"]) }
-        //});
-
-        //describe('when longer than max line length', () => {
-          //namedImports = %w[foo bar baz fizz buzz];
-          //path = 'also_very_long_for_some_reason';
-          //max_line_length = 50;
-          //it do
-            //should eq(
-              //[
-                //"const {\n  foo,\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = " \
-                //"require('#{path}');",
-              //]
-            //)
-          //});
-        //});
-      //});
-
-      //describe('with default and named imports', () => {
-        //defaultImport = 'foo';
-        //namedImports = %w[bar baz];
-        //it do
-          //should eq(
-            //[
-              //"const foo = require('path');",
-              //"const { bar, baz } = require('path');",
-            //]
-          //)
-        //});
-
-        //describe('with `import_function`', () => {
-          //import_function = 'myCustomRequire';
-          //it do
-            //should eq(
-              //[
-                //"const foo = myCustomRequire('path');",
-                //"const { bar, baz } = myCustomRequire('path');",
-              //]
-            //)
-          //});
-        //});
-
-        //describe('when longer than max line length', () => {
-          //namedImports = %w[bar baz fizz buzz];
-          //path = 'also_very_long_for_some_reason';
-          //max_line_length = 50;
-          //it do
-            //should eq(
-              //[
-                //"const foo =\n  require('#{path}');",
-                //"const {\n  bar,\n  baz,\n  fizz,\n  buzz,\n} = " \
-                //"require('#{path}');",
-              //]
-            //)
-          //});
-        //});
-      //});
-    //});
-  //});
-//});
