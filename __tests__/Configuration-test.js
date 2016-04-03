@@ -2,6 +2,7 @@
 
 jest.autoMockOff();
 jest.mock('../lib/FileUtils');
+jest.mock('../package.json');
 
 describe('Configuration', () => {
   function mockJsonFile(file, json) {
@@ -48,16 +49,17 @@ describe('Configuration', () => {
       });
 
       it('does not throw an error when current version is newer', () => {
+        require('../package.json').version = '1.2.3';
         const Configuration = require('../lib/Configuration');
         expect(() => new Configuration()).not.toThrow();
       });
 
-      xit('throws an error when current version is older', () => {
-        // TODO implement this test for real, and implement the code for real.
+      it('throws an error when current version is older', () => {
+        require('../package.json').version = '1.2.2';
         const Configuration = require('../lib/Configuration');
         expect(() => new Configuration()).toThrow(new Error(
-          'The .importjs.json file you are using requires version 1.2.3. ' +
-          'You are using 1.2.2.'
+          'The .importjs.json file for this project requires version ' +
+          '1.2.3 or newer. You are using 1.2.2.'
         ));
       });
     });
