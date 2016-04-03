@@ -32,7 +32,7 @@ describe('Importer', () => {
     word = 'foo';
     text = 'foo';
     existingFiles = [];
-    packageJsonContent = undefined;
+    packageJsonContent = {};
     packageDependencies = [];
     pathToCurrentFile = `${tmpDir}/test.js`;
     configuration = {
@@ -44,8 +44,14 @@ describe('Importer', () => {
       FileUtils.readJsonFile.mockImplementation((file) => {
         if (file === '.importjs.json') {
           return configuration;
-        } else if (file === 'package.json') {
+        }
+        if (file === 'package.json') {
           return { dependencies: packageDependencies };
+        }
+
+        const normalizedFile = file.replace(`${path.basename(tmpDir)}/`, '');
+        if (normalizedFile in packageJsonContent) {
+          return packageJsonContent[normalizedFile];
         }
 
         for (let i = 0; i < packageDependencies.length; i++) {
@@ -62,12 +68,6 @@ describe('Importer', () => {
         mkdirp.sync(path.dirname(fullPath));
         fs.closeSync(fs.openSync(fullPath, 'w')); // create empty file
       });
-
-      if (packageJsonContent) {
-        mkdirp.sync(`${tmpDir}/Foo`);
-        fs.writeFileSync(`${tmpDir}/Foo/package.json`,
-                         JSON.stringify(packageJsonContent));
-      }
     };
   });
 
@@ -1048,160 +1048,176 @@ foo
           });
         });
       });
+
+      describe('when the same logical file is matched twice', () => {
+        beforeEach(() => {
+          existingFiles = [
+            'Foo/lib/foo.jsx',
+            'Foo/package.json',
+            'zoo/foo.js',
+          ];
+
+          packageJsonContent = {
+            'Foo/package.json': {
+              main: 'lib/foo.jsx',
+            },
+          };
+        });
+
+        it('does not list logical duplicates', () => {
+          subject();
+          expect(editor._askForSelections[0].alternatives).toEqual([
+            'Foo (main: lib/foo.jsx)',
+            'zoo/foo',
+          ]);
+        });
+      });
+    });
+
+    describe('importing a module with a package.json file', () => {
+      beforeEach(() => {
+        existingFiles = [
+          'Foo/package.json',
+          'Foo/build/main.js',
+        ];
+      });
+
+      describe('when `main` points to a JS file', () => {
+        beforeEach(() => {
+          packageJsonContent = {
+            'Foo/package.json': {
+              main: 'build/main.js',
+            },
+          };
+        });
+
+        it('adds an import to the top of the buffer', () => {
+          expect(subject()).toEqual(`
+import foo from 'Foo';
+
+foo
+          `.trim());
+        });
+      });
+
+      describe('when `main` points to index.js in the same folder', () => {
+        beforeEach(() => {
+          existingFiles = [
+            'Foo/package.json',
+            'Foo/index.js',
+          ];
+
+          packageJsonContent = {
+            'Foo/package.json': {
+              main: 'index.js',
+            },
+          };
+        });
+
+        it('adds an import to the top of the buffer', () => {
+          expect(subject()).toEqual(`
+import foo from 'Foo';
+
+foo
+          `.trim());
+        });
+      });
+
+      describe('when the module is named something.js', () => {
+        beforeEach(() => {
+          existingFiles = [
+            'Foo.js/package.json',
+            'Foo.js/main.js',
+          ];
+          text = 'FooJS';
+          word = 'FooJS';
+
+          packageJsonContent = {
+            'Foo.js/package.json': {
+              main: 'main.js',
+            },
+          };
+        });
+
+        it('keeps the .js in the import', () => {
+          expect(subject()).toEqual(`
+import FooJS from 'Foo.js';
+
+FooJS
+          `.trim());
+        });
+      });
+
+      describe('when `main` is missing', () => {
+        beforeEach(() => {
+          packageJsonContent = {
+            'Foo/package.json': {},
+          };
+        });
+
+        it('does not add an import', () => {
+          expect(subject()).toEqual(`
+foo
+          `.trim());
+        });
+      });
+    });
+
+    describe('line wrapping', () => {
+      describe('when lines exceed the configured max width', () => {
+        beforeEach(() => {
+          configuration.max_line_length = 40;
+          existingFiles = ['fiz/bar/biz/baz/fiz/buz/boz/foo.jsx'];
+        });
+
+        describe('when configured to use a tab character', () => {
+          beforeEach(() => {
+            configuration.tab = "\t"
+          });
+
+          it('wraps them and indents with a tab', () => {
+            expect(subject()).toEqual(`
+import foo from
+	'fiz/bar/biz/baz/fiz/buz/boz/foo';
+
+foo
+            `.trim());
+          });
+        });
+
+        describe('when configured to use two spaces', () => {
+          beforeEach(() => {
+            configuration.tab = '  ';
+          });
+
+          it('wraps them and indents with two spaces', () => {
+            expect(subject()).toEqual(`
+import foo from
+  'fiz/bar/biz/baz/fiz/buz/boz/foo';
+
+foo
+            `.trim());
+          });
+        });
+      });
+
+      describe('when lines do not exceed the configured max width', () => {
+        beforeEach(() => {
+          configuration.max_line_length = 80;
+          existingFiles = ['bar/foo.jsx'];
+        });
+
+        it('does not wrap them', () => {
+          expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+foo
+          `.trim());
+        });
+      });
     });
   });
 });
-//
-//       describe('when the same logical file is matched twice', () => {
-//         let(:existing_files) do
-//           [
-//             'Foo/lib/foo.jsx',
-//             'Foo/package.json',
-//             'zoo/foo.js',
-//           ]
-//         });
-//
-//         let(:package_json_content) do
-//           {
-//             main: 'lib/foo.jsx',
-//           }
-//         });
-//
-//         it('lists the version of the file resolved through package.json', () => {
-//           subject
-//           expect(editor.ask_for_selections[0][:alternatives]).to include(
-//             'Foo (main: lib/foo.jsx)')
-//         });
-//
-//         it('does not list the file also resolved through package.json', () => {
-//           subject
-//           expect(editor.ask_for_selections[0][:alternatives]).to_not include(
-//             'Foo/lib/foo.jsx')
-//         });
-//       });
-//     });
-//
-//     describe('importing a module with a package.json file', () => {
-//       existingFiles = ['Foo/package.json', 'Foo/build/main.js'];
-//
-//       describe('when `main` points to a JS file', () => {
-//         let(:package_json_content) do
-//           {
-//             main: 'build/main.js',
-//           }
-//         });
-//
-//         it('adds an import to the top of the buffer', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'Foo';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//
-//       describe('when `main` points to index.js in the same folder', () => {
-//         existingFiles = ['Foo/package.json', 'Foo/index.js'];
-//
-//         let(:package_json_content) do
-//           {
-//             main: 'index.js',
-//           }
-//         });
-//
-//         it('adds an import to the top of the buffer', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'Foo';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//
-//       describe('when the module is named something.js', () => {
-//         existingFiles = ['Foo.js/package.json', 'Foo.js/main.js'];
-//         text = 'FooJS';
-//         word = 'FooJS';
-//
-//         before do
-//           File.open(File.join(tmp_dir, 'Foo.js/package.json'), 'w') do |f|
-//             f.write({ main: 'main.js' }.to_json)
-//           });
-//         });
-//
-//         it('keeps the .js in the import', () => {
-//           expect(subject()).toEqual(`)});
-// import FooJS from 'Foo.js';
-//
-// FooJS
-//           `.trim();
-//         });
-//       });
-//
-//       describe('when `main` is missing', () => {
-//         packageJsonContent = {};
-//
-//         it('does not add an import', () => {
-//           expect(subject()).toEqual(`)});
-// foo
-//           `.trim();
-//         });
-//       });
-//     });
-//
-//     describe 'line wrapping' do
-//       this.tab = '  ';
-//       let(:configuration) do
-//         super().merge(
-//           'max_line_length' => max_line_length,
-//           'tab' => tab
-//         )
-//       });
-//
-//       describe('when lines exceed the configured max width', () => {
-//         this.max_line_length = 40;
-//         existingFiles = ['fiz/bar/biz/baz/fiz/buz/boz/foo.jsx'];
-//
-//         describe('when configured to use a tab character', () => {
-//           this.tab = "\t";
-//
-//           it('wraps them and indents with a tab', () => {
-//             expect(subject()).toEqual(`)});
-// import foo from
-// 	'fiz/bar/biz/baz/fiz/buz/boz/foo';
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//
-//         describe('when configured to use two spaces', () => {
-//           this.tab = '  ';
-//
-//           it('wraps them and indents with two spaces', () => {
-//             expect(subject()).toEqual(`)});
-// import foo from
-//   'fiz/bar/biz/baz/fiz/buz/boz/foo';
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//       });
-//
-//       describe('when lines do not exceed the configured max width', () => {
-//         this.max_line_length = 80;
-//         existingFiles = ['bar/foo.jsx'];
-//
-//         it('does not wrap them', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//     });
 //
 //     describe('configuration', () => {
 //       describe('with aliases', () => {
