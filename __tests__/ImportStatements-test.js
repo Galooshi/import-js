@@ -1,25 +1,24 @@
 'use strict';
 
 jest.autoMockOff();
-jest.mock('../lib/Configuration');
+jest.mock('../lib/FileUtils');
 
-const Configuration = require('../lib/Configuration');
 const ImportStatement = require('../lib/ImportStatement');
 const ImportStatements = require('../lib/ImportStatements');
 
 describe('ImportStatements', () => {
-  let statements;
-
-  beforeEach(() => {
-    const configuration = new Configuration();
-    statements = new ImportStatements(configuration);
-  });
+  function newStatements() {
+    const Configuration = require('../lib/Configuration');
+    return new ImportStatements(new Configuration());
+  }
 
   it('gives an empty array without any import statements', () => {
+    const statements = newStatements();
     expect(statements.toArray()).toEqual([]);
   });
 
   it('returns the pushed import statement', () => {
+    const statements = newStatements();
     statements.push(ImportStatement.parse("import foo from 'foo';"));
 
     expect(statements.toArray()).toEqual([
@@ -28,6 +27,7 @@ describe('ImportStatements', () => {
   });
 
   it('returns one statement when pushed two identical statements', () => {
+    const statements = newStatements();
     statements.push(ImportStatement.parse("import foo from 'foo';"));
     statements.push(ImportStatement.parse("import foo from 'foo';"));
 
@@ -37,6 +37,7 @@ describe('ImportStatements', () => {
   });
 
   it('returns sorted in same group when pushed two of the same kind', () => {
+    const statements = newStatements();
     statements.push(ImportStatement.parse("import foo from 'foo';"));
     statements.push(ImportStatement.parse("import bar from 'bar';"));
 
@@ -47,6 +48,7 @@ describe('ImportStatements', () => {
   });
 
   it('merges statements of different kinds with identical paths', () => {
+    const statements = newStatements();
     statements.push(ImportStatement.parse("import foo from 'foo';"));
     statements.push(ImportStatement.parse("import { bar } from 'foo';"));
 
@@ -55,9 +57,8 @@ describe('ImportStatements', () => {
     ]);
   });
 
-  xit('separates import and const', () => {
-    // TODO make default configuration happen
-
+  it('separates import and const', () => {
+    const statements = newStatements();
     statements.push(ImportStatement.parse("import foo from 'foo';"));
     statements.push(ImportStatement.parse("const bar = require('bar');"));
 
@@ -68,243 +69,170 @@ describe('ImportStatements', () => {
     ]);
   });
 
-  xdescribe('when group_imports is false', () => {
-    // TODO configure group_imports to be false
+  describe('with a package dependency', () => {
+    beforeEach(() => {
+      require('../lib/FileUtils').__setJsonFile('package.json', {
+        dependencies: {
+          bar: '1.0.0',
+        },
+      });
+    });
+
+    afterEach(() => {
+      require('../lib/FileUtils').__setJsonFile('package.json', null);
+    });
+
+    it('separates package dependencies from non-package dependencies', () => {
+      const statements = newStatements();
+      statements.push(ImportStatement.parse("import foo from 'foo';"));
+      statements.push(ImportStatement.parse("import bar from 'bar';"));
+
+      expect(statements.toArray()).toEqual([
+        "import bar from 'bar';",
+        '',
+        "import foo from 'foo';",
+      ]);
+    });
+
+    it('separates package-local dependencies from non-package dependencies', () => {
+      const statements = newStatements();
+      statements.push(ImportStatement.parse("import foo from 'foo';"));
+      statements.push(ImportStatement.parse("import bar from 'bar/too/far';"));
+
+      expect(statements.toArray()).toEqual([
+        "import bar from 'bar/too/far';",
+        '',
+        "import foo from 'foo';",
+      ]);
+    });
+
+    describe('with a node environment', () => {
+      beforeEach(() => {
+        require('../lib/FileUtils').__setJsonFile('.importjs.json', {
+          environments: ['node'],
+        });
+      });
+
+      afterEach(() => {
+        require('../lib/FileUtils').__setJsonFile('.importjs.json', null);
+      });
+
+      it('separates packages from core modules', () => {
+        const statements = newStatements();
+        statements.push(ImportStatement.parse("import readline from 'readline';"));
+        statements.push(ImportStatement.parse("import bar from 'bar';"));
+
+        expect(statements.toArray()).toEqual([
+          "import readline from 'readline';",
+          '',
+          "import bar from 'bar';",
+        ]);
+      });
+
+      it('separates core modules from things that look like core modules', () => {
+        const statements = newStatements();
+        statements.push(ImportStatement.parse("import constants from 'constants';"));
+        statements.push(ImportStatement.parse(
+          "import AppConstants from 'constants/app_constants';"
+        ));
+
+        expect(statements.toArray()).toEqual([
+          "import constants from 'constants';",
+          '',
+          "import AppConstants from 'constants/app_constants';",
+        ]);
+      });
+    });
+  });
+
+  it('separates import statements with different styles', () => {
+    const statements = newStatements();
+    statements.push(ImportStatement.parse("const bar = require('bar');"));
+    statements.push(ImportStatement.parse("const custom = custom('custom');"));
+    statements.push(ImportStatement.parse("import foo from 'foo';"));
+    statements.push(ImportStatement.parse("var baz = require('baz');"));
+
+    expect(statements.toArray()).toEqual([
+      "import foo from 'foo';",
+      '',
+      "const bar = require('bar');",
+      '',
+      "var baz = require('baz');",
+      '',
+      "const custom = custom('custom');",
+    ]);
+  });
+
+  describe('when group_imports is false', () => {
+    beforeEach(() => {
+      require('../lib/FileUtils').__setJsonFile('.importjs.json', {
+        group_imports: false,
+      });
+    });
+
+    afterEach(() => {
+      require('../lib/FileUtils').__setJsonFile('.importjs.json', null);
+    });
 
     it('does not separate statements of different kinds', () => {
-      statements.push(ImportStatement.parse("import foo from 'foo';"));
+      const statements = newStatements();
       statements.push(ImportStatement.parse("const bar = require('bar');"));
+      statements.push(ImportStatement.parse("const custom = custom('custom');"));
+      statements.push(ImportStatement.parse("import foo from 'foo';"));
+      statements.push(ImportStatement.parse("var baz = require('baz');"));
 
       expect(statements.toArray()).toEqual([
         "const bar = require('bar');",
+        "var baz = require('baz');",
+        "const custom = custom('custom');",
         "import foo from 'foo';",
       ]);
     });
   });
 
-  //context('when pushed two import statements of different kinds', () => {
-    //context('when one statement is a package dependency', () => {
-      //let(:second_import_statement) do
-        //ImportStatement.parse("import bar from 'bar';")
-      //});
+  describe('.deleteVariables()', () => {
+    it('removes empty import statements when deleting default imports', () => {
+      const statements = newStatements();
+      statements.push(ImportStatement.parse("import foo from './lib/foo'"));
+      statements.deleteVariables(['foo']);
 
-      //beforeEach(() => {
-        //allow_any_instance_of(ImportJS::Configuration)
-          //.to receive(:package_dependencies)
-          //.and_return(['bar'])
-      //});
+      expect(statements.toArray()).toEqual([]);
+    });
 
-      //it('gives the two statements in different groups', () => {
-        //expect(subject.to_a).to eq(
-          //[
-            //"import bar from 'bar';",
-            //'',
-            //"import foo from 'foo';",
-          //]
-        //)
-      //});
+    it('removes empty import statements when deleting named imports', () => {
+      const statements = newStatements();
+      statements.push(ImportStatement.parse("import { foo } from './lib/foo'"));
+      statements.deleteVariables(['foo']);
 
-      //context('when importing a package-local module', () => {
-        //let(:second_import_statement) do
-          //ImportStatement.parse("import bar from 'bar/too/far';")
-        //});
+      expect(statements.toArray()).toEqual([]);
+    });
 
-        //it('gives the two statements in different groups', () => {
-          //expect(subject.to_a).to eq(
-            //[
-              //"import bar from 'bar/too/far';",
-              //'',
-              //"import foo from 'foo';",
-            //]
-          //)
-        //});
-      //});
-    //});
+    it('does not remove non-empty statements when deleting named imports', () => {
+      const statements = newStatements();
+      statements.push(ImportStatement.parse("import { foo, bar } from './lib/foo'"));
+      statements.deleteVariables(['foo']);
 
-    //context('when one is a package dependency and the other is a core module', () => {
-      //let(:first_import_statement) do
-        //ImportStatement.parse("import readline from 'readline';")
-      //});
-      //let(:second_import_statement) do
-        //ImportStatement.parse("import bar from 'bar';")
-      //});
+      expect(statements.toArray()).toEqual([
+        "import { bar } from './lib/foo';",
+      ]);
+    });
 
-      //beforeEach(() => {
-        //allow_any_instance_of(ImportJS::Configuration)
-          //.to receive(:package_dependencies)
-          //.and_return(['bar'])
-        //allow_any_instance_of(ImportJS::Configuration)
-          //.to receive(:environment_core_modules)
-          //.and_return(['readline'])
-      //});
+    it('does not remove non-empty statements when deleting default imports', () => {
+      const statements = newStatements();
+      statements.push(ImportStatement.parse("import foo, { bar } from './lib/foo'"));
+      statements.deleteVariables(['foo']);
 
-      //it('gives the two statements in different groups, core module on top', () => {
-        //expect(subject.to_a).to eq(
-          //[
-            //"import readline from 'readline';",
-            //'',
-            //"import bar from 'bar';",
-          //]
-        //)
-      //});
-    //});
+      expect(statements.toArray()).toEqual([
+        "import { bar } from './lib/foo';",
+      ]);
+    });
 
-    //context('when one is a core module and the other looks like one', () => {
-      //let(:first_import_statement) do
-        //ImportStatement.parse("import constants from 'constants';")
-      //});
-      //let(:second_import_statement) do
-        //ImportStatement.parse("import AppConstants from 'constants/app_constants';")
-      //});
+    it('removes empty statements when deleting default and named imports', () => {
+      const statements = newStatements();
+      statements.push(ImportStatement.parse("import foo, { bar } from './lib/foo'"));
+      statements.deleteVariables(['foo', 'bar']);
 
-      //beforeEach(() => {
-        //allow_any_instance_of(ImportJS::Configuration)
-          //.to receive(:environment_core_modules)
-          //.and_return(['constants'])
-      //});
-
-      //it('gives the two statements in different groups, core module on top', () => {
-        //expect(subject.to_a).to eq(
-          //[
-            //"import constants from 'constants';",
-            //'',
-            //"import AppConstants from 'constants/app_constants';",
-          //]
-        //)
-      //});
-    //});
-  //});
-
-  //context('when pushed import statements of all different kinds', () => {
-    //let(:import_statements) do
-      //[
-        //ImportStatement.parse("const bar = require('bar');"),
-        //ImportStatement.parse("const custom = custom('custom');"),
-        //ImportStatement.parse("import foo from 'foo';"),
-        //ImportStatement.parse("var baz = require('baz');"),
-      //]
-    //});
-
-    //beforeEach(() => {
-      //import_statements.each { |import_statement| subject << import_statement }
-    //});
-
-    //it('gives the statements in different groups', () => {
-      //expect(subject.to_a).to eq(
-        //[
-          //"import foo from 'foo';",
-          //'',
-          //"const bar = require('bar');",
-          //'',
-          //"var baz = require('baz');",
-          //'',
-          //"const custom = custom('custom');",
-        //]
-      //)
-    //});
-
-    //context('when `group_imports` is false', () => {
-      //let(:configuration) do
-        //{
-          //'group_imports' => false,
-        //}
-      //});
-
-      //it('returns a single, ordered group', () => {
-        //expect(subject.to_a).to eq(
-          //[
-            //"const bar = require('bar');",
-            //"var baz = require('baz');",
-            //"const custom = custom('custom');",
-            //"import foo from 'foo';",
-          //]
-        //)
-      //});
-    //});
-  //});
-
-  //describe('#delete_variables!', () => {
-    //context('when it deletes the default import from an import statement', () => {
-      //let(:import_statement) do
-        //ImportStatement.parse("import foo from 'foo';")
-      //});
-
-      //beforeEach(() => {
-        //subject << import_statement
-        //subject.delete_variables!(['foo'])
-      //});
-
-      //it('rejects the empty import statement', () => {
-        //expect(subject.to_a).to eq([])
-      //});
-    //});
-
-    //context('when it deletes the last named import from an import statement', () => {
-      //let(:import_statement) do
-        //ImportStatement.parse("import { foo } from 'foo';")
-      //});
-
-      //beforeEach(() => {
-        //subject << import_statement
-        //subject.delete_variables!(['foo'])
-      //});
-
-      //it('rejects the empty import statement', () => {
-        //expect(subject.to_a).to eq([])
-      //});
-    //});
-
-    //context('when it deletes the first named import from an import statement', () => {
-      //let(:import_statement) do
-        //ImportStatement.parse("import { foo, bar } from 'foo';")
-      //});
-
-      //beforeEach(() => {
-        //subject << import_statement
-        //subject.delete_variables!(['foo'])
-      //});
-
-      //it('does not reject the import statement', () => {
-        //expect(subject.to_a).to eq(
-          //[
-            //"import { bar } from 'foo';",
-          //]
-        //)
-      //});
-    //});
-
-    //context('when it deletes the default import from a complex statement', () => {
-      //let(:import_statement) do
-        //ImportStatement.parse("import foo, { bar } from 'foo';")
-      //});
-
-      //beforeEach(() => {
-        //subject << import_statement
-        //subject.delete_variables!(['foo'])
-      //});
-
-      //it('does not reject the import statement', () => {
-        //expect(subject.to_a).to eq(
-          //[
-            //"import { bar } from 'foo';",
-          //]
-        //)
-      //});
-    //});
-
-    //context('when it deletes all variables from a complex import statement', () => {
-      //let(:import_statement) do
-        //ImportStatement.parse("import foo, { bar, baz } from 'foo';")
-      //});
-
-      //beforeEach(() => {
-        //subject << import_statement
-        //subject.delete_variables!(%w[foo bar baz])
-      //});
-
-      //it('rejects the import statement', () => {
-        //expect(subject.to_a).to eq([])
-      //});
-    //});
-  //});
+      expect(statements.toArray()).toEqual([]);
+    });
+  });
 });
