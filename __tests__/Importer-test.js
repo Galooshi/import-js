@@ -1,7 +1,5 @@
 'use strict';
 
-const FileUtils = require('../lib/FileUtils');
-
 jest.autoMockOff();
 jest.mock('../lib/FileUtils');
 
@@ -10,9 +8,6 @@ const fs = require('fs');
 const path = require('path');
 
 const mkdirp = require('mkdirp');
-
-const CommandLineEditor = require('../lib/CommandLineEditor');
-const Importer = require('../lib/Importer');
 
 describe('Importer', () => {
   const tmpDir = './tmp';
@@ -41,14 +36,17 @@ describe('Importer', () => {
     selections = {};
 
     setup = () => {
-      FileUtils.readJsonFile.mockImplementation((file) => {
-        if (file === '.importjs.json') {
-          return configuration;
-        }
-        if (file === 'package.json') {
-          return { dependencies: packageDependencies };
-        }
+      const FileUtils = require('../lib/FileUtils');
 
+      FileUtils.__setJsonFile('.importjs.json', configuration);
+
+      // Convert the array to an object, as it is in the package.json file.
+      const dependencies = packageDependencies.reduce((depsObj, dependency) => (
+        Object.assign({}, depsObj, { [dependency]: '1.0.0' })
+      ), {});
+      FileUtils.__setJsonFile('package.json', { dependencies });
+
+      FileUtils.__setJsonFileFallback((file) => {
         const normalizedFile = file.replace(`${path.basename(tmpDir)}/`, '');
         if (normalizedFile in packageJsonContent) {
           return packageJsonContent[normalizedFile];
@@ -63,6 +61,9 @@ describe('Importer', () => {
         return null;
       });
 
+      // TODO instead of creating and removing files in our tmpDir, we should
+      // just mock the fs module like we are doing for our FileUtils module.
+      // This will make the tests faster, less flaky, and safer.
       existingFiles.forEach((file) => {
         const fullPath = `${tmpDir}/${file}`;
         mkdirp.sync(path.dirname(fullPath));
@@ -82,6 +83,10 @@ describe('Importer', () => {
     beforeEach(() => {
       subject = () => {
         setup();
+
+        const CommandLineEditor = require('../lib/CommandLineEditor');
+        const Importer = require('../lib/Importer');
+
         editor = new CommandLineEditor(text.split('\n'), {
           word,
           pathToFile: pathToCurrentFile,
