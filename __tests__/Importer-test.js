@@ -1221,766 +1221,810 @@ foo
         });
       });
     });
+
+    describe('configuration', () => {
+      describe('with aliases', () => {
+        beforeEach(() => {
+          configuration.aliases = { $: 'jquery' };
+          text = '$';
+          word = '$';
+        });
+
+        it('resolves aliased imports to the aliases', () => {
+          expect(subject()).toEqual(`
+import $ from 'jquery';
+
+$
+        `.trim());
+        });
+
+        describe('and an alias has a dynamic {filename}', () => {
+          beforeEach(() => {
+            configuration.aliases = { styles: './{filename}.scss' };
+            text = 'styles';
+            word = 'styles';
+            pathToCurrentFile = 'bar/foo.jsx';
+          });
+
+          it('uses the filename of the current file', () => {
+            expect(subject()).toEqual(`
+import styles from './foo.scss';
+
+styles
+            `.trim());
+          });
+
+          describe('when editing an anonymous file', () => {
+            describe('that is nil', () => {
+              beforeEach(() => {
+                pathToCurrentFile = null;
+              });
+
+              it('does not replace the dynamic part', () => {
+                expect(subject()).toEqual(`
+import styles from './{filename}.scss';
+
+styles
+                `.trim());
+              });
+            });
+
+            describe('that is an empty string', () => {
+              beforeEach(() => {
+                pathToCurrentFile = '';
+              });
+
+              it('does not replace the dynamic part', () => {
+                expect(subject()).toEqual(`
+import styles from './{filename}.scss';
+
+styles
+                `.trim());
+              });
+            });
+          });
+        });
+
+        describe('and an alias contains a slash', () => {
+          // https://github.com/trotzig/import-js/issues/39
+          beforeEach(() => {
+            configuration.aliases = { '$': 'jquery/jquery' };
+          });
+
+          it('keeps the slash in the alias path', () => {
+            expect(subject()).toEqual(`
+import $ from 'jquery/jquery';
+
+$
+          `.trim());
+          });
+        });
+      });
+
+      describe('with `named_exports` object', () => {
+        beforeEach(() => {
+          configuration.named_exports = {
+            'lib/utils': [
+              'foo',
+              'bar',
+            ],
+          };
+          text = 'foo';
+          word = 'foo';
+        });
+
+        it('resolves that import using named imports', () => {
+          expect(subject()).toEqual(`
+import { foo } from 'lib/utils';
+
+foo
+          `.trim());
+        });
+      });
+
+      describe('using `var`, `aliases` and a `named_exports` object', () => {
+        beforeEach(() => {
+          configuration = Object.assign(configuration, {
+            declaration_keyword: 'var',
+            named_exports: {
+              underscore: [
+                'memoize',
+                'debounce',
+              ],
+            },
+            aliases: {
+              _: 'underscore',
+            },
+          });
+          text = '_';
+          word = '_';
+        });
+
+        it('resolves the main alias without destructuring', () => {
+          expect(subject()).toEqual(`
+var _ = require('underscore');
+
+_
+        `.trim());
+        });
+
+        describe('when a named import exists for the same module', () => {
+          beforeEach(() => {
+            text = `
+var { memoize } = require('underscore');
+
+_
+            `.trim();
+          });
+
+          it('adds the default import', () => {
+            expect(subject()).toEqual(`
+var _ = require('underscore');
+var { memoize } = require('underscore');
+
+_
+            `.trim());
+          });
+        });
+
+        describe('when importing a named export', () => {
+          beforeEach(() => {
+            text = 'memoize';
+            word = 'memoize';
+          });
+
+          it('resolves that import using destructuring', () => {
+            expect(subject()).toEqual(`
+var { memoize } = require('underscore');
+
+memoize
+            `.trim());
+          });
+
+          it('displays a message about the imported module', () => {
+            subject();
+            expect(editor.messages()).toEqual(
+              'ImportJS: Imported `memoize` from `underscore`');
+          });
+
+          describe('when the default import exists for the same module', () => {
+            beforeEach(() => {
+              text = `
+var _ = require('underscore');
+
+memoize
+              `.trim();
+            });
+
+            it('adds the destructuring on a new line', () => {
+              expect(subject()).toEqual(`
+var _ = require('underscore');
+var { memoize } = require('underscore');
+
+memoize
+              `.trim());
+            });
+          });
+
+          describe('when the default is already imported for destructured var', () => {
+            beforeEach(() => {
+              text = `
+var _ = require('underscore');
+var foo = require('foo');
+
+memoize
+              `.trim();
+            });
+
+            it('adds the destructuring on a new line', () => {
+              expect(subject()).toEqual(`
+var _ = require('underscore');
+var { memoize } = require('underscore');
+var foo = require('foo');
+
+memoize
+              `.trim());
+            });
+          });
+
+          describe('with other imports', () => {
+            beforeEach(() => {
+              text = `
+const bar = require('foo/bar');
+var { xyz } = require('alphabet');
+
+memoize
+              `.trim();
+            });
+
+            it('places the import at the right place', () => {
+              expect(subject()).toEqual(`
+const bar = require('foo/bar');
+
+var { memoize } = require('underscore');
+var { xyz } = require('alphabet');
+
+memoize
+              `.trim());
+            });
+          });
+
+          describe('when other destructured imports exist for the same module', () => {
+            beforeEach(() => {
+              text = `
+var { xyz, debounce } = require('underscore');
+
+memoize
+              `.trim();
+            });
+
+            it('combines the destructured import and sorts items', () => {
+              expect(subject()).toEqual(`
+var { debounce, memoize, xyz } = require('underscore');
+
+memoize
+              `.trim());
+            });
+
+            describe('when the module is already in the destructured object', () => {
+              beforeEach(() => {
+                text = `
+var { debounce, memoize } = require('underscore');
+
+memoize
+                `.trim();
+              });
+
+              it('does not add a duplicate', () => {
+                expect(subject()).toEqual(`
+var { debounce, memoize } = require('underscore');
+
+memoize
+                `.trim());
+              });
+            });
+          });
+        });
+      });
+
+      describe('alias with `import` and a `named_exports` object', () => {
+        beforeEach(() => {
+          configuration = Object.assign(configuration, {
+            declaration_keyword: 'import',
+            named_exports: {
+              underscore: [
+                'memoize',
+                'debounce',
+              ],
+            },
+            aliases: {
+              _: 'underscore',
+            },
+          });
+          text = '_';
+          word = '_';
+        });
+
+        it('resolves the main alias without a named import', () => {
+          expect(subject()).toEqual(`
+import _ from 'underscore';
+
+_
+          `.trim());
+        });
+
+        describe('when a named import exists for the same module', () => {
+          beforeEach(() => {
+            text = `
+import { memoize } from 'underscore';
+
+_
+            `.trim();
+          });
+
+          it('adds the default import', () => {
+            expect(subject()).toEqual(`
+import _, { memoize } from 'underscore';
+
+_
+            `.trim());
+          });
+        });
+
+        describe('when importing a named export', () => {
+          beforeEach(() => {
+            text = 'memoize';
+            word = 'memoize';
+          });
+
+          it('uses a named import', () => {
+            expect(subject()).toEqual(`
+import { memoize } from 'underscore';
+
+memoize
+            `.trim());
+          });
+
+          describe('with other imports', () => {
+            beforeEach(() => {
+              text = `
+import bar from 'foo/bar';
+import { xyz } from 'alphabet';
+
+memoize
+              `.trim();
+            });
+
+            it('places the import at the right place', () => {
+              expect(subject()).toEqual(`
+import { memoize } from 'underscore';
+import { xyz } from 'alphabet';
+import bar from 'foo/bar';
+
+memoize
+              `.trim());
+            });
+          });
+
+          describe('when other named imports exist for the same module', () => {
+            beforeEach(() => {
+              text = `
+import { xyz, debounce } from 'underscore';
+
+memoize
+              `.trim();
+            });
+
+            it('combines the named import and sorts items', () => {
+              expect(subject()).toEqual(`
+import { debounce, memoize, xyz } from 'underscore';
+
+memoize
+              `.trim());
+            });
+
+            describe('when the module is already in the named imports', () => {
+              beforeEach(() => {
+                text = `
+import { debounce, memoize, xyz } from 'underscore';
+
+memoize
+                `.trim();
+              });
+
+              it('does not add a duplicate', () => {
+                expect(subject()).toEqual(`
+import { debounce, memoize, xyz } from 'underscore';
+
+memoize
+                `.trim());
+              });
+            });
+          });
+
+          describe('when a default import exists for the same module', () => {
+            beforeEach(() => {
+              text = `
+import _ from 'underscore';
+
+memoize
+              `.trim();
+            });
+
+            it('adds the named import', () => {
+              expect(subject()).toEqual(`
+import _, { memoize } from 'underscore';
+
+memoize
+              `.trim());
+            });
+
+            describe('when the module is already in the named import', () => {
+              beforeEach(() => {
+                text = `
+import _, { memoize } from 'underscore';
+
+memoize
+                `.trim();
+              });
+
+              it('does not add a duplicate', () => {
+                expect(subject()).toEqual(`
+import _, { memoize } from 'underscore';
+
+memoize
+                `.trim());
+              });
+            });
+          });
+        });
+      });
+
+      describe('with a custom `import_function`', () => {
+        beforeEach(() => {
+          existingFiles = ['bar/foo.js'];
+        });
+
+        describe('and `declaration_keyword=import`', () => {
+          beforeEach(() => {
+            configuration.import_function = 'myRequire';
+            configuration.declaration_keyword = 'import';
+          });
+
+          it('does nothing special', () => {
+            expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+foo
+            `.trim());
+          });
+        });
+
+        describe('and `declaration_keyword=const`', () => {
+          beforeEach(() => {
+            configuration.import_function = 'myRequire';
+            configuration.declaration_keyword = 'const';
+          });
+
+          it('uses the custom import function instead of "require"', () => {
+            expect(subject()).toEqual(`
+const foo = myRequire('bar/foo');
+
+foo
+            `.trim());
+          });
+        });
+      });
+
+      describe('when strip_file_extensions is empty', () => {
+        beforeEach(() => {
+          existingFiles = ['bar/foo.js'];
+          configuration.strip_file_extensions = [];
+        });
+
+        it('keeps the file ending in the import', () => {
+          expect(subject()).toEqual(`
+import foo from 'bar/foo.js';
+
+foo
+          `.trim());
+        });
+      });
+
+      describe('with excludes', () => {
+        beforeEach(() => {
+          existingFiles = ['bar/foo/foo.js'];
+          configuration.excludes = ['**/foo/**'];
+        });
+
+        it('does not add an import', () => {
+          expect(subject()).toEqual(`
+foo
+          `.trim());
+        });
+
+        it('displays a message', () => {
+          subject();
+          expect(editor.messages()).toEqual(
+            `ImportJS: No JS module to import for variable \`${word}\``);
+        });
+      });
+
+      describe('with declaration_keyword=const', () => {
+        beforeEach(() => {
+          configuration.declaration_keyword = 'const';
+        });
+
+        describe('with a variable name that will resolve', () => {
+          beforeEach(() => {
+            existingFiles = ['bar/foo.jsx'];
+          });
+
+          it('adds an import to the top using the declaration_keyword', () => {
+            expect(subject()).toEqual(`
+const foo = require('bar/foo');
+
+foo
+            `.trim());
+          });
+
+          describe('when that variable is already imported using `var`', () => {
+            beforeEach(() => {
+              text = `
+var foo = require('bar/foo');
+
+foo
+              `.trim();
+            });
+
+            it('changes the `var` to declaration_keyword', () => {
+              expect(subject()).toEqual(`
+const foo = require('bar/foo');
+
+foo
+              `.trim());
+            });
+          });
+
+          describe('when the import contains a line-break', () => {
+            beforeEach(() => {
+              text = `
+var foo =
+  require('bar/foo');
+
+foo
+              `.trim();
+            });
+
+            it('changes the `var` to declaration_keyword and removes space', () => {
+              expect(subject()).toEqual(`
+const foo = require('bar/foo');
+
+foo
+              `.trim());
+            });
+          });
+
+          describe('when other imports exist', () => {
+            beforeEach(() => {
+              text = `
+var zoo = require('foo/zoo');
+let bar = require('foo/bar');
+
+foo
+              `.trim();
+            });
+
+            it('adds the import and sorts and groups the entire list', () => {
+              expect(subject()).toEqual(`
+const foo = require('bar/foo');
+
+var zoo = require('foo/zoo');
+
+let bar = require('foo/bar');
+
+foo
+            `.trim());
+            });
+          });
+        });
+      });
+
+      describe('with declaration_keyword=import', () => {
+        beforeEach(() => {
+          configuration.declaration_keyword = 'import';
+        });
+
+        describe('with a variable name that will resolve', () => {
+          beforeEach(() => {
+            existingFiles = [
+              'bar/foo.jsx',
+              'bar/fromfoo.jsx',
+            ];
+          });
+
+          describe('when that variable is already imported using `var`', () => {
+            beforeEach(() => {
+              text = `
+var foo = require('bar/foo');
+
+foo
+              `.trim();
+            });
+
+            it('changes the `var` to declaration_keyword', () => {
+              expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+foo
+              `.trim());
+            });
+          });
+
+          describe('when that variable already exists with a different style', () => {
+            beforeEach(() => {
+              text = `
+var foo = require("bar/foo");
+
+foo
+              `.trim();
+            });
+
+            it('changes `var` to declaration_keyword and doubles to singles', () => {
+              expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+foo
+              `.trim());
+            });
+          });
+
+          describe('when the imported variable has "from" in it', () => {
+            beforeEach(() => {
+              word = 'fromfoo';
+              text = `
+var fromfoo = require('bar/fromfoo');
+
+fromfoo
+              `.trim();
+            });
+
+            it('changes the `var` to declaration_keyword', () => {
+              expect(subject()).toEqual(`
+import fromfoo from 'bar/fromfoo';
+
+fromfoo
+              `.trim());
+            });
+          });
+
+          describe('when the import contains a line-break', () => {
+            beforeEach(() => {
+              text = `
+var foo =
+  require('bar/foo');
+
+foo
+              `.trim();
+            });
+
+            it('changes the `var` to declaration_keyword and removes space', () => {
+              expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+foo
+              `.trim());
+            });
+          });
+
+          describe('when other imports exist', () => {
+            beforeEach(() => {
+              text = `
+var zoo = require('foo/zoo');
+let bar = require('foo/bar');
+
+foo
+              `.trim();
+            });
+
+            it('adds the import and sorts and groups the entire list', () => {
+              expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+var zoo = require('foo/zoo');
+
+let bar = require('foo/bar');
+
+foo
+            `.trim());
+            });
+          });
+        });
+      });
+
+      describe('with `use_relative_paths=true`', () => {
+        beforeEach(() => {
+          existingFiles = ['bar/foo.jsx'];
+          text = 'foo';
+          configuration.use_relative_paths = true;
+        });
+
+        describe('when the current file is in the same lookup_path', () => {
+          beforeEach(() => {
+            pathToCurrentFile = `${path.basename(tmpDir)}/bar/current.js`;
+          });
+
+          it('uses a relative import path', () => {
+            expect(subject()).toEqual(`
+import foo from './foo';
+
+foo
+            `.trim());
+          });
+        });
+
+        describe('when the current file is not in the same lookup_path', () => {
+          beforeEach(() => {
+            pathToCurrentFile = '/foo/bar/current.js';
+          });
+
+          it('does not use a relative import path', () => {
+            expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+foo
+            `.trim());
+          });
+        });
+      });
+
+      describe('with local configuration defined in the main config file', () => {
+        beforeEach(() => {
+          existingFiles = ['bar/goo.jsx'];
+          pathToCurrentFile = 'foo/bar.js';
+          configuration.applies_to = 'foo/**/*';
+          configuration.declaration_keyword = 'var';
+          text = 'goo';
+          word = 'goo';
+        });
+
+
+        describe('when the pattern matches the file being edited', () => {
+          it('uses local config', () => {
+            expect(subject()).toEqual(`
+var goo = require('bar/goo');
+
+goo
+            `.trim());
+          });
+        });
+
+        describe('when the pattern does not match the file being edited', () => {
+          beforeEach(() => {
+            configuration.applies_to = 'car/**';
+          });
+
+          it('falls back to default config', () => {
+            expect(subject()).toEqual(`
+import goo from 'tmp/bar/goo';
+
+goo
+            `.trim());
+          });
+        });
+
+        describe('with an applies_from pattern', () => {
+          beforeEach(() => {
+            configuration = Object.assign(configuration, {
+              applies_from: 'tmp/bar/**/*', // TODO: Is there a bug here?
+              declaration_keyword: 'var',
+              import_function: 'quack',
+              strip_file_extensions: [],
+            });
+          });
+
+          describe('that matches the path of the file being imported', () => {
+            it('uses local config', () => {
+              expect(subject()).toEqual(`
+var goo = quack('bar/goo.jsx');
+
+goo
+              `.trim());
+            });
+
+            describe('when using `.` as lookup_path', () => {
+              beforeEach(() => {
+                configuration.lookup_path = ['.'];
+              });
+
+              it('uses local config', () => {
+                expect(subject()).toEqual(`
+var goo = quack('bar/goo.jsx');
+
+goo
+                `.trim());
+              });
+            });
+          });
+
+          describe('that does not match the file being imported', () => {
+            beforeEach(() => {
+              configuration.applies_from = 'foo/**';
+            });
+
+            it('falls back to default config', () => {
+              expect(subject()).toEqual(`
+import goo from 'bar/goo';
+
+goo
+              `.trim());
+            });
+          });
+        });
+      });
+    });
   });
 });
-//
-//     describe('configuration', () => {
-//       describe('with aliases', () => {
-//         let(:configuration) do
-//           super().merge('aliases' => { '$' => 'jquery' })
-//         });
-//         text = '$';
-//         word = '$';
-//
-//         it('resolves aliased imports to the aliases', () => {
-//           expect(subject()).toEqual(`)});
-// import $ from 'jquery';
-//
-// $
-//         `.trim();
-//         });
-//
-//         describe('and an alias has a dynamic {filename}', () => {
-//           let(:configuration) do
-//             super().merge('aliases' => { 'styles' => './{filename}.scss' })
-//           });
-//           text = 'styles';
-//           word = 'styles';
-//           pathToCurrentFile = 'bar/foo.jsx';
-//
-//           it('uses the filename of the current file', () => {
-//             expect(subject()).toEqual(`)});
-// import styles from './foo.scss';
-//
-// styles
-//             `.trim();
-//           });
-//
-//           describe('when editing an anonymous file', () => {
-//             describe('that is nil', () => {
-//               pathToCurrentFile = nil;
-//
-//               it('does not replace the dynamic part', () => {
-//                 expect(subject()).toEqual(`)});
-// import styles from './{filename}.scss';
-//
-// styles
-//                 `.trim();
-//               });
-//             });
-//
-//             describe('that is an empty string', () => {
-//               pathToCurrentFile = '';
-//
-//               it('does not replace the dynamic part', () => {
-//                 expect(subject()).toEqual(`)});
-// import styles from './{filename}.scss';
-//
-// styles
-//                 `.trim();
-//               });
-//             });
-//           });
-//         });
-//
-//         describe('and an alias contains a slash', () => {
-//           # https://github.com/trotzig/import-js/issues/39
-//           let(:configuration) do
-//             super().merge('aliases' => { '$' => 'jquery/jquery' })
-//           });
-//
-//           it('keeps the slash in the alias path', () => {
-//             expect(subject()).toEqual(`)});
-// import $ from 'jquery/jquery';
-//
-// $
-//           `.trim();
-//           });
-//         });
-//       });
-//
-//       describe('with `named_exports` object', () => {
-//         let(:configuration) do
-//           super().merge(
-//             'named_exports' => {
-//               'lib/utils' => %w[
-//                 foo
-//                 bar
-//               ],
-//             }
-//           )
-//         });
-//         text = 'foo';
-//         word = 'foo';
-//
-//         it('resolves that import using named imports', () => {
-//           expect(subject()).toEqual(`)});
-// import { foo } from 'lib/utils';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//
-//       describe('using `var`, `aliases` and a `named_exports` object', () => {
-//         let(:configuration) do
-//           super().merge(
-//             'declaration_keyword' => 'var',
-//             'named_exports' => {
-//               'underscore' => %w[
-//                 memoize
-//                 debounce
-//               ],
-//             },
-//             'aliases' => {
-//               '_' => 'underscore',
-//             }
-//           )
-//         });
-//         text = '_';
-//         word = '_';
-//
-//         it('resolves the main alias without destructuring', () => {
-//           expect(subject()).toEqual(`)});
-// var _ = require('underscore');
-//
-// _
-//         `.trim();
-//         });
-//
-//         describe('when a named import exists for the same module', () => {
-//           text = `;
-// var { memoize } = require('underscore');
-//
-// _
-//           `.trim();
-//
-//           it('adds the default import', () => {
-//             expect(subject()).toEqual(`)});
-// var _ = require('underscore');
-// var { memoize } = require('underscore');
-//
-// _
-//             `.trim();
-//           });
-//         });
-//
-//         describe('when importing a named export', () => {
-//           text = 'memoize';
-//           word = 'memoize';
-//
-//           it('resolves that import using destructuring', () => {
-//             expect(subject()).toEqual(`)});
-// var { memoize } = require('underscore');
-//
-// memoize
-//             `.trim();
-//           });
-//
-//           it('displays a message about the imported module', () => {
-//             subject
-//             expect(editor.messages).to start_with(
-//               'ImportJS: Imported `memoize` from `underscore`')
-//           });
-//
-//           describe('when the default import exists for the same module', () => {
-//             text = `;
-// var _ = require('underscore');
-//
-// memoize
-//             `.trim();
-//
-//             it('adds the destructuring on a new line', () => {
-//               expect(subject()).toEqual(`)});
-// var _ = require('underscore');
-// var { memoize } = require('underscore');
-//
-// memoize
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when the default is already imported for destructured var', () => {
-//             text = `;
-// var _ = require('underscore');
-// var foo = require('foo');
-//
-// memoize
-//             `.trim();
-//
-//             it('adds the destructuring on a new line', () => {
-//               expect(subject()).toEqual(`)});
-// var _ = require('underscore');
-// var { memoize } = require('underscore');
-// var foo = require('foo');
-//
-// memoize
-//               `.trim();
-//             });
-//           });
-//
-//           describe('with other imports', () => {
-//             text = `;
-// const bar = require('foo/bar');
-// var { xyz } = require('alphabet');
-//
-// memoize
-//             `.trim();
-//
-//             it('places the import at the right place', () => {
-//               expect(subject()).toEqual(`)});
-// const bar = require('foo/bar');
-//
-// var { memoize } = require('underscore');
-// var { xyz } = require('alphabet');
-//
-// memoize
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when other destructured imports exist for the same module', () => {
-//             text = `;
-// var { xyz, debounce } = require('underscore');
-//
-// memoize
-//             `.trim();
-//
-//             it('combines the destructured import and sorts items', () => {
-//               expect(subject()).toEqual(`)});
-// var { debounce, memoize, xyz } = require('underscore');
-//
-// memoize
-//               `.trim();
-//             });
-//
-//             describe('when the module is already in the destructured object', () => {
-//               text = `;
-// var { debounce, memoize } = require('underscore');
-//
-// memoize
-//               `.trim();
-//
-//               it('does not add a duplicate', () => {
-//                 expect(subject()).toEqual(`)});
-// var { debounce, memoize } = require('underscore');
-//
-// memoize
-//                 `.trim();
-//               });
-//             });
-//           });
-//         });
-//       });
-//
-//       describe('alias with `import` and a `named_exports` object', () => {
-//         let(:configuration) do
-//           {
-//             'declaration_keyword' => 'import',
-//             'named_exports' => {
-//               'underscore' => %w[
-//                 memoize
-//                 debounce
-//               ],
-//             },
-//             'aliases' => {
-//               '_' => 'underscore',
-//             },
-//           }
-//         });
-//         text = '_';
-//         word = '_';
-//
-//         it('resolves the main alias without a named import', () => {
-//           expect(subject()).toEqual(`)});
-// import _ from 'underscore';
-//
-// _
-//         `.trim();
-//         });
-//
-//         describe('when a named import exists for the same module', () => {
-//           text = `;
-// import { memoize } from 'underscore';
-//
-// _
-//           `.trim();
-//
-//           it('adds the default import', () => {
-//             expect(subject()).toEqual(`)});
-// import _, { memoize } from 'underscore';
-//
-// _
-//             `.trim();
-//           });
-//         });
-//
-//         describe('when importing a named export', () => {
-//           text = 'memoize';
-//           word = 'memoize';
-//
-//           it('uses a named import', () => {
-//             expect(subject()).toEqual(`)});
-// import { memoize } from 'underscore';
-//
-// memoize
-//             `.trim();
-//           });
-//
-//           describe('with other imports', () => {
-//             text = `;
-// import bar from 'foo/bar';
-// import { xyz } from 'alphabet';
-//
-// memoize
-//             `.trim();
-//
-//             it('places the import at the right place', () => {
-//               expect(subject()).toEqual(`)});
-// import { memoize } from 'underscore';
-// import { xyz } from 'alphabet';
-// import bar from 'foo/bar';
-//
-// memoize
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when other named imports exist for the same module', () => {
-//             text = `;
-// import { xyz, debounce } from 'underscore';
-//
-// memoize
-//             `.trim();
-//
-//             it('combines the named import and sorts items', () => {
-//               expect(subject()).toEqual(`)});
-// import { debounce, memoize, xyz } from 'underscore';
-//
-// memoize
-//               `.trim();
-//             });
-//
-//             describe('when the module is already in the named imports', () => {
-//               text = `;
-// import { debounce, memoize, xyz } from 'underscore';
-//
-// memoize
-//               `.trim();
-//
-//               it('does not add a duplicate', () => {
-//                 expect(subject()).toEqual(`)});
-// import { debounce, memoize, xyz } from 'underscore';
-//
-// memoize
-//                 `.trim();
-//               });
-//             });
-//           });
-//
-//           describe('when a default import exists for the same module', () => {
-//             text = `;
-// import _ from 'underscore';
-//
-// memoize
-//             `.trim();
-//
-//             it('adds the named import', () => {
-//               expect(subject()).toEqual(`)});
-// import _, { memoize } from 'underscore';
-//
-// memoize
-//               `.trim();
-//             });
-//
-//             describe('when the module is already in the named import', () => {
-//               text = `;
-// import _, { memoize } from 'underscore';
-//
-// memoize
-//               `.trim();
-//
-//               it('does not add a duplicate', () => {
-//                 expect(subject()).toEqual(`)});
-// import _, { memoize } from 'underscore';
-//
-// memoize
-//                 `.trim();
-//               });
-//             });
-//           });
-//         });
-//       });
-//
-//       describe('with a custom `import_function`', () => {
-//         existingFiles = ['bar/foo.js'];
-//
-//         describe('and `declaration_keyword=import`', () => {
-//           let(:configuration) do
-//             super().merge(
-//               'import_function' => 'myRequire',
-//               'declaration_keyword' => 'import'
-//             )
-//           });
-//
-//           it('does nothing special', () => {
-//             expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//
-//         describe('and `declaration_keyword=const`', () => {
-//           let(:configuration) do
-//             super().merge(
-//               'import_function' => 'myRequire',
-//               'declaration_keyword' => 'const'
-//             )
-//           });
-//
-//           it('uses the custom import function instead of "require"', () => {
-//             expect(subject()).toEqual(`)});
-// const foo = myRequire('bar/foo');
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//       });
-//
-//       describe('when strip_file_extensions is empty', () => {
-//         existingFiles = ['bar/foo.js'];
-//         let(:configuration) do
-//           super().merge('strip_file_extensions' => [])
-//         });
-//
-//         it('keeps the file });ing in the import', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'bar/foo.js';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//
-//       describe('with excludes', () => {
-//         existingFiles = ['bar/foo/foo.js'];
-//         let(:configuration) do
-//           super().merge('excludes' => ['**/foo/**'])
-//         });
-//
-//         it('does not add an import', () => {
-//           expect(subject()).toEqual(`)});
-// foo
-//           `.trim();
-//         });
-//
-//         it('displays a message', () => {
-//           subject
-//           expect(editor.messages).to start_with(
-//             `ImportJS: No JS module to import for variable `${word}``)
-//         });
-//       });
-//
-//       describe('with declaration_keyword=const', () => {
-//         let(:configuration) do
-//           super().merge('declaration_keyword' => 'const')
-//         });
-//
-//         describe('with a variable name that will resolve', () => {
-//           existingFiles = ['bar/foo.jsx'];
-//
-//           it('adds an import to the top using the declaration_keyword', () => {
-//             expect(subject()).toEqual(`)});
-// const foo = require('bar/foo');
-//
-// foo
-//             `.trim();
-//           });
-//
-//           describe('when that variable is already imported using `var`', () => {
-//             text = `;
-// var foo = require('bar/foo');
-//
-// foo
-//             `.trim();
-//
-//             it('changes the `var` to declaration_keyword', () => {
-//               expect(subject()).toEqual(`)});
-// const foo = require('bar/foo');
-//
-// foo
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when the import contains a line-break', () => {
-//             text = `;
-// var foo =
-//   require('bar/foo');
-//
-// foo
-//             `.trim();
-//
-//             it('changes the `var` to declaration_keyword and removes space', () => {
-//               expect(subject()).toEqual(`)});
-// const foo = require('bar/foo');
-//
-// foo
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when other imports exist', () => {
-//             text = `;
-// var zoo = require('foo/zoo');
-// let bar = require('foo/bar');
-//
-// foo
-//             `.trim();
-//
-//             it('adds the import and sorts and groups the entire list', () => {
-//               expect(subject()).toEqual(`)});
-// const foo = require('bar/foo');
-//
-// var zoo = require('foo/zoo');
-//
-// let bar = require('foo/bar');
-//
-// foo
-//             `.trim();
-//             });
-//           });
-//         });
-//       });
-//
-//       describe('with declaration_keyword=import', () => {
-//         let(:configuration) do
-//           super().merge('declaration_keyword' => 'import')
-//         });
-//
-//         describe('with a variable name that will resolve', () => {
-//           existingFiles = ['bar/foo.jsx', 'bar/fromfoo.jsx'];
-//
-//           describe('when that variable is already imported using `var`', () => {
-//             text = `;
-// var foo = require('bar/foo');
-//
-// foo
-//             `.trim();
-//
-//             it('changes the `var` to declaration_keyword', () => {
-//               expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when that variable already exists with a different style', () => {
-//             text = `;
-// var foo = require("bar/foo");
-//
-// foo
-//             `.trim();
-//
-//             it('changes `var` to declaration_keyword and doubles to singles', () => {
-//               expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when the imported variable has "from" in it', () => {
-//             word = 'fromfoo';
-//             text = `;
-// var fromfoo = require('bar/fromfoo');
-//
-// fromfoo
-//             `.trim();
-//
-//             it('changes the `var` to declaration_keyword', () => {
-//               expect(subject()).toEqual(`)});
-// import fromfoo from 'bar/fromfoo';
-//
-// fromfoo
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when the import contains a line-break', () => {
-//             text = `;
-// var foo =
-//   require('bar/foo');
-//
-// foo
-//             `.trim();
-//
-//             it('changes the `var` to declaration_keyword and removes space', () => {
-//               expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//               `.trim();
-//             });
-//           });
-//
-//           describe('when other imports exist', () => {
-//             text = `;
-// var zoo = require('foo/zoo');
-// let bar = require('foo/bar');
-//
-// foo
-//             `.trim();
-//
-//             it('adds the import and sorts and groups the entire list', () => {
-//               expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// var zoo = require('foo/zoo');
-//
-// let bar = require('foo/bar');
-//
-// foo
-//             `.trim();
-//             });
-//           });
-//         });
-//       });
-//
-//       describe('with `use_relative_paths=true`', () => {
-//         existingFiles = ['bar/foo.jsx'];
-//         text = `;
-// foo
-//         `.trim();
-//
-//         let(:configuration) do
-//           super().merge('use_relative_paths' => true)
-//         });
-//
-//         describe('when the current file is in the same lookup_path', () => {
-//           pathToCurrentFile = File.join(tmp_dir, 'bar/current.js');
-//
-//           it('uses a relative import path', () => {
-//             expect(subject()).toEqual(`)});
-// import foo from './foo';
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//
-//         describe('when the current file is not in the same lookup_path', () => {
-//           pathToCurrentFile = '/foo/bar/current.js';
-//
-//           it('does not use a relative import path', () => {
-//             expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//       });
-//
-//       describe('with local configuration defined in the main config file', () => {
-//         this.pattern = 'foo/**';
-//         existingFiles = ['bar/foo.jsx'];
-//         pathToCurrentFile = 'foo/bar.js';
-//         let(:configuration) do
-//           [
-//             super(),
-//             {
-//               'applies_to' => pattern,
-//               'declaration_keyword' => 'var',
-//             },
-//           ]
-//         });
-//
-//         text = 'foo';
-//         word = 'foo';
-//
-//         describe('when the pattern matches the file being edited', () => {
-//           it('uses local config', () => {
-//             expect(subject()).toEqual(`)});
-// var foo = require('bar/foo');
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//
-//         describe('when the pattern does not match the file being edited', () => {
-//           this.pattern = 'car/**';
-//
-//           it('falls back to default config', () => {
-//             expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//             `.trim();
-//           });
-//         });
-//
-//         describe('with an applies_from pattern', () => {
-//           this.from_pattern = `${File.basename(tmp_dir)}/bar/**`;
-//           pathToCurrentFile = `${File.basename(tmp_dir)}/foo/bar.js`;
-//           let(:configuration) do
-//             super() << {
-//               'applies_from' => from_pattern,
-//               'declaration_keyword' => 'var',
-//               'import_function' => 'quack',
-//               'use_relative_paths' => true,
-//               'strip_file_extensions' => [],
-//             }
-//           });
-//
-//           describe('that matches the path of the file being imported', () => {
-//             it('uses local config', () => {
-//               expect(subject()).toEqual(`)});
-// var foo = quack('../bar/foo.jsx');
-//
-// foo
-//               `.trim();
-//             });
-//
-//             describe('when using `.` as lookup_path', () => {
-//               let(:configuration) do
-//                 [{
-//                   'lookup_paths' => ['.'],
-//                 }].concat(super())
-//               });
-//
-//               it('uses local config', () => {
-//                 expect(subject()).toEqual(`)});
-// var foo = quack('../bar/foo.jsx');
-//
-// foo
-//                 `.trim();
-//               });
-//             });
-//           });
-//
-//           describe('that does not match the file being imported', () => {
-//             this.from_pattern = 'foo/**';
-//
-//             it('falls back to default config', () => {
-//               expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//               `.trim();
-//             });
-//           });
-//         });
-//       });
-//     });
-//   });
 //
 //   describe '#fix_imports' do
 //     this.eslint_result = '';
