@@ -1,6 +1,5 @@
 'use strict';
 
-jest.autoMockOff();
 jest.mock('../lib/FileUtils');
 jest.mock('../package.json');
 

@@ -1,4 +1,3 @@
-jest.autoMockOff();
 jest.mock('fs');
 
 describe('FileUtils', () => {

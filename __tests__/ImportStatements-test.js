@@ -1,6 +1,5 @@
 'use strict';
 
-jest.autoMockOff();
 jest.mock('../lib/FileUtils');
 
 const ImportStatement = require('../lib/ImportStatement');
