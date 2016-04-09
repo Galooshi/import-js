@@ -1,175 +1,134 @@
 jest.autoMockOff();
+jest.mock('../lib/FileUtils');
+jest.mock('fs');
 
 describe('resolveImportPathAndMain()', () => {
-  //let(:file_path) { '' }
-  //let(:strip_file_extensions) { [] }
+  function mockFile(file, contents, stats) {
+    beforeEach(() => {
+      require('fs').__setFile(file, contents, stats);
+    });
 
-  //subject do
-    //described_class.resolve_import_path_and_main(
-      //file_path, strip_file_extensions)
-  //});
+    afterEach(() => {
+      require('fs').__setFile(file, null);
+    });
+  }
 
-  //context('when the file path ends with /package.json', () => {
-    //let(:package_path) { 'node_modules/foo' }
-    //let(:file_path) { "#{package_path}/package.json" }
+  function mockJsonFile(file, json) {
+    beforeEach(() => {
+      require('../lib/FileUtils').__setJsonFile(file, json);
+    });
 
-    //context('when the file path does not exist', () => {
-      //it('returns nulls', () => {
-        //expect(subject).toEqual([null, null])
-      //});
-    //});
+    afterEach(() => {
+      require('../lib/FileUtils').__setJsonFile(file, null);
+    });
+  }
 
-    //context('when the file is empty', () => {
-      //before do
-        //allow(File).to receive(:exist?).with(file_path).and_return(true)
-        //allow(File).to receive(:read).with(file_path).and_return('')
-      //});
+  it('returns nulls when path ends with /package.json but does not exist', () => {
+    const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+    expect(resolveImportPathAndMain('node_modules/foo/package.json', []))
+      .toEqual([null, null]);
+  });
 
-      //it('returns nulls', () => {
-        //expect(subject).toEqual([null, null])
-      //});
-    //});
+  describe('when the package.json does not have main', () => {
+    mockJsonFile('node_modules/foo/package.json', {});
 
-    //context('when the file has JSON but no main file', () => {
-      //before do
-        //allow(File).to receive(:exist?).and_call_original
-        //allow(File).to receive(:exist?).with(file_path).and_return(true)
-        //allow(File).to receive(:read).with(file_path)
-          //.and_return('{}')
-      //});
+    it('returns nulls', () => {
+      const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+      expect(resolveImportPathAndMain('node_modules/foo/package.json', []))
+        .toEqual([null, null]);
+    });
 
-      //it('returns nulls', () => {
-        //expect(subject).toEqual([null, null])
-      //});
+    describe('when there is an index.js', () => {
+      mockFile('node_modules/foo/index.js', '', { isDirectory: () => false });
 
-      //context('when there is an index.js', () => {
-        //before do
-          //allow(File).to receive(:exist?)
-            //.with("#{package_path}/index.js")
-            //.and_return(true)
-        //});
+      it('resolves to index.js', () => {
+        const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+        expect(resolveImportPathAndMain('node_modules/foo/package.json', []))
+          .toEqual(['node_modules/foo', 'index.js']);
+      });
+    });
 
-        //it('resolves to index.js', () => {
-          //expect(subject).toEqual([package_path, 'index.js'])
-        //});
-      //});
+    describe('when there is an index.jsx', () => {
+      mockFile('node_modules/foo/index.jsx', '', { isDirectory: () => false });
 
-      //context('when there is an index.jsx', () => {
-        //before do
-          //allow(File).to receive(:exist?)
-            //.with("#{package_path}/index.jsx")
-            //.and_return(true)
-        //});
+      it('resolves to index.js', () => {
+        const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+        expect(resolveImportPathAndMain('node_modules/foo/package.json', []))
+          .toEqual(['node_modules/foo', 'index.jsx']);
+      });
+    });
+  });
 
-        //it('resolves to index.jsx', () => {
-          //expect(subject).toEqual([package_path, 'index.jsx'])
-        //});
-      //});
-    //});
+  describe('when the package.json has a main file', () => {
+    mockJsonFile('node_modules/foo/package.json', { main: 'main-file.js' });
 
-    //context('when the file has JSON with a main file', () => {
-      //let(:main_file) { 'index.jsx' }
-      //before do
-        //allow(File).to receive(:exist?).with(file_path).and_return(true)
-        //allow(File).to receive(:read).with(file_path)
-          //.and_return("{ \"main\": \"#{main_file}\" }")
-      //});
+    it('returns the package path and the main file', () => {
+      const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+      expect(resolveImportPathAndMain('node_modules/foo/package.json', []))
+        .toEqual(['node_modules/foo', 'main-file.js']);
+    });
+  });
 
-      //it('returns the package path and the main file', () => {
-        //expect(subject).toEqual([package_path, main_file])
-      //});
+  describe('when the package.json has a main directory', () => {
+    mockJsonFile('node_modules/foo/package.json', { main: 'main-dir' });
+    mockFile('node_modules/foo/main-dir', '', { isDirectory: () => true });
 
-      //context('when main is a directory', () => {
-        //let(:main_file) { 'bar' }
-        //let(:main_path) { "#{package_path}/#{main_file}" }
+    describe('and the main directory has an index.js', () => {
+      mockFile(
+        'node_modules/foo/main-dir/index.js', '', { isDirectory: () => false });
 
-        //before do
-          //allow(File).to receive(:exist?).with(main_path).and_return(true)
-          //allow(File).to receive(:directory?).with(main_path).and_return(true)
-        //});
+      it('returns the package path and the main directory index.js', () => {
+        const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+        expect(resolveImportPathAndMain('node_modules/foo/package.json', []))
+          .toEqual(['node_modules/foo', 'main-dir/index.js']);
+      });
+    });
 
-        //context('and the main directory has an index.js file', () => {
-          //let(:main_index) { 'index.js' }
-          //let(:main_index_path) { "#{main_path}/#{main_index}" }
+    describe('and the main directory has an index.jsx', () => {
+      mockFile(
+        'node_modules/foo/main-dir/index.jsx', '', { isDirectory: () => false });
 
-          //before do
-            //allow(File).to receive(:exist?)
-              //.with("#{main_path}/index.jsx").and_return(false)
-            //allow(File).to receive(:exist?)
-              //.with(main_index_path).and_return(true)
-          //});
+      it('returns the package path and the main directory index.jsx', () => {
+        const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+        expect(resolveImportPathAndMain('node_modules/foo/package.json', []))
+          .toEqual(['node_modules/foo', 'main-dir/index.jsx']);
+      });
+    });
+  });
 
-          //it('returns the package path and main/index.js', () => {
-            //expect(subject)
-              //.toEqual([package_path, "#{main_file}/#{main_index}"])
-          //});
-        //});
+  it('returns directory path and index.js for paths ending in index.js', () => {
+    const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+    expect(resolveImportPathAndMain('path/to/foo/index.js', []))
+      .toEqual(['path/to/foo', 'index.js']);
+  });
 
-        //context('and the main directory has an index.jsx file', () => {
-          //let(:main_index) { 'index.jsx' }
-          //let(:main_index_path) { "#{main_path}/#{main_index}" }
+  it('returns directory path and index.jsx for paths ending in index.jsx', () => {
+    const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+    expect(resolveImportPathAndMain('path/to/foo/index.jsx', []))
+      .toEqual(['path/to/foo', 'index.jsx']);
+  });
 
-          //before do
-            //allow(File).to receive(:exist?)
-              //.with("#{main_path}/index.js").and_return(false)
-            //allow(File).to receive(:exist?)
-              //.with(main_index_path).and_return(true)
-          //});
+  it('returns file path for non-index js paths', () => {
+    const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+    expect(resolveImportPathAndMain('path/to/foo.js', []))
+      .toEqual(['path/to/foo.js', null]);
+  });
 
-          //it('returns the package path and main/index.jsx', () => {
-            //expect(subject)
-              //.toEqual([package_path, "#{main_file}/#{main_index}"])
-          //});
-        //});
-      //});
-    //});
-  //});
+  it('returns file path for non-index jsx paths', () => {
+    const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+    expect(resolveImportPathAndMain('path/to/foo.jsx', []))
+      .toEqual(['path/to/foo.jsx', null]);
+  });
 
-  //context('when the file path ends with index.js', () => {
-    //let(:file_path) { 'path/to/foo/index.js' }
+  it('can strip .js extensions', () => {
+    const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+    expect(resolveImportPathAndMain('path/to/foo.js', ['.js', '.jsx']))
+      .toEqual(['path/to/foo', null]);
+  });
 
-    //it('returns the directory path and index.js', () => {
-      //expect(subject).toEqual(['path/to/foo', 'index.js'])
-    //});
-  //});
-
-  //context('when the file path ends with index.jsx', () => {
-    //let(:file_path) { 'path/to/foo/index.jsx' }
-
-    //it('returns the directory path and index.jsx', () => {
-      //expect(subject).toEqual(['path/to/foo', 'index.jsx'])
-    //});
-  //});
-
-  //context('when the file path is to a non-index js file', () => {
-    //let(:file_path) { 'path/to/foo.js' }
-
-    //it('returns the file path', () => {
-      //expect(subject).toEqual([file_path, null])
-    //});
-
-    //context('when .js is an extension to strip', () => {
-      //let(:strip_file_extensions) { ['.js', '.jsx'] }
-
-      //it('returns the file path without the extension', () => {
-        //expect(subject).toEqual(['path/to/foo', null])
-      //});
-    //});
-  //});
-
-  //context('when the file path is to a non-index jsx file', () => {
-    //let(:file_path) { 'path/to/foo.jsx' }
-
-    //it('returns the file path', () => {
-      //expect(subject).toEqual([file_path, null])
-    //});
-
-    //context('when .jsx is an extension to strip', () => {
-      //let(:strip_file_extensions) { ['.js', '.jsx'] }
-
-      //it('returns the file path without the extension', () => {
-        //expect(subject).toEqual(['path/to/foo', null])
-      //});
-    //});
-  //});
+  it('can strip .jsx extensions', () => {
+    const resolveImportPathAndMain = require('../lib/resolveImportPathAndMain');
+    expect(resolveImportPathAndMain('path/to/foo.jsx', ['.js', '.jsx']))
+      .toEqual(['path/to/foo', null]);
+  });
 });
