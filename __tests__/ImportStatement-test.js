@@ -1,7 +1,5 @@
 'use strict';
 
-jest.autoMockOff();
-
 const ImportStatement = require('../lib/ImportStatement');
 
 describe('ImportStatement', () => {
