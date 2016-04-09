@@ -1,21 +1,33 @@
 jest.autoMockOff();
-
-const JsModule = require('../lib/JsModule');
+jest.mock('../lib/FileUtils');
 
 describe('JsModule', () => {
+  function mockJsonFile(file, json) {
+    beforeEach(() => {
+      require('../lib/FileUtils').__setJsonFile(file, json);
+    });
+
+    afterEach(() => {
+      require('../lib/FileUtils').__setJsonFile(file, null);
+    });
+  }
+
   it('does not modify lookupPath when it is .', () => {
+    const JsModule = require('../lib/JsModule');
     const lookupPath = '.';
     JsModule.construct({ lookupPath });
     expect(lookupPath).toEqual('.');
   });
 
   it('does not modify relativeFilePath when it is .', () => {
+    const JsModule = require('../lib/JsModule');
     const relativeFilePath = '.';
     JsModule.construct({ relativeFilePath });
     expect(relativeFilePath).toEqual('.');
   });
 
   it('strips out the lookup path from relativeFilePath', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       relativeFilePath: 'app/lib/foo.js',
@@ -25,6 +37,7 @@ describe('JsModule', () => {
   });
 
   it('strips file extensions that are configured to be stripped', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       relativeFilePath: 'app/lib/foo.js',
@@ -35,6 +48,7 @@ describe('JsModule', () => {
   });
 
   it('strips double extensions', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       relativeFilePath: 'app/lib/foo.web.js',
@@ -45,6 +59,7 @@ describe('JsModule', () => {
   });
 
   it('does not strip parts of double extensions', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       relativeFilePath: 'app/lib/foo.js',
@@ -55,6 +70,7 @@ describe('JsModule', () => {
   });
 
   it('strips stripFromPath from the beginning of the path', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       stripFromPath: 'lib',
@@ -65,6 +81,7 @@ describe('JsModule', () => {
   });
 
   it('does not strip anything when stripFromPath is not at the beginning', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       stripFromPath: 'foo',
@@ -75,6 +92,7 @@ describe('JsModule', () => {
   });
 
   it('prefers makeRelativeTo over stripFromPath', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       stripFromPath: 'lib',
@@ -86,6 +104,7 @@ describe('JsModule', () => {
   });
 
   it('creates a valid JsModule when index.js is part of the name', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       relativeFilePath: 'lib/index.js/foo.js',
     });
@@ -95,6 +114,7 @@ describe('JsModule', () => {
   });
 
   it('produces a correct path when lookupPath is the current directory', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: '.',
       relativeFilePath: './app/lib/foo.js',
@@ -104,6 +124,7 @@ describe('JsModule', () => {
   });
 
   it('produces a correct path when lookupPath starts with a dot', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: './app',
       relativeFilePath: './app/lib/foo.js',
@@ -113,6 +134,7 @@ describe('JsModule', () => {
   });
 
   it('produces a correct path with a relative file in the same directory', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       makeRelativeTo: 'app/lib/bar.js',
@@ -123,6 +145,7 @@ describe('JsModule', () => {
   });
 
   it('produces a correct same-directory relative path when lookupPath starts with a dot', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: './app',
       makeRelativeTo: 'app/lib/bar.js',
@@ -134,6 +157,7 @@ describe('JsModule', () => {
 
   xit('produces a correct same-directory relative path when lookupPath is current directory', () => {
     // TODO figure out why this isn't working and fix it
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: '.',
       makeRelativeTo: 'app/lib/bar.js',
@@ -144,6 +168,7 @@ describe('JsModule', () => {
   });
 
   it('produces a correct relative path when other file is in a parent directory', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       makeRelativeTo: 'app/bar.js',
@@ -154,6 +179,7 @@ describe('JsModule', () => {
   });
 
   it('produces a correct relative path when other file is in a sibling directory', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       makeRelativeTo: 'app/foo/bar.js',
@@ -164,6 +190,7 @@ describe('JsModule', () => {
   });
 
   it('has correct path when other file is in a child of a sibling directory', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       makeRelativeTo: 'app/foo/gas/bar.js',
@@ -174,6 +201,7 @@ describe('JsModule', () => {
   });
 
   it('does not create a relative path when other file is in a different lookupPath', () => {
+    const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: 'app',
       makeRelativeTo: 'spec/foo/gas/bar.js',
@@ -183,90 +211,78 @@ describe('JsModule', () => {
     expect(jsModule.importPath).toEqual('lib/foo.js');
   });
 
-  //describe('#open_file_path', () => {
-    //context('when the file path is present', () => {
-      //let(:path_to_current_file) { '/path/to/file' }
+  describe('.openFilePath()', () => {
+    describe('when relative file path has /package.json', () => {
+      mockJsonFile('node_modules/foo/package.json', { main: 'main-file.js' });
 
-      //context('when relative file path ends with /package.json ', () => {
-        //let(:relative_file_path) { 'node_modules/foo/package.json' }
-        //let(:main_file) { 'index.jsx' }
-        //before do
-          //allow(File).to receive(:exist?)
-            //.with(relative_file_path)
-            //.and_return(true)
-          //allow(File).to receive(:read)
-            //.with(relative_file_path)
-            //.and_return("{ \"main\": \"#{main_file}\" }")
-        //});
+      it('replaces /package.json at the end with the main file', () => {
+        const JsModule = require('../lib/JsModule');
+        const jsModule = JsModule.construct({
+          relativeFilePath: 'node_modules/foo/package.json',
+        });
 
-        //it('replaces /package.json with the main file', () => {
-          //expect(subject.open_file_path(path_to_current_file))
-            //.toEqual('node_modules/foo/index.jsx')
-        //});
-      //});
+        expect(jsModule.openFilePath('/path/to/file'))
+          .toEqual('node_modules/foo/main-file.js');
+      });
 
-      //context('when relative file path has /package.json in the middle', () => {
-        //let(:relative_file_path) { 'node_modules/foo/package.json/bar' }
+      it('does not replace /package.json in the middle', () => {
+        const JsModule = require('../lib/JsModule');
+        const jsModule = JsModule.construct({
+          relativeFilePath: 'node_modules/foo/package.json/bar',
+        });
 
-        //it('does not modify the path', () => {
-          //expect(subject.open_file_path(path_to_current_file))
-            //.toEqual(relative_file_path)
-        //});
-      //});
-    //});
+        expect(jsModule.openFilePath('/path/to/file'))
+          .toEqual('node_modules/foo/package.json/bar');
+      });
+    });
 
-    //context('when the file path is empty', () => {
-      //# This can happen when resolving aliases
-      //let(:path_to_current_file) { '/path/to/file' }
-      //subject { described_class.new(import_path: import_path) }
+    it('makes ./ paths relative to the current file', () => {
+      const JsModule = require('../lib/JsModule');
+      const jsModule = new JsModule({
+        importPath: './index.scss',
+      });
 
-      //context('when the import path starts with a ./', () => {
-        //let(:import_path) { './index.scss' }
+      expect(jsModule.openFilePath('/path/to/file'))
+        .toEqual('/path/to/index.scss');
+    });
 
-        //it('makes the path relative to the path to the current file', () => {
-          //expect(subject.open_file_path(path_to_current_file))
-            //.toEqual('/path/to/index.scss')
-        //});
-      //});
+    it('makes ../ paths relative to the current file', () => {
+      const JsModule = require('../lib/JsModule');
+      const jsModule = new JsModule({
+        importPath: '../index.scss',
+      });
 
-      //context('when the import path starts with a ../', () => {
-        //let(:import_path) { '../index.scss' }
+      expect(jsModule.openFilePath('/path/to/file'))
+        .toEqual('/path/index.scss');
+    });
 
-        //it('makes the path relative to the path to the current file', () => {
-          //expect(subject.open_file_path(path_to_current_file))
-            //.toEqual('/path/index.scss')
-        //});
-      //});
+    describe('when the import path is a package', () => {
+      mockJsonFile(
+        'node_modules/my-package/package.json',
+        { main: 'main-file.js' }
+      );
 
-      //context('when the import path does not have any dots at the beginning', () => {
-        //let(:import_path) { 'my-package' }
+      it('uses the main file', () => {
+        const JsModule = require('../lib/JsModule');
+        const jsModule = new JsModule({
+          importPath: 'my-package',
+        });
 
-        //context('when it is an alias of a package', () => {
-          //let(:main_file) { 'index.jsx' }
-          //before do
-            //allow(File).to receive(:exist?)
-              //.with("node_modules/#{import_path}/package.json")
-              //.and_return(true)
-            //allow(File).to receive(:read)
-              //.with("node_modules/#{import_path}/package.json")
-              //.and_return("{ \"main\": \"#{main_file}\" }")
-          //});
+        expect(jsModule.openFilePath('/path/to/file'))
+          .toEqual('node_modules/my-package/main-file.js');
+      });
+    });
 
-          //it('gives the main path found in the package.json', () => {
-            //expect(subject.open_file_path(path_to_current_file))
-              //.toEqual("node_modules/#{import_path}/#{main_file}")
-          //});
-        //});
+    it('does nothing to the path when it is not a package', () => {
+      const JsModule = require('../lib/JsModule');
+      const jsModule = new JsModule({
+        importPath: 'my-package',
+      });
 
-        //context('when it is not an alias of a package', () => {
-          //it('does nothing to the path', () => {
-            //expect(subject.open_file_path(path_to_current_file))
-              //.toEqual(import_path)
-          //});
-        //});
-      //});
-    //});
-  //});
+      expect(jsModule.openFilePath('/path/to/file'))
+        .toEqual('my-package');
+    });
+  });
 
   //describe('.resolve_import_path_and_main', () => {
     //let(:file_path) { '' }
