@@ -1176,7 +1176,7 @@ foo
 
         describe('when configured to use a tab character', () => {
           beforeEach(() => {
-            configuration.tab = "\t"
+            configuration.tab = '\t';
           });
 
           it('wraps them and indents with a tab', () => {
@@ -1287,7 +1287,7 @@ styles
         describe('and an alias contains a slash', () => {
           // https://github.com/trotzig/import-js/issues/39
           beforeEach(() => {
-            configuration.aliases = { '$': 'jquery/jquery' };
+            configuration.aliases = { $: 'jquery/jquery' };
           });
 
           it('keeps the slash in the alias path', () => {
