@@ -154,8 +154,7 @@ describe('JsModule', () => {
     expect(jsModule.importPath).toEqual('./foo.js');
   });
 
-  xit('produces a correct same-directory relative path when lookupPath is current directory', () => {
-    // TODO figure out why this isn't working and fix it
+  it('produces a correct same-directory relative path when lookupPath is current directory', () => {
     const JsModule = require('../lib/JsModule');
     const jsModule = JsModule.construct({
       lookupPath: '.',
