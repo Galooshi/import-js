@@ -397,7 +397,7 @@ module ImportJS
         a.import_path.length <=> b.import_path.length
       end
       matched_modules.uniq! do |m|
-        m.lookup_path + '/' + m.import_path
+        (m.lookup_path || '') + '/' + m.import_path
       end
       matched_modules.sort! do |a, b|
         a.display_name <=> b.display_name
