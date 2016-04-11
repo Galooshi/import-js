@@ -92,7 +92,7 @@ describe('Configuration', () => {
         });
 
         it('falls back to default config if key is completely missing', () => {
-          expect(configuration.get('eslint_executable')).toEqual('eslint');
+          expect(configuration.get('max_line_length')).toEqual(80);
         });
       });
 

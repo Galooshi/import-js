@@ -2023,152 +2023,105 @@ goo
       });
     });
   });
-});
-//
-//   describe '#fix_imports' do
-//     this.eslint_result = '';
-//     let(:eslint_error)  { '' }
-//     before do
-//       allow(Open3).to receive(:capture3).and_call_original
-//       allow(Open3).to receive(:capture3).with(/eslint/, anything)
-//         .and_return([eslint_result, eslint_error])
-//     });
-//
-//     subject do
-//       described_class.new(editor).fix_imports
-//       editor.current_file_content
-//     });
-//
-//     it('calls out to global eslint', () => {
-//       expect(Open3).to receive(:capture3).with(/\Aeslint /, any_args)
-//       subject
-//     });
-//
-//     describe('with eslint_executable configuration', () => {
-//       this.eslint_executable = 'node_modules/.bin/eslint';
-//       let(:configuration) do
-//         super().merge('eslint_executable' => 'node_modules/.bin/eslint')
-//       });
-//
-//       it('calls out to the configured eslint executable', () => {
-//         command = Regexp.escape(eslint_executable)
-//         expect(Open3).to receive(:capture3).with(/\A#{command} /, any_args)
-//         subject
-//       });
-//     });
-//
-//     describe('with an eslint_executable that can not be found', () => {
-//       let(:eslint_error) do
-//         'node_modules/.bin/eslink: No such file or directory'
-//       });
-//
-//       it('throws an error', () => {
-//         expect { subject }.to raise_error(ImportJS::ParseError)
-//       });
-//     });
-//
-//     describe('when no undefined variables exist', () => {
-//       it('leaves the buffer unchanged', () => {
-//         expect(subject()).toEqual(text)});
-//       });
-//     });
-//
-//     describe('when eslint can not parse', () => {
-//       let(:eslint_result) do
-//         'stdin: line 1, col 1, Error - Parsing error: Unexpected token ILLEGAL'
-//       });
-//
-//       it('throws an error', () => {
-//         expect { subject }.to raise_error(ImportJS::ParseError)
-//       });
-//     });
-//
-//     describe('when one undefined variable exists', () => {
-//       existingFiles = ['bar/foo.jsx'];
-//       let(:eslint_result) do
-//         'stdin:3:11: "foo" is not defined. [Error/no-undef]'
-//       });
-//
-//       it('imports that variable', () => {
-//         expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//         `.trim();
-//       });
-//
-//       describe('when the variable name is wrapped in single quotes', () => {
-//         # Undefined jsx variables are wrapped in single quotes
-//
-//         let(:eslint_result) do
-//           "stdin:3:11: 'foo' is not defined. [Error/no-undef]"
-//         });
-//
-//         it('imports that import', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//
-//       describe('when eslint returns other issues', () => {
-//         let(:eslint_result) do
-//           'stdin:1:1: Use the function form of "use strict". ' \
-//           "[Error/strict]\n" \
-//           'stdin:3:11: "foo" is not defined. [Error/no-undef]'
-//         });
-//
-//         it('still imports the import', () => {
-//           expect(subject()).toEqual(`)});
-// import foo from 'bar/foo';
-//
-// foo
-//           `.trim();
-//         });
-//       });
-//     });
-//
-//     describe('when multiple undefined variables exist', () => {
-//       existingFiles = ['bar/foo.jsx', 'bar.js'];
-//       text = 'var a = foo + bar;';
-//
-//       let(:eslint_result) do
-//         "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
-//         'stdin:3:11: "bar" is not defined. [Error/no-undef]'
-//       });
-//
-//       it('imports all variables', () => {
-//         expect(subject()).toEqual(`)});
-// import bar from 'bar';
-// import foo from 'bar/foo';
-//
-// var a = foo + bar;
-//         `.trim();
-//       });
-//     });
-//
-//     describe('when the list of undefined variables has duplicates', () => {
-//       existingFiles = ['bar/foo.jsx', 'bar.js'];
-//       text = 'var a = foo + bar;';
-//
-//       let(:eslint_result) do
-//         "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
-//         "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
-//         "stdin:3:11: \"foo\" is not defined. [Error/no-undef]\n" \
-//         'stdin:3:11: "bar" is not defined. [Error/no-undef]'
-//       });
-//
-//       it('imports all variables', () => {
-//         expect(subject()).toEqual(`)});
-// import bar from 'bar';
-// import foo from 'bar/foo';
-//
-// var a = foo + bar;
-//         `.trim();
-//       });
-//     });
+
+  describe('.fixImports()', () => {
+    let subject;
+    let editor;
+
+    beforeEach(() => {
+      subject = () => {
+        setup();
+
+        const CommandLineEditor = require('../lib/CommandLineEditor');
+        const Importer = require('../lib/Importer');
+
+        editor = new CommandLineEditor(text.split('\n'), {
+          word,
+          pathToFile: pathToCurrentFile,
+          selections,
+        });
+        new Importer(editor).fixImports();
+        return editor.currentFileContent();
+      };
+    });
+
+    describe('when no undefined variables exist', () => {
+      beforeEach(() => {
+        text = `
+const foo = require('foo');
+
+foo();
+        `.trim();
+      });
+
+      it('leaves the buffer unchanged', () => {
+        expect(subject()).toEqual(text);
+      });
+    });
+
+    describe('when eslint can not parse', () => {
+      beforeEach(() => {
+        text = `
+return if sd([
+        `.trim();
+      });
+
+      it('leaves the buffer unchanged', () => {
+        expect(subject()).toEqual(text);
+      });
+    });
+
+    describe('when one undefined variable exists', () => {
+      beforeEach(() => {
+        existingFiles = ['bar/foo.jsx'];
+        text = 'foo();';
+      });
+
+      it('imports that variable', () => {
+        expect(subject()).toEqual(`
+import foo from 'bar/foo';
+
+foo();
+        `.trim());
+      });
+    });
+
+
+    describe('when multiple undefined variables exist', () => {
+      beforeEach(() => {
+        existingFiles = ['bar/foo.jsx', 'bar.js'];
+        text = 'var a = foo + bar;';
+      });
+
+      it('imports all variables', () => {
+        expect(subject()).toEqual(`
+import bar from 'bar';
+import foo from 'bar/foo';
+
+var a = foo + bar;
+        `.trim());
+      });
+    });
+
+    describe('when undefined variables are used multiple times', () => {
+      beforeEach(() => {
+        existingFiles = ['bar/foo.jsx', 'bar.js'];
+        text = `
+var a = foo + bar;
+var b = bar + foo;
+        `.trim();
+      });
+
+      it('imports all variables', () => {
+        expect(subject()).toEqual(`
+import bar from 'bar';
+import foo from 'bar/foo';
+
+var a = foo + bar;
+var b = bar + foo;
+        `.trim());
+      });
+    });
 //
 //     describe('when an implicit React import is missing', () => {
 //       text = 'var a = <span/>;';
@@ -2198,100 +2151,95 @@ goo
 //       });
 //     });
 //
-//     describe('when no unused variables exist', () => {
-//       it('leaves the buffer unchanged', () => {
-//         expect(subject()).toEqual(text)});
-//       });
-//     });
-//
-//     describe('when one unused import exists', () => {
-//       text = `;
-// import foo from 'bar/foo';
-// import zar from 'foo/zar';
-//
-// bar
-//       `.trim();
-//       let(:eslint_result) do
-//         'stdin:1:7: "foo" is defined but never used [Error/no-unused-vars]'
-//       });
-//
-//       it('removes that import', () => {
-//         expect(subject()).toEqual(`)});
-// import zar from 'foo/zar';
-//
-// bar
-//         `.trim();
-//       });
-//
-//       describe('when that import is the last one', () => {
-//         text = `;
-// import foo from 'bar/foo';
-//
-// bar
-//         `.trim();
-//
-//         it('removes that import and leaves no whitespace', () => {
-//           expect(subject()).toEqual(`)});
-// bar
-//           `.trim();
-//         });
-//
-//         describe('and there is a comment above', () => {
-//           text = `;
-// // I'm a comment
-// import foo from 'bar/foo';
-//
-// bar
-//           `.trim();
-//
-//           let(:eslint_result) do
-//             'stdin:2:7: "foo" is defined but never used [Error/no-unused-vars]'
-//           });
-//
-//           it('removes that import and leaves no whitespace', () => {
-//             expect(subject()).toEqual(`)});
-// // I'm a comment
-// bar
-//             `.trim();
-//           });
-//
-//           describe('with whitespace after the comment', () => {
-//             text = `;
-// // I'm a comment
-//
-// import foo from 'bar/foo';
-//
-// bar
-//             `.trim();
-//
-//             let(:eslint_result) do
-//               'stdin:3:7: "foo" is defined but never used [Error/no-unused-vars]'
-//             });
-//
-//             it('removes that import and leaves one newline', () => {
-//               expect(subject()).toEqual(`)});
-// // I'm a comment
-//
-// bar
-//               `.trim();
-//             });
-//           });
-//         });
-//
-//         describe('and there is no previous whitespace', () => {
-//           text = `;
-// import foo from 'bar/foo';
-// bar
-//           `.trim();
-//
-//           it('removes that import and leaves no whitespace', () => {
-//             expect(subject()).toEqual(`)});
-// bar
-//             `.trim();
-//           });
-//         });
-//       });
-//     });
+    describe('when one unused import exists', () => {
+      beforeEach(() => {
+        text = `
+import foo from 'bar/foo';
+import zar from 'foo/zar';
+
+zar
+        `.trim();
+      });
+
+      it('removes that import', () => {
+        expect(subject()).toEqual(`
+import zar from 'foo/zar';
+
+zar
+        `.trim());
+      });
+
+      describe('when that import is the last one', () => {
+        beforeEach(() => {
+          text = `
+import foo from 'bar/foo';
+
+bar
+          `.trim();
+        });
+
+        it('removes that import and leaves no whitespace', () => {
+          expect(subject()).toEqual(`
+bar
+          `.trim());
+        });
+
+        describe('and there is a comment above', () => {
+          beforeEach(() => {
+            text = `
+// I'm a comment
+import foo from 'bar/foo';
+
+bar
+            `.trim();
+          });
+
+          it('removes that import and leaves no whitespace', () => {
+            expect(subject()).toEqual(`
+// I'm a comment
+bar
+            `.trim());
+          });
+
+          describe('with whitespace after the comment', () => {
+            beforeEach(() => {
+              text = `
+// I'm a comment
+
+import foo from 'bar/foo';
+
+bar
+              `.trim();
+            });
+
+            it('removes that import and leaves one newline', () => {
+              expect(subject()).toEqual(`
+// I'm a comment
+
+bar
+              `.trim());
+            });
+          });
+        });
+
+        describe('and there is no previous whitespace', () => {
+          beforeEach(() => {
+            text = `
+import foo from 'bar/foo';
+bar
+            `.trim();
+          });
+
+          it('removes that import and leaves no whitespace', () => {
+            expect(subject()).toEqual(`
+bar
+            `.trim());
+          });
+        });
+      });
+    });
+  });
+});
 //
 //     describe('when one unused import exists and eslint uses single quotes', () => {
 //       text = `;
