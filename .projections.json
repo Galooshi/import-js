@@ -1,20 +1,10 @@
 {
-  "lib/import_js/*.rb": {
-    "alternate": "spec/import_js/{}_spec.rb",
-    "type": "source",
-    "dispatch": "rspec spec/import_js/{}_spec.rb"
-  },
-  "spec/import_js/*_spec.rb": {
-    "alternate": "lib/import_js/{}.rb",
-    "type": "test",
-    "dispatch": "rspec {file}"
-  },
   "lib/*.js": {
-    "alternate": "__tests__/{}-test.js",
+    "alternate": "lib/__tests__/{}-test.js",
     "type": "source",
     "dispatch": "npm run --silent jest __tests__/{}-test.js"
   },
-  "__tests__/*-test.js": {
+  "lib/__tests__/*-test.js": {
     "alternate": "lib/{}.js",
     "type": "test",
     "dispatch": "npm run --silent jest {file}"
