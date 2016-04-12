@@ -1,5 +1,5 @@
 module.exports = {
-  extends: 'airbnb/base',
+  extends: 'airbnb',
 
   env: {
     jasmine: true,
