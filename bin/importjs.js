@@ -27,7 +27,7 @@ function getLines(pathToFile, callback) {
 function runCommand(executor, pathToFile) {
   getLines(pathToFile, (lines) => {
     const editor = new CommandLineEditor(lines, program);
-    const importer = new Importer(editor);
+    const importer = new Importer(editor, pathToFile);
     executor(importer);
     if (program.overwrite) {
       fs.writeFile(pathToFile, editor.currentFileContent(), (err) => {
@@ -72,7 +72,7 @@ program.command('goto <word> <pathToFile>')
   .action((word, pathToFile) => {
     getLines(pathToFile, (lines) => {
       const editor = new CommandLineEditor(lines, program);
-      console.log(new Importer(editor).goto(word));
+      console.log(new Importer(editor, pathToFile).goto(word));
     });
   });
 
