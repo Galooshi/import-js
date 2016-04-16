@@ -34,7 +34,7 @@ function runCommand(executor, pathToFile) {
         if (err) throw err;
       });
     } else {
-      console.log(editor.currentFileContent());
+      console.log(JSON.stringify(editor.toJSON()));
     }
   });
 }
