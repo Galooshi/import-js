@@ -2,6 +2,7 @@
 
 'use strict';
 
+const fs = require('fs');
 const program = require('commander');
 
 const CommandLineEditor = require('../lib/CommandLineEditor');
@@ -23,36 +24,43 @@ function getLines(pathToFile, callback) {
 /**
  * Run a command/method on an importer instance
  */
-function runCommand(executor, pathToFile, options) {
+function runCommand(executor, pathToFile) {
   getLines(pathToFile, (lines) => {
-    const editor = new CommandLineEditor(lines, options)
+    const editor = new CommandLineEditor(lines, program)
     const importer = new Importer(editor);
     executor(importer);
-    console.log(editor.currentFileContent());
+    if (program.overwrite) {
+      fs.writeFile(pathToFile, editor.currentFileContent(), (err) => {
+        if (err) throw err;
+      });
+    } else {
+      console.log(editor.currentFileContent());
+    }
   });
 }
 
-program.version(packageJson.version);
+program.version(packageJson.version)
+  .option('--overwrite', 'overwrite the file with the result after importing');
 
 program.command('word <word> <pathToFile>')
-  .action((word, pathToFile, options) => {
-    runCommand(importer => importer.import(word), pathToFile, options);
+  .action((word, pathToFile) => {
+    runCommand(importer => importer.import(word), pathToFile);
   });
 
 program.command('fix <pathToFile>')
   .action((pathToFile, options) => {
-    runCommand(importer => importer.fixImports(), pathToFile, options);
+    runCommand(importer => importer.fixImports(), pathToFile);
   });
 
 program.command('rewrite <pathToFile>')
-  .action((pathToFile, options) => {
-    runCommand(importer => importer.rewriteImports(), pathToFile, options);
+  .action((pathToFile) => {
+    runCommand(importer => importer.rewriteImports(), pathToFile);
   });
 
 program.command('goto <word> <pathToFile>')
-  .action((word, pathToFile, options) => {
+  .action((word, pathToFile) => {
     getLines(pathToFile, (lines) => {
-      const editor = new CommandLineEditor(lines, options);
+      const editor = new CommandLineEditor(lines, program);
       console.log(new Importer(editor).goto(word));
     });
   });
