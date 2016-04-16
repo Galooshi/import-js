@@ -2,6 +2,59 @@
 
 'use strict';
 
+const program = require('commander');
+
+const CommandLineEditor = require('../lib/CommandLineEditor');
+const Importer = require('../lib/Importer');
+
+/**
+ * Grab lines from stdin or directly from the file.
+ */
+function getLines(pathToFile, callback) {
+  // TODO: grab lines directly from file
+  const lines = [];
+  process.stdin.resume();
+  process.stdin.setEncoding('utf-8');
+  process.stdin.on('data', data => lines.push(...data.split("\n")));
+  process.stdin.on('end', () => callback(lines));
+}
+
+/**
+ * Run a command/method on an importer instance
+ */
+function runCommand(executor, pathToFile, options) {
+  getLines(pathToFile, (lines) => {
+    const editor = new CommandLineEditor(lines, options)
+    const importer = new Importer(editor);
+    executor(importer);
+    console.log(editor.currentFileContent());
+  });
+}
+
+program.command('word <word> <pathToFile>')
+  .action((word, pathToFile, options) => {
+    runCommand(importer => importer.import(word), pathToFile, options);
+  });
+
+program.command('fix <pathToFile>')
+  .action((pathToFile, options) => {
+    runCommand(importer => importer.fixImports(), pathToFile, options);
+  });
+
+program.command('rewrite <pathToFile>')
+  .action((pathToFile, options) => {
+    runCommand(importer => importer.rewriteImports(), pathToFile, options);
+  });
+
+program.command('goto <word> <pathToFile>')
+  .action((word, pathToFile, options) => {
+    getLines(pathToFile, (lines) => {
+      const editor = new CommandLineEditor(lines, options);
+      console.log(new Importer(editor).goto(word));
+    });
+  });
+
+program.parse(process.argv);
 // require 'import_js'
 // require 'slop'
 // require 'json'
