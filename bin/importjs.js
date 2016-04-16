@@ -6,6 +6,7 @@ const program = require('commander');
 
 const CommandLineEditor = require('../lib/CommandLineEditor');
 const Importer = require('../lib/Importer');
+const packageJson = require('../package.json');
 
 /**
  * Grab lines from stdin or directly from the file.
@@ -30,6 +31,8 @@ function runCommand(executor, pathToFile, options) {
     console.log(editor.currentFileContent());
   });
 }
+
+program.version(packageJson.version);
 
 program.command('word <word> <pathToFile>')
   .action((word, pathToFile, options) => {
