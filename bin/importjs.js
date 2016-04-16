@@ -17,7 +17,7 @@ function getLines(pathToFile, callback) {
   const lines = [];
   process.stdin.resume();
   process.stdin.setEncoding('utf-8');
-  process.stdin.on('data', data => lines.push(...data.split("\n")));
+  process.stdin.on('data', data => lines.push(...data.split('\n')));
   process.stdin.on('end', () => callback(lines));
 }
 
@@ -26,7 +26,7 @@ function getLines(pathToFile, callback) {
  */
 function runCommand(executor, pathToFile) {
   getLines(pathToFile, (lines) => {
-    const editor = new CommandLineEditor(lines, program)
+    const editor = new CommandLineEditor(lines, program);
     const importer = new Importer(editor);
     executor(importer);
     if (program.overwrite) {
@@ -40,7 +40,18 @@ function runCommand(executor, pathToFile) {
 }
 
 program.version(packageJson.version)
-  .option('--overwrite', 'overwrite the file with the result after importing');
+  .option('--overwrite',
+          'overwrite the file with the result after importing')
+  .option('--resolvedImports <list>',
+          'A list of resolved imports, e.g. Foo:0,Bar:1',
+          (list) => {
+            const result = {};
+            list.split(',').forEach((string) => {
+              const tuple = string.split(':');
+              result[tuple[0]] = tuple[1];
+            });
+            return result;
+          });
 
 program.command('word <word> <pathToFile>')
   .action((word, pathToFile) => {
@@ -48,7 +59,7 @@ program.command('word <word> <pathToFile>')
   });
 
 program.command('fix <pathToFile>')
-  .action((pathToFile, options) => {
+  .action((pathToFile) => {
     runCommand(importer => importer.fixImports(), pathToFile);
   });
 
