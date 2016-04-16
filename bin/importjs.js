@@ -13,7 +13,13 @@ const packageJson = require('../package.json');
  * Grab lines from stdin or directly from the file.
  */
 function getLines(pathToFile, callback) {
-  // TODO: grab lines directly from file
+  if (process.stdin.isTTY) {
+    fs.readFile(pathToFile, 'utf-8', (err, fileContent) => {
+      if (err) throw err;
+      callback(fileContent.split('\n'));
+    });
+    return;
+  }
   const lines = [];
   process.stdin.resume();
   process.stdin.setEncoding('utf-8');
