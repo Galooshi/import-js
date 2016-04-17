@@ -11,6 +11,8 @@ const packageJson = require('../package.json');
 
 /**
  * Grab lines from stdin or directly from the file.
+ * @param {String} pathToFile
+ * @param {Function} callback
  */
 function getLines(pathToFile, callback) {
   if (process.stdin.isTTY) {
@@ -29,6 +31,8 @@ function getLines(pathToFile, callback) {
 
 /**
  * Run a command/method on an importer instance
+ * @param {Function} executor
+ * @param {String} pathToFile
  */
 function runCommand(executor, pathToFile) {
   getLines(pathToFile, (lines) => {
