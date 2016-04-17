@@ -40,13 +40,14 @@ function getLines(pathToFile, callback) {
  * Run a command/method on an importer instance
  * @param {Function} executor
  * @param {String} pathToFile
+ * @param {Object} options
  */
-function runCommand(executor, pathToFile) {
+function runCommand(executor, pathToFile, options) {
   getLines(pathToFile, (lines) => {
-    const editor = new CommandLineEditor(lines, program);
+    const editor = new CommandLineEditor(lines, options);
     const importer = new Importer(editor, pathToFile);
     executor(importer);
-    if (program.overwrite) {
+    if (options.overwrite) {
       fs.writeFile(pathToFile, editor.currentFileContent(), (err) => {
         if (err) throw err;
       });
@@ -56,33 +57,46 @@ function runCommand(executor, pathToFile) {
   });
 }
 
-program.version(packageJson.version)
-  .option('--overwrite',
-          'overwrite the file with the result after importing')
-  .option('--resolvedImports <list>',
-          'A list of resolved imports, e.g. Foo:0,Bar:1',
-          (list) => {
-            const result = {};
-            list.split(',').forEach((string) => {
-              const tuple = string.split(':');
-              result[tuple[0]] = tuple[1];
-            });
-            return result;
-          });
+program.version(packageJson.version);
+
+// Some options that are shared by multiple commands
+const options = {
+  overwrite: [
+    '--overwrite',
+    'overwrite the file with the result after importing',
+  ],
+  resolvedImports: [
+    '--resolvedImports <list>',
+    'A list of resolved imports, e.g. Foo:0,Bar:1',
+    (list) => {
+      const result = {};
+      list.split(',').forEach((string) => {
+        const tuple = string.split(':');
+        result[tuple[0]] = tuple[1];
+      });
+      return result;
+    },
+  ],
+};
 
 program.command('word <word> <pathToFile>')
-  .action((word, pathToFile) => {
-    runCommand(importer => importer.import(word), pathToFile);
+  .option(...options.overwrite)
+  .option(...options.resolvedImports)
+  .action((word, pathToFile, options) => {
+    runCommand(importer => importer.import(word), pathToFile, options);
   });
 
 program.command('fix <pathToFile>')
-  .action((pathToFile) => {
-    runCommand(importer => importer.fixImports(), pathToFile);
+  .option(...options.overwrite)
+  .option(...options.resolvedImports)
+  .action((pathToFile, options) => {
+    runCommand(importer => importer.fixImports(), pathToFile, options);
   });
 
 program.command('rewrite <pathToFile>')
-  .action((pathToFile) => {
-    runCommand(importer => importer.rewriteImports(), pathToFile);
+  .option(...options.overwrite)
+  .action((pathToFile, options) => {
+    runCommand(importer => importer.rewriteImports(), pathToFile, options);
   });
 
 program.command('goto <word> <pathToFile>')
