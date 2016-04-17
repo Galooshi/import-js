@@ -42,14 +42,12 @@ function getLines(pathToFile, callback) {
  * @param {String} pathToFile
  * @param {Object} options
  * @param {Boolean} options.overwrite
- * @param {Object} options.resolvedImports
  */
 function runCommand(executor, pathToFile, options) {
   const overwrite = options.overwrite;
-  const resolvedImports = options.resolvedImports;
 
   getLines(pathToFile, (lines) => {
-    const editor = new CommandLineEditor(lines, { resolvedImports });
+    const editor = new CommandLineEditor(lines);
     const importer = new Importer(editor, pathToFile);
     executor(importer);
     if (overwrite) {
@@ -70,30 +68,16 @@ const sharedOptions = {
     '--overwrite',
     'overwrite the file with the result after importing',
   ],
-  resolvedImports: [
-    '--resolvedImports <list>',
-    'A list of resolved imports, e.g. Foo:0,Bar:1',
-    (list) => {
-      const result = {};
-      list.split(',').forEach((string) => {
-        const tuple = string.split(':');
-        result[tuple[0]] = tuple[1];
-      });
-      return result;
-    },
-  ],
 };
 
 program.command('word <word> <pathToFile>')
   .option(...sharedOptions.overwrite)
-  .option(...sharedOptions.resolvedImports)
   .action((word, pathToFile, options) => {
     runCommand(importer => importer.import(word), pathToFile, options);
   });
 
 program.command('fix <pathToFile>')
   .option(...sharedOptions.overwrite)
-  .option(...sharedOptions.resolvedImports)
   .action((pathToFile, options) => {
     runCommand(importer => importer.fixImports(), pathToFile, options);
   });
@@ -102,6 +86,13 @@ program.command('rewrite <pathToFile>')
   .option(...sharedOptions.overwrite)
   .action((pathToFile, options) => {
     runCommand(importer => importer.rewriteImports(), pathToFile, options);
+  });
+
+program.command('add <imports> <pathToFile>')
+  .option(...sharedOptions.overwrite)
+  .action((imports, pathToFile, options) => {
+    runCommand(importer => importer.addImports(JSON.parse(imports)),
+               pathToFile, options);
   });
 
 program.command('goto <word> <pathToFile>')
@@ -117,6 +108,7 @@ program.on('--help', () => {
     'word someModule path/to/file.js',
     'fix path/to/file.js',
     'rewrite --overwrite path/to/file.js',
+    'add \'{ "foo": "path/to/foo", "bar": "path/to/bar" }\' path/to/file.js',
     'goto someModule path/to/file.js',
   ];
 
