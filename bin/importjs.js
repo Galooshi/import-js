@@ -119,6 +119,7 @@ program.on('--help', () => {
   stdoutWrite('    $ importjs fix path/to/file.js');
   stdoutWrite('    $ importjs rewrite --overwrite path/to/file.js');
   stdoutWrite('    $ importjs goto someModule path/to/file.js');
+  stdoutWrite('');
 });
 
 program.parse(process.argv);
