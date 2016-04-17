@@ -112,6 +112,15 @@ program.command('goto <word> <pathToFile>')
     });
   });
 
+program.on('--help', () => {
+  stdoutWrite('  Examples:');
+  stdoutWrite('');
+  stdoutWrite('    $ importjs word someModule path/to/file.js');
+  stdoutWrite('    $ importjs fix path/to/file.js');
+  stdoutWrite('    $ importjs rewrite --overwrite path/to/file.js');
+  stdoutWrite('    $ importjs goto someModule path/to/file.js');
+});
+
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {
