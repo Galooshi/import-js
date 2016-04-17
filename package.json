@@ -22,6 +22,13 @@
     "importing"
   ],
   "author": "Henric Trotzig",
+  "contributors": [
+    {
+      "name": "Joe Lencioni",
+      "email": "joe.lencioni@gmail.com",
+      "url": "https://twitter.com/lencioni"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/trotzig/import-js/issues"
