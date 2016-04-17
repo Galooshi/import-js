@@ -10,6 +10,13 @@ const Importer = require('../lib/Importer');
 const packageJson = require('../package.json');
 
 /**
+ * @param {String} str
+ */
+function stdoutWrite(str) {
+  process.stdout.write(`${str}\n`);
+}
+
+/**
  * Grab lines from stdin or directly from the file.
  * @param {String} pathToFile
  * @param {Function} callback
@@ -44,7 +51,7 @@ function runCommand(executor, pathToFile) {
         if (err) throw err;
       });
     } else {
-      console.log(JSON.stringify(editor.toJSON()));
+      stdoutWrite(JSON.stringify(editor.toJSON()));
     }
   });
 }
@@ -82,7 +89,7 @@ program.command('goto <word> <pathToFile>')
   .action((word, pathToFile) => {
     getLines(pathToFile, (lines) => {
       const editor = new CommandLineEditor(lines, program);
-      console.log(new Importer(editor, pathToFile).goto(word));
+      stdoutWrite(new Importer(editor, pathToFile).goto(word));
     });
   });
 
