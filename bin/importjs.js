@@ -113,12 +113,18 @@ program.command('goto <word> <pathToFile>')
   });
 
 program.on('--help', () => {
+  const examples = [
+    'word someModule path/to/file.js',
+    'fix path/to/file.js',
+    'rewrite --overwrite path/to/file.js',
+    'goto someModule path/to/file.js',
+  ];
+
   stdoutWrite('  Examples:');
   stdoutWrite('');
-  stdoutWrite('    $ importjs word someModule path/to/file.js');
-  stdoutWrite('    $ importjs fix path/to/file.js');
-  stdoutWrite('    $ importjs rewrite --overwrite path/to/file.js');
-  stdoutWrite('    $ importjs goto someModule path/to/file.js');
+  examples.forEach(example => {
+    stdoutWrite(`    $ importjs ${example}`);
+  });
   stdoutWrite('');
 });
 
