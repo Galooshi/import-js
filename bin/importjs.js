@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-'use strict';
-
 const fs = require('fs');
 const program = require('commander');
 
@@ -65,7 +63,7 @@ function runCommand(executor, pathToFile, options) {
 program.version(packageJson.version);
 
 // Some options that are shared by multiple commands
-const options = {
+const sharedOptions = {
   overwrite: [
     '--overwrite',
     'overwrite the file with the result after importing',
@@ -85,21 +83,21 @@ const options = {
 };
 
 program.command('word <word> <pathToFile>')
-  .option(...options.overwrite)
-  .option(...options.resolvedImports)
+  .option(...sharedOptions.overwrite)
+  .option(...sharedOptions.resolvedImports)
   .action((word, pathToFile, options) => {
     runCommand(importer => importer.import(word), pathToFile, options);
   });
 
 program.command('fix <pathToFile>')
-  .option(...options.overwrite)
-  .option(...options.resolvedImports)
+  .option(...sharedOptions.overwrite)
+  .option(...sharedOptions.resolvedImports)
   .action((pathToFile, options) => {
     runCommand(importer => importer.fixImports(), pathToFile, options);
   });
 
 program.command('rewrite <pathToFile>')
-  .option(...options.overwrite)
+  .option(...sharedOptions.overwrite)
   .action((pathToFile, options) => {
     runCommand(importer => importer.rewriteImports(), pathToFile, options);
   });
