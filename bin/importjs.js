@@ -41,13 +41,18 @@ function getLines(pathToFile, callback) {
  * @param {Function} executor
  * @param {String} pathToFile
  * @param {Object} options
+ * @param {Boolean} options.overwrite
+ * @param {Object} options.resolvedImports
  */
 function runCommand(executor, pathToFile, options) {
+  const overwrite = options.overwrite;
+  const resolvedImports = options.resolvedImports;
+
   getLines(pathToFile, (lines) => {
-    const editor = new CommandLineEditor(lines, options);
+    const editor = new CommandLineEditor(lines, { resolvedImports });
     const importer = new Importer(editor, pathToFile);
     executor(importer);
-    if (options.overwrite) {
+    if (overwrite) {
       fs.writeFile(pathToFile, editor.currentFileContent(), (err) => {
         if (err) throw err;
       });
