@@ -5,7 +5,6 @@
 const fs = require('fs');
 const program = require('commander');
 
-const CommandLineEditor = require('../lib/CommandLineEditor');
 const Importer = require('../lib/Importer');
 const packageJson = require('../package.json');
 
@@ -47,15 +46,14 @@ function runCommand(executor, pathToFile, options) {
   const overwrite = options.overwrite;
 
   getLines(pathToFile, (lines) => {
-    const editor = new CommandLineEditor(lines);
-    const importer = new Importer(editor, pathToFile);
-    executor(importer);
+    const importer = new Importer(lines, pathToFile);
+    const result = executor(importer);
     if (overwrite) {
-      fs.writeFile(pathToFile, editor.currentFileContent(), (err) => {
+      fs.writeFile(pathToFile, result.fileContent, (err) => {
         if (err) throw err;
       });
     } else {
-      stdoutWrite(JSON.stringify(editor.toJSON()));
+      stdoutWrite(JSON.stringify(result));
     }
   });
 }
@@ -98,8 +96,7 @@ program.command('add <imports> <pathToFile>')
 program.command('goto <word> <pathToFile>')
   .action((word, pathToFile) => {
     getLines(pathToFile, (lines) => {
-      const editor = new CommandLineEditor(lines, program);
-      stdoutWrite(new Importer(editor, pathToFile).goto(word));
+      stdoutWrite(JSON.stringify(new Importer(lines, pathToFile).goto(word)));
     });
   });
 
