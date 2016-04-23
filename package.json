@@ -7,8 +7,11 @@
   },
   "main": "index.js",
   "scripts": {
-    "lint": "eslint .",
+    "build": "babel lib --out-dir build",
+    "clean": "rimraf build",
     "jest": "jest",
+    "lint": "eslint .",
+    "prepublish": "npm run clean && npm run build",
     "test": "npm run --silent lint; npm run --silent jest"
   },
   "repository": {
@@ -35,11 +38,15 @@
   },
   "homepage": "https://github.com/trotzig/import-js#readme",
   "devDependencies": {
+    "babel-cli": "^6.7.7",
+    "babel-jest": "^11.0.2",
+    "babel-preset-airbnb": "^1.1.1",
     "eslint-config-airbnb": "^7.0.0",
     "eslint-plugin-jsx-a11y": "^0.6.2",
     "eslint-plugin-react": "^5.0.0",
     "jest-cli": "^11.0.2",
-    "mkdirp": "^0.5.1"
+    "mkdirp": "^0.5.1",
+    "rimraf": "^2.5.2"
   },
   "dependencies": {
     "StringScanner": "0.0.3",
@@ -57,6 +64,10 @@
     "xregexp": "^3.1.0"
   },
   "jest": {
-    "automock": false
+    "automock": false,
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/build/"
+    ]
   }
 }

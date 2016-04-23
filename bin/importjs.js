@@ -2,4 +2,4 @@
 
 'use strict';
 
-require('../lib/importjs.js');
+require('../build/importjs.js');
