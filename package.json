@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trotzig/import-js.git"
+    "url": "git+https://github.com/galooshi/import-js.git"
   },
   "keywords": [
     "es6",
@@ -35,9 +35,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/trotzig/import-js/issues"
+    "url": "https://github.com/galooshi/import-js/issues"
   },
-  "homepage": "https://github.com/trotzig/import-js#readme",
+  "homepage": "https://github.com/galooshi/import-js#readme",
   "devDependencies": {
     "babel-cli": "^6.7.7",
     "babel-jest": "^11.0.2",
