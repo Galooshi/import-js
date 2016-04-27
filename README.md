@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.org/trotzig/import-js.svg?branch=master)](https://travis-ci.org/trotzig/import-js)
-[![Gem Version](https://badge.fury.io/rb/import_js.svg)](https://badge.fury.io/rb/import_js)
+[![Build Status](https://travis-ci.org/galooshi/import-js.svg?branch=master)](https://travis-ci.org/galooshi/import-js)
 [![MELPA](http://melpa.org/packages/import-js-badge.svg)](http://melpa.org/#/import-js)
 
 # Introduction
@@ -9,18 +8,16 @@ project. Use it in Vim, Emacs, or Sublime by placing your cursor on a variable
 and hit `<leader>j` (Vim), or `(M-x) import-js-import` (Emacs), or select
 "ImportJS: import word under cursor" from the Command Palette (Sublime).
 
-![Demo of import-js in action](https://raw.github.com/trotzig/import-js/master/import-js-demo.gif)
+![Demo of import-js in action](https://raw.github.com/galooshi/import-js/master/import-js-demo.gif)
 
 ## Editor support
 
 import-js comes with plugins for the following editors:
 
 - [Atom](https://github.com/galooshi/atom-import-js)
-- [Emacs](EMACS.md) (Thanks to
-  [@kevinkehl](https://github.com/kevinkehl)!)
-- [Vim](VIM.md)
-- [Sublime](SUBLIME.md) (Thanks to
-  [@janpaul123](https://github.com/janpaul123))
+- [Emacs](https://github.com/galooshi/emacs-import-js) (Thanks to [@kevinkehl](https://github.com/kevinkehl)!)
+- [Sublime](https://github.com/galooshi/sublime-import-js) (Thanks to [@janpaul123](https://github.com/janpaul123))
+- [Vim](https://github.com/galooshi/vim-import-js)
 - [(your editor here?)](CONTRIBUTING.md)
 
 Detailed instructions on how to install import-js can be found in the editor
@@ -432,23 +429,31 @@ importing outside of an editor. Under the hood, this is what the [Sublime
 editor](SUBLIME.md) uses.
 
 ```bash
-⨠ import-js --help
-Usage: import-js [<path-to-file>] [options] ...
-    -w, --word         A word/variable to import
-    --goto             Instead of importing, just print the path to a module
-    --selections       A list of resolved selections, e.g. Foo:0,Bar:1
-    --stdin-file-path  A path to the file whose content is being passed in as stdin.
-                       This is used as a way to make sure that the right configuration
-                       is applied.
-    --overwrite        Overwrite the file with the result after importing (the
-                       default behavior is to print to stdout). This only applies
-                       if you are passing in a file (<path- to-file>) as the first
-                       positional argument.
-    --rewrite          Rewrite all current imports to match Import-JS configuration.
-                       This does not add missing imports or remove unused imports.
-    --filename         (deprecated) Alias for --stdin-file-path
-    -v, --version      Prints the current version
-    -h, --help         Prints help
+⨠ importjs --help
+
+  Usage: importjs [options] [command]
+
+
+  Commands:
+
+    word [options] <word> <pathToFile>
+    fix [options] <pathToFile>
+    rewrite [options] <pathToFile>
+    add [options] <imports> <pathToFile>
+    goto <word> <pathToFile>
+
+  Options:
+
+    -h, --help     output usage information
+    -V, --version  output the version number
+
+  Examples:
+
+    $ importjs word someModule path/to/file.js
+    $ importjs fix path/to/file.js
+    $ importjs rewrite --overwrite path/to/file.js
+    $ importjs add '{ "foo": "path/to/foo", "bar": "path/to/bar" }' path/to/file.js
+    $ importjs goto someModule path/to/file.js
 ```
 
 ### Batch-rewriting
@@ -458,7 +463,7 @@ can use the command-line tool in combination with `find` to batch-update a set
 of files. E.g.
 
 ```bash
-find ./app -name "**.js*" -exec import-js {} --overwrite --rewrite \;
+find ./app -name "**.js*" -exec importjs rewrite --overwrite {} \;
 ```
 
 Since the `--overwrite` flag makes import-js destructive (files are
@@ -468,7 +473,7 @@ the right files before adding the `-exec` part.
 ## Contributing
 
 See the
-[CONTRIBUTING.md](https://github.com/trotzig/import-js/blob/master/CONTRIBUTING.md)
+[CONTRIBUTING.md](https://github.com/galooshi/import-js/blob/master/CONTRIBUTING.md)
 document for tips on how to run, test and develop import-js locally.
 
 Happy hacking!
