@@ -5,7 +5,7 @@
   "bin": {
     "importjs": "./bin/importjs.js"
   },
-  "main": "index.js",
+  "main": "build/Importer.js",
   "scripts": {
     "build": "babel lib --out-dir build",
     "clean": "rimraf build",
