@@ -39,6 +39,18 @@ Using Jest CLI v11.0.2, jasmine2, babel-jest
 285 tests passed (285 total in 7 test suites, run time 29.123s)
 ```
 
+## Publishing
+
+```sh
+git checkout master
+git fetch origin
+git rebase origin/master
+npm version (major|minor|patch)
+npm publish
+git push origin master
+git push --tags origin
+```
+
 ## Code of conduct
 
 This project adheres to the [Open Code of Conduct][code-of-conduct]. By
