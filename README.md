@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/galooshi/import-js.svg?branch=master)](https://travis-ci.org/galooshi/import-js)
+[![Build Status](https://travis-ci.org/Galooshi/import-js.svg?branch=master)](https://travis-ci.org/Galooshi/import-js)
 
 # Introduction
 
