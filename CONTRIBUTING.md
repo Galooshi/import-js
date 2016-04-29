@@ -2,105 +2,42 @@
 
 ## Adding support for another editor
 
-Depending on how plugins for your editor work, you can either make the repo
-itself work as a plugin (as the Vim plugin is built), or make use of the
-`import_js` gem (which also comes with command-line utilities):
+Most editor plugins will integrate with ImportJS via the command line utility.
+Execute the `importjs` command in the project's root directory with the options
+needed for the command you want to add, and parse the resulting JSON.
 
-```bash
-gem install import_js
-```
-
-All editor plugins will need to implement an `ImportJS::FooEditor` class. Look
-at the one implemented by the Vim plugin (`ImportJS::VIMEditor`), or the Emacs
-plugin (`ImportJS::EmacsEditor`) for inspiration. The Vim editor class works as
-a reference implementation. Any public methods defined for that class will have
-to be implemented in all editor classes.
+If your editor can consume plugins written in JavaScript (e.g. Atom), then you
+can depend on the import-js package directly, which exports the base `Importer`
+class.
 
 ## Testing
 
-import-js uses RSpec to test its behavior. To run tests, you might first have
-to install the `rspec` gem:
-
-```bash
-gem install rspec
-```
-
-Once you have RSpec installed, you just type `rspec` in the root folder of the
-project to run all tests.
-
-```bash
-⨠ rspec
-......................
-
-Finished in 0.02133 seconds (files took 0.19664 seconds to load)
-22 examples, 0 failures
-```
-
-## Developing for Vim
-
-Here are a few tips to make it simpler to test a local copy of import-js in
-Vim:
-
-### Symlink
-
-Make a symlink inside your pathogen bundles folder to the local copy of
-import-js to make it easier to try out your changes.
+ImportJS uses Jest to test its behavior. To run tests, first ensure that this
+project's dependencies are installed:
 
 ```sh
-ln -s ~/import-js import-js
+npm install
 ```
 
-## Developing for Sublime
-
-Here are a few tips to make it simpler to test a local copy of import-js in
-Sublime:
-
-### Symlink
-
-Make a symlink inside your Sublime packages folder to the local copy of
-import-js. Every time you change the `import_js.py` file the plugin will
-reload.
+Once you have the dependencies installed, you just type `npm test` in the root
+folder of the project to run all tests.
 
 ```sh
-cd ~/Library/Application Support/Sublime Text 3/Packages
-ln -s ~/import-js import-js
+⨠ npm test
+
+> import-js@0.7.0 test /path/to/import-js
+> npm run --silent lint; npm run --silent jest
+
+Using Jest CLI v11.0.2, jasmine2, babel-jest
+ PASS  lib/__tests__/resolveImportPathAndMain-test.js (0.743s)
+ PASS  lib/__tests__/ImportStatements-test.js (1.459s)
+ PASS  lib/__tests__/JsModule-test.js (0.923s)
+ PASS  lib/__tests__/Configuration-test.js (0.321s)
+ PASS  lib/__tests__/ImportStatement-test.js (0.158s)
+ PASS  lib/__tests__/FileUtils-test.js (0.094s)
+ PASS  lib/__tests__/Importer-test.js (27.172s)
+285 tests passed (285 total in 7 test suites, run time 29.123s)
 ```
-
-## Developing for Atom
-
-To make it simpler to test a local copy of import-js in Atom:
-
-```sh
-cd ~/atom-import-js
-apm link
-```
-
-After making changes to the plugin, you can reload Atom by opening the console
-(`CMD+OPTION+i`) and then refreshing (`CMD+r`).
-
-## Build and install the gem locally
-
-Since the Sublime and Atom plugins use the `import-js` CLI tool, you need to
-rebuild and install the `import_js` Ruby gem whenever you make changes to the
-Ruby code powering import-js.
-
-First, update `lib/import_js/version.rb` and bump the version number.
-
-```sh
-gem build import_js.gemspec && gem install --local import_js-__version__.gem
-```
-
-Replace `__version__` with the bumped version number.
-
-If you just need to make some small changes to the gem for debugging purposes,
-you can open the installed gem:
-
-```sh
-gem open import_js
-```
-
-Note that any changes made here will only affect the installed gem and not the
-import-js codebase.
 
 ## Code of conduct
 
