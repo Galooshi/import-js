@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/galooshi/import-js.svg?branch=master)](https://travis-ci.org/galooshi/import-js)
-[![MELPA](http://melpa.org/packages/import-js-badge.svg)](http://melpa.org/#/import-js)
 
 # Introduction
 
