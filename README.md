@@ -1,7 +1,5 @@
 [![Build Status](https://travis-ci.org/Galooshi/import-js.svg?branch=master)](https://travis-ci.org/Galooshi/import-js)
 
-# Introduction
-
 ImportJS is a tool to automatically import dependencies in your JavaScript
 project. Use it along with one of our editor integrations for Atom, Emacs,
 Sublime, or Vim.
