@@ -59,7 +59,7 @@ or choose "ImportJS: import word under cursor" (Sublime). The file buffer will
 now change to the following:
 
 ```js
-import Button from 'components/button';
+import Button from '../components/button';
 
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
