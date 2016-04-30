@@ -307,7 +307,7 @@ an empty array `[]` to avoid stripping out extensions.
 
 ### `use_relative_paths`
 
-This option is disabled by default. By enabling it, imports will be resolved
+This option is enabled by default. When enabled, imports will be resolved
 relative to the current file being edited.
 
 ```js
@@ -319,8 +319,10 @@ Only imports located in the same `lookup_path` will be made relative to each
 other. Package dependencies (located in `node_modules`) will not be imported
 relatively.
 
+You can disable this by setting it to false:
+
 ```json
-"use_relative_paths": true
+"use_relative_paths": false
 ```
 
 ### `ignore_package_prefixes`
