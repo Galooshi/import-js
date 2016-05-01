@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Galooshi/import-js.svg?branch=master)](https://travis-ci.org/Galooshi/import-js)
+[![npm Version](https://img.shields.io/npm/v/import-js.svg)](https://www.npmjs.com/package/import-js) [![License](https://img.shields.io/npm/l/import-js.svg)](https://www.npmjs.com/package/import-js) [![Build Status](https://travis-ci.org/Galooshi/import-js.svg)](https://travis-ci.org/Galooshi/import-js)
 
 ImportJS is a tool to automatically import dependencies in your JavaScript
 project. Use it along with one of our editor integrations for
