@@ -114,7 +114,7 @@ configure ImportJS. The following configuration options can be used.
 - [`strip_file_extensions`](#strip_file_extension)
 - [`use_relative_paths`](#use_relative_paths)
 - [`ignore_package_prefixes`](#ignore_package_prefixes)
-- [`minium_version`](#minimum_version)
+- [`minimum_version`](#minimum_version)
 - [`max_line_length`](#max_line_length)
 - [`tab`](#tab)
 
