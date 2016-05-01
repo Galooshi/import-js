@@ -1,7 +1,7 @@
 [
   {
     "environments": ["node"],
-    "declaration_keyword": "const",
+    "declaration_keyword": "import",
     "ignore_package_prefixes": ["lodash."],
     "use_relative_paths": true
   },
