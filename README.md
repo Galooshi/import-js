@@ -351,7 +351,7 @@ When package dependencies are matched, these prefixes will be ignored. As an
 example, a variable named `validator` would match a package named
 `my-company-validator`.
 
-### `minium_version`
+### `minimum_version`
 
 Setting `minimum_version` will warn people who are running a version of
 ImportJS that is older than what your `.importjs.json` configuration file
