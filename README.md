@@ -111,7 +111,7 @@ configure ImportJS. The following configuration options can be used.
 - [`import_dev_dependencies`](#import_dev_dependencies)
 - [`import_function`](#import_function)
 - [`strip_from_path`](#strip_from_path)
-- [`strip_file_extensions`](#strip_file_extension)
+- [`strip_file_extensions`](#strip_file_extensions)
 - [`use_relative_paths`](#use_relative_paths)
 - [`ignore_package_prefixes`](#ignore_package_prefixes)
 - [`minimum_version`](#minimum_version)
