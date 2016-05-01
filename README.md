@@ -30,8 +30,7 @@ contribute](CONTRIBUTING.md).
 
 ## Importing: Example
 
-Here's an example that demonstrates what ImportJS can do. Let's say that you
-have a JavaScript project with the following structure:
+Let's say that you have a JavaScript project with the following structure:
 
 ```
 .
@@ -45,7 +44,7 @@ have a JavaScript project with the following structure:
 |     |-- index.js
 ```
 
-Imagine that you're editing `pages/index.js` which contains:
+Now, imagine that you're editing `pages/index.js` which contains:
 
 ```js
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
@@ -69,15 +68,13 @@ That's basically it. ImportJS will help you find modules and automatically add
 
 ## Fix imports
 
-ImportJS can be used to automatically fix all imports. By hitting `<leader>i`
-(Vim), `(M-x) import-js-fix` (Emacs), or choose `ImportJS: fix all imports`
-(Sublime), all your undefined variables will be resolved, and all your unused
-imports will be removed.
+ImportJS can be used to automatically fix all imports in the current file. By
+hitting `<leader>i` (Vim), `(M-x) import-js-fix` (Emacs), or choose `ImportJS:
+fix all imports` (Sublime), all your undefined variables will be resolved, and
+all your unused imports will be removed.
 
 If you're using React, ImportJS will automatically import `React` for you, but
-only if you have [eslint-plugin-react][] installed and the
-[`react-in-jsx-scope`][react-in-jsx-scope] rule enabled in your `.eslintrc`
-configuration file.
+only if you have [eslint-plugin-react][] installed.
 
 [eslint-plugin-react]: https://github.com/yannickcr/eslint-plugin-react
 [react-in-jsx-scope]: https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/react-in-jsx-scope.md
@@ -86,7 +83,7 @@ configuration file.
 
 Since ImportJS is pretty good at finding JS modules, it makes sense that
 there's an option to open/go to a file rather than import it. This is similar
-to VIM's built in ["Open file under cursor"][vim open file]. Use it by placing
+to Vim's built in ["Open file under cursor"][vim open file]. Use it by placing
 the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 (Emacs), or choose "ImportJS: goto module" (Sublime).
 
@@ -116,8 +113,8 @@ Webpack, these should match the `modulesDirectories` configuration. Example:
 ]
 ```
 
-*Tip:* Don't put `node_modules` here. ImportJS will find your Node
-dependencies through your `package.json` file.
+*Tip:* Don't put `node_modules` here. ImportJS will find your Node dependencies
+through your `package.json` file.
 
 ### `excludes`
 
@@ -132,8 +129,8 @@ want to include for importing.
 
 ### `aliases`
 
-Some variable names might not easily map to a file in the filesystem. For
-those, you can add them to the `aliases` configuration.
+Some variable names might not easily map to a file in the filesystem. For those,
+you can add them to the `aliases` configuration.
 
 ```json
 "aliases": {
@@ -161,7 +158,7 @@ import styles from './bar.scss';
 
 ### `environments`
 
-This list of environments control what core modules are available when
+This list of environments controls what core modules are available when
 importing. The only supported value right now is `["node"]`, and if you use it
 you automatically make [all the core modules for Node][node core modules]
 available for ImportJS.
@@ -195,8 +192,6 @@ configuration option.
 Imports that use the `import` declaration keyword then use [named imports
 syntax][]. e.g.
 
-[named imports syntax]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
-
 ```javascript
 import { memoize } from 'underscore';
 
@@ -204,16 +199,16 @@ memoize(() => { foo() });
 ```
 
 and imports that use `const` or `var` use [ES2015 Destructuring
-Assigment][destructing assignment],
-e.g.
-
-[destructuring assignment]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
+Assigment][destructing assignment], e.g.
 
 ```javascript
 const { memoize } = require('underscore');
 
 memoize(() => { foo() });
 ```
+
+[named imports syntax]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
+[destructuring assignment]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
 
 The key used to describe the named exports should be a valid import path. This
 can be e.g. the name of a package found under `node_modules`, a path to a
