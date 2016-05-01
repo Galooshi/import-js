@@ -6,7 +6,7 @@
     "use_relative_paths": true
   },
   {
-    "applies_to": "__tests__/*",
+    "applies_to": "lib/__tests__/*",
     "import_dev_dependencies": true
   }
 ]
