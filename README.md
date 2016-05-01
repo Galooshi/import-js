@@ -101,6 +101,23 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 Create a file called `.importjs.json` in the root folder of your project to
 configure ImportJS. The following configuration options can be used.
 
+- [`lookup_paths`](#lookup_paths)
+- [`excludes`](#excludes)
+- [`aliases`](#aliases)
+- [`environments`](#environments)
+- [`named_exports`](#named_exports)
+- [`declaration_keyword`](#declaration_keyword)
+- [`group_imports`](#group_imports)
+- [`import_dev_dependencies`](#import_dev_dependencies)
+- [`import_function`](#import_function)
+- [`strip_from_path`](#strip_from_path)
+- [`strip_file_extensions`](#strip_file_extension)
+- [`use_relative_paths`](#use_relative_paths)
+- [`ignore_package_prefixes`](#ignore_package_prefixes)
+- [`minium_version`](#minimum_version)
+- [`max_line_length`](#max_line_length)
+- [`tab`](#tab)
+
 ### `lookup_paths`
 
 Configure where ImportJS should look to resolve imports. If you are using
