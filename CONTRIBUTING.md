@@ -41,14 +41,20 @@ Using Jest CLI v11.0.2, jasmine2, babel-jest
 
 ## Publishing
 
+First ensure that your master is up to date:
+
 ```sh
 git checkout master
 git fetch origin
 git rebase origin/master
+```
+
+Now you are ready to tag a new version, publish, and push:
+
+```sh
 npm version (major|minor|patch)
 npm publish
-git push origin master
-git push --tags origin
+git push --tags origin master
 ```
 
 ## Code of conduct
