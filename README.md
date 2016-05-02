@@ -101,21 +101,21 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 Create a file called `.importjs.json` in the root folder of your project to
 configure ImportJS. The following configuration options can be used.
 
-- [`lookupPaths`](#lookupPaths)
+- [`lookupPaths`](#lookuppaths)
 - [`excludes`](#excludes)
 - [`aliases`](#aliases)
 - [`environments`](#environments)
-- [`namedExports`](#namedExports)
-- [`declarationKeyword`](#declarationKeyword)
-- [`groupImports`](#groupImports)
-- [`importDevDependencies`](#importDevDependencies)
-- [`importFunction`](#importFunction)
-- [`stripFromPath`](#stripFromPath)
-- [`stripFileExtensions`](#stripFileExtensions)
-- [`useRelativePaths`](#useRelativePaths)
-- [`ignorePackagePrefixes`](#ignorePackagePrefixes)
-- [`minimumVersion`](#minimumVersion)
-- [`maxLineLength`](#maxLineLength)
+- [`namedExports`](#namedexports)
+- [`declarationKeyword`](#declarationkeyword)
+- [`groupImports`](#groupimports)
+- [`importDevDependencies`](#importdevdependencies)
+- [`importFunction`](#importfunction)
+- [`stripFromPath`](#stripfrompath)
+- [`stripFileExtensions`](#stripfileextensions)
+- [`useRelativePaths`](#userelativepaths)
+- [`ignorePackagePrefixes`](#ignorepackageprefixes)
+- [`minimumVersion`](#minimumversion)
+- [`maxLineLength`](#maxlinelength)
 - [`tab`](#tab)
 
 ### `lookupPaths`
