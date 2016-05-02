@@ -93,7 +93,7 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 - Only files ending in `.js\*` are considered when importing
 - As part of resolving imports, all imports will be sorted and placed into
-  groups. *Grouping can be disabled, see the `group_imports` configuration
+  groups. *Grouping can be disabled, see the `groupImports` configuration
   option.*
 
 ## Configuration
@@ -101,30 +101,30 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 Create a file called `.importjs.json` in the root folder of your project to
 configure ImportJS. The following configuration options can be used.
 
-- [`lookup_paths`](#lookup_paths)
+- [`lookupPaths`](#lookupPaths)
 - [`excludes`](#excludes)
 - [`aliases`](#aliases)
 - [`environments`](#environments)
-- [`named_exports`](#named_exports)
-- [`declaration_keyword`](#declaration_keyword)
-- [`group_imports`](#group_imports)
-- [`import_dev_dependencies`](#import_dev_dependencies)
-- [`import_function`](#import_function)
-- [`strip_from_path`](#strip_from_path)
-- [`strip_file_extensions`](#strip_file_extensions)
-- [`use_relative_paths`](#use_relative_paths)
-- [`ignore_package_prefixes`](#ignore_package_prefixes)
-- [`minimum_version`](#minimum_version)
-- [`max_line_length`](#max_line_length)
+- [`namedExports`](#namedExports)
+- [`declarationKeyword`](#declarationKeyword)
+- [`groupImports`](#groupImports)
+- [`importDevDependencies`](#importDevDependencies)
+- [`importFunction`](#importFunction)
+- [`stripFromPath`](#stripFromPath)
+- [`stripFileExtensions`](#stripFileExtensions)
+- [`useRelativePaths`](#useRelativePaths)
+- [`ignorePackagePrefixes`](#ignorePackagePrefixes)
+- [`minimumVersion`](#minimumVersion)
+- [`maxLineLength`](#maxLineLength)
 - [`tab`](#tab)
 
-### `lookup_paths`
+### `lookupPaths`
 
 Configure where ImportJS should look to resolve imports. If you are using
 Webpack, these should match the `modulesDirectories` configuration. Example:
 
 ```json
-"lookup_paths": [
+"lookupPaths": [
   "app/assets/javascripts",
   "react-components"
 ]
@@ -186,15 +186,15 @@ available for ImportJS.
 "environments": ["node"]
 ```
 
-### `named_exports`
+### `namedExports`
 
 If you have an ES6/ES2015 module that exports multiple things (named exports),
 or a CommonJS module that exports an object with properties on it that you want
-to destructure when importing, you can add those to a `named_exports`
+to destructure when importing, you can add those to a `namedExports`
 configuration option.
 
 ```json
-"named_exports": {
+"namedExports": {
   "underscore": [
     "omit",
     "debounce"
@@ -229,10 +229,10 @@ memoize(() => { foo() });
 
 The key used to describe the named exports should be a valid import path. This
 can be e.g. the name of a package found under `node_modules`, a path to a
-module you created yourself without the `lookup_path` prefix, or a relative
-import path.
+module you created yourself without one of the `lookupPaths` prefixes, or a
+relative import path.
 
-### `declaration_keyword`
+### `declarationKeyword`
 
 The default value for this property is `import`, making your import statements
 use the [ES2015 modules syntax][]:
@@ -247,17 +247,17 @@ If you aren't ready for ES2015 yet, you have the option to use `var` or `const`
 instead.
 
 ```json
-"declaration_keyword": "const"
+"declarationKeyword": "const"
 ```
 
 In such case, your import statements will look something like this:
 
 ```js
-var Foo = require('foo'); // "declaration_keyword": "var"
-const Foo = require('foo'); // "declaration_keyword": "const"
+var Foo = require('foo'); // "declarationKeyword": "var"
+const Foo = require('foo'); // "declarationKeyword": "const"
 ```
 
-### `group_imports`
+### `groupImports`
 
 By default, ImportJS will put imports into groups:
 
@@ -265,59 +265,59 @@ By default, ImportJS will put imports into groups:
 2. Package dependencies
 3. One or more groups with internal imports
 
-You can turn off this behavior by setting `group_imports` to `false`. When
+You can turn off this behavior by setting `groupImports` to `false`. When
 disabled, imports are listed alphabetically in one list.
 
 ```json
-"group_imports": false
+"groupImports": false
 ```
 
-### `import_dev_dependencies`
+### `importDevDependencies`
 
 ImportJS will look for package dependencies listed in `package.json` when
 importing. By default, only modules listed under `dependencies` and
-`peerDependencies` will be used. By setting `import_dev_dependencies` to
+`peerDependencies` will be used. By setting `importDevDependencies` to
 `true`, `devDependencies` will also be taken into account.
 
 ```json
-"import_dev_dependencies": true
+"importDevDependencies": true
 ```
 
-### `import_function`
+### `importFunction`
 
 *Note: this only applies if you are using `var` or `const` as
-`declaration_keyword`.*
+`declarationKeyword`.*
 
 The default value for this configuration option is `"require"`, which is [the
 standard CommonJS function name used for
 importing](http://wiki.commonjs.org/wiki/Modules/1.1).
 
 ```json
-"import_function": "myCustomRequireFunction"
+"importFunction": "myCustomRequireFunction"
 ```
 
-### `strip_from_path`
+### `stripFromPath`
 
 This option is used to trim imports by removing a slice of the path. The main
-rationale for using this option is if you have a custom `import_function` that
+rationale for using this option is if you have a custom `importFunction` that
 has different logic than the default `require` and `import from` behavior.
 
 ```json
-"strip_from_path": "app/assets/",
-"import_function": "requireFromAppAssets"
+"stripFromPath": "app/assets/",
+"importFunction": "requireFromAppAssets"
 ```
 
-### `strip_file_extensions`
+### `stripFileExtensions`
 
 An array that controls what file extensions are stripped out from the resulting
 import statement. The default configuration strips out `[".js", ".jsx"]`. Set to
 an empty array `[]` to avoid stripping out extensions.
 
 ```json
-"strip_file_extensions": [".web.js", ".js"]
+"stripFileExtensions": [".web.js", ".js"]
 ```
 
-### `use_relative_paths`
+### `useRelativePaths`
 
 This option is enabled by default. When enabled, imports will be resolved
 relative to the current file being edited.
@@ -327,42 +327,42 @@ import Foo from './foo';
 import Bar from '../baz/bar';
 ```
 
-Only imports located in the same `lookup_path` will be made relative to each
+Only imports located in the same `lookupPaths` will be made relative to each
 other. Package dependencies (located in `node_modules`) will not be imported
 relatively.
 
 You can disable this by setting it to false:
 
 ```json
-"use_relative_paths": false
+"useRelativePaths": false
 ```
 
-### `ignore_package_prefixes`
+### `ignorePackagePrefixes`
 
 If you have package dependencies specified in `package.json` that are prefixed
 with e.g. an organization name but want to be able to import these without the
-package prefix, you can set the `ignore_package_prefixes` configuration option.
+package prefix, you can set the `ignorePackagePrefixes` configuration option.
 
 ```json
-"ignore_package_prefixes": ["my-company-"]
+"ignorePackagePrefixes": ["my-company-"]
 ```
 
 When package dependencies are matched, these prefixes will be ignored. As an
 example, a variable named `validator` would match a package named
 `my-company-validator`.
 
-### `minimum_version`
+### `minimumVersion`
 
-Setting `minimum_version` will warn people who are running a version of
+Setting `minimumVersion` will warn people who are running a version of
 ImportJS that is older than what your `.importjs.json` configuration file
 requires. If your plugin version is older than this value, you will be shown a
 warning that encourages you to upgrade your plugin.
 
 ```json
-"minimum_version": "0.4.0"
+"minimumVersion": "0.4.0"
 ```
 
-### `max_line_length`
+### `maxLineLength`
 
 Defaults to `80`. This setting controls when import statements are broken into
 multiple lines.
@@ -385,34 +385,34 @@ constructed when import statements are broken into multiple lines.
 You can dynamically apply configuration to different directory trees within your
 project by turning the `.importjs.json` file into an array of configuration
 objects. Each configuration specifies what part of the tree it applies to
-through the `applies_to` and `applies_from` options.
+through the `appliesTo` and `appliesFrom` options.
 
 ```json
 [
   {
-    "applies_to": "app/**",
-    "declaration_keyword": "import",
-    "use_relative_paths": true
+    "appliesTo": "app/**",
+    "declarationKeyword": "import",
+    "useRelativePaths": true
   },
   {
-    "applies_to": "app/**",
-    "declaration_keyword": "const"
+    "appliesTo": "app/**",
+    "declarationKeyword": "const"
   },
   {
-    "applies_from": "tests/**",
-    "applies_to": "app/**",
-    "declaration_keyword": "var",
-    "import_function": "mockRequire",
-    "use_relative_paths": false
+    "appliesFrom": "tests/**",
+    "appliesTo": "app/**",
+    "declarationKeyword": "var",
+    "importFunction": "mockRequire",
+    "useRelativePaths": false
   },
 ]
 ```
 
-Use glob patterns supported by [minimatch][] for the `applies_to` and
-`applies_from` values. If any of the patterns are omitted, the default catch-all
+Use glob patterns supported by [minimatch][] for the `appliesTo` and
+`appliesFrom` values. If any of the patterns are omitted, the default catch-all
 "globstar" pattern (`**`) is used. The difference between the two patterns is
-that `applies_to` is matched with the file you are currently editing (relative
-to the project root). The `applies_from` pattern is matched with the file you
+that `appliesTo` is matched with the file you are currently editing (relative
+to the project root). The `appliesFrom` pattern is matched with the file you
 are currently importing (also relative to the project root) will be used when
 matching.
 
@@ -421,13 +421,13 @@ matching.
 Put more specific configuration at the bottom of the configuration file and the
 default, catch-all configuration at the top.
 
-When using `applies_from` only a subset of configurations are supported:
+When using `appliesFrom` only a subset of configurations are supported:
 
-- `declaration_keyword`
-- `import_function`
-- `strip_file_extensions`
-- `strip_from_path`
-- `use_relative_paths`
+- `declarationKeyword`
+- `importFunction`
+- `stripFileExtensions`
+- `stripFromPath`
+- `useRelativePaths`
 
 ## Command-line tool
 
