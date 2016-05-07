@@ -1,12 +1,15 @@
 [
   {
     "environments": ["node"],
-    "declaration_keyword": "import",
-    "ignore_package_prefixes": ["lodash."],
-    "use_relative_paths": true
+    "ignorePackagePrefixes": ["lodash."],
+    "excludes": [
+      "./build/**",
+      "./lib/__mocks__/**"
+    ]
   },
   {
-    "applies_to": "__tests__/*",
-    "import_dev_dependencies": true
+    "appliesTo": "lib/__tests__/**",
+    "declarationKeyword": "const",
+    "importDevDependencies": true
   }
 ]
