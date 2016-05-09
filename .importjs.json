@@ -9,7 +9,6 @@
   },
   {
     "appliesTo": "lib/__tests__/**",
-    "declarationKeyword": "const",
     "importDevDependencies": true
   }
 ]
