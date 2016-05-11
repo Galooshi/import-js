@@ -12,7 +12,7 @@
     "jest": "jest",
     "lint": "eslint .",
     "prepublish": "npm run clean && npm run build",
-    "preversion": "npm run clean && npm test",
+    "preversion": "npm run clean && npm run build && npm test",
     "test": "npm run --silent lint && npm run --silent jest"
   },
   "repository": {
