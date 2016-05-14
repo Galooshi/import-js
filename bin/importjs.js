@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+/* eslint-disable strict */
+
 'use strict';
 
 // This is hacky, but necessary to make eslint find plugins local to the files

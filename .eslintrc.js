@@ -3,6 +3,5 @@ module.exports = {
 
   rules: {
     'no-underscore-dangle': ['error', { allowAfterThis: true }],
-    strict: 0,
   }
 };
