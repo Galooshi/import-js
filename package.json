@@ -69,7 +69,7 @@
     "minimatch": "^3.0.0",
     "semver": "^5.1.0",
     "underscore": "^1.8.3",
-    "xregexp": "^3.1.0"
+    "xregexp": "^3.1.1"
   },
   "jest": {
     "automock": false,
