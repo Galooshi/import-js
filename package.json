@@ -73,8 +73,8 @@
   "jest": {
     "automock": false,
     "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/build/"
+      "<rootDir>/node_modules/",
+      "<rootDir>/build/"
     ]
   }
 }
