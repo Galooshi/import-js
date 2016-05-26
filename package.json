@@ -61,6 +61,7 @@
     "StringScanner": "0.0.3",
     "commander": "^2.9.0",
     "eslint": "^2.8.0",
+    "glob": "^7.0.3",
     "lodash.escaperegexp": "^4.1.1",
     "lodash.flattendeep": "^4.1.0",
     "lodash.partition": "^4.2.0",
