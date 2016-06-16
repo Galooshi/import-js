@@ -18,4 +18,4 @@ const oldPath = process.env.NODE_PATH;
 process.env.NODE_PATH = `${oldPath || ''}:${process.cwd()}/node_modules/`;
 require('module').Module._initPaths(); // eslint-disable-line no-underscore-dangle
 
-require('../build/importjs.js');
+require('../build/importjs.js')(process.argv);
