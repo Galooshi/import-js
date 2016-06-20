@@ -477,6 +477,46 @@ Since the `--overwrite` flag makes ImportJS destructive (files are overwritten),
 it's a good thing to double-check that the `find` command returns the right
 files before adding the `-exec` part.
 
+## Running as a daemon
+
+To speed up importing, import-js can run as a daemon. Start the daemon by
+running `importjsd`. The daemon accepts commands sent via `stdin`. Each command
+is a (oneline) JSON string ending with a newline. The command structure is
+basically the same as for the command-line tool, but wrapped in JSON instead of
+expressed on the command line. Here are a few examples:
+
+Run `fix imports`:
+```json
+{
+  "command": "fix",
+  "fileContent": "const foo = bar();\n",
+  "pathToFile": "foo.js",
+}
+```
+
+Import a single word:
+```json
+{
+  "command": "word",
+  "commandArg": "bar",
+  "fileContent": "const foo = bar();\n",
+  "pathToFile": "foo.js",
+}
+```
+
+Goto:
+```json
+{
+  "command": "goto",
+  "commandArg": "bar",
+  "fileContent": "const foo = bar();\n",
+  "pathToFile": "foo.js",
+}
+```
+
+The daemon will print results to `stdout` in JSON format. The response will
+look the same as what the command-line tool produces.
+
 ## Contributing
 
 See the [CONTRIBUTING.md](CONTRIBUTING.md) document for tips on how to run, test
