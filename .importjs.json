@@ -2,6 +2,7 @@
   {
     "environments": ["node"],
     "ignorePackagePrefixes": ["lodash."],
+    "logLevel": "debug",
     "excludes": [
       "./build/**",
       "./lib/__mocks__/**"
