@@ -117,6 +117,7 @@ configure ImportJS. The following configuration options can be used.
 - [`minimumVersion`](#minimumversion)
 - [`maxLineLength`](#maxlinelength)
 - [`tab`](#tab)
+- [`logLevel`](#loglevel)
 
 ### `lookupPaths`
 
@@ -380,6 +381,19 @@ constructed when import statements are broken into multiple lines.
 "tab": "\t"
 ```
 
+### `logLevel`
+
+One of `["debug", "info", "warn", "error"]`. This controls what ends up in the
+logfile (mostly used when [import-js is run as a daemon
+process](#running-as-a-daemon). The default is `info`.
+
+```json
+"logLevel": "debug"
+```
+
+*Tip:* Don't put `node_modules` here. ImportJS will find your Node dependencies
+through your `package.json` file.
+
 ## Local configuration
 
 You can dynamically apply configuration to different directory trees within your
@@ -516,6 +530,12 @@ Goto:
 
 The daemon will print results to `stdout` in JSON format. The response will
 look the same as what the command-line tool produces.
+
+On startup, the daemon will print a path to a logfile. If you want to find out
+what's going on behind the scenes, you can inspect this file. If you don't have
+access to the console log of the daemon, you'll find the logfile in
+`os.tmpdir() + '/importjs.log` (which will resolve to something like
+`var/folders/1l/_t6tm7195nd53936tsvh2pcr0000gn/T/importjs.log` on a Mac).
 
 ## Contributing
 
