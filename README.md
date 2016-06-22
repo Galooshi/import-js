@@ -95,6 +95,9 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 - As part of resolving imports, all imports will be sorted and placed into
   groups. *Grouping can be disabled, see the `groupImports` configuration
   option.*
+- You can speed up importing by installing
+  (Watchman)[https://facebook.github.io/watchman/]. See [Speeding it
+  up!](#speeding-it-up) for more information.
 
 ## Configuration
 
@@ -384,7 +387,7 @@ constructed when import statements are broken into multiple lines.
 ### `logLevel`
 
 One of `["debug", "info", "warn", "error"]`. This controls what ends up in the
-logfile (mostly used when [import-js is run as a daemon
+logfile (mostly used when [ImportJS is run as a daemon
 process](#running-as-a-daemon). The default is `info`.
 
 ```json
@@ -493,11 +496,17 @@ files before adding the `-exec` part.
 
 ## Running as a daemon
 
-To speed up importing, import-js can run as a daemon. Start the daemon by
-running `importjsd`. The daemon accepts commands sent via `stdin`. Each command
-is a (oneline) JSON string ending with a newline. The command structure is
-basically the same as for the command-line tool, but wrapped in JSON instead of
-expressed on the command line. Here are a few examples:
+Instead of invoking the `importjs` command-line tool every time you import
+something, you can run ImportJS in a background process and communicate with
+it using `stdin` and `stdout`. This will make importing faster because we don't
+have to spin up a node environment on every invocation. Chances are your editor
+plugin is already using the daemon for importing.
+
+The daemon is started by running running `importjsd`. It accepts commands sent
+via `stdin`. Each command is a (oneline) JSON string ending with a newline. The
+command structure is basically the same as for the command-line tool, but
+wrapped in JSON instead of expressed on the command line. Here are a few
+examples:
 
 Run `fix imports`:
 ```json
@@ -536,6 +545,17 @@ what's going on behind the scenes, you can inspect this file. If you don't have
 access to the console log of the daemon, you'll find the logfile in
 `os.tmpdir() + '/importjs.log` (which will resolve to something like
 `var/folders/1l/_t6tm7195nd53936tsvh2pcr0000gn/T/importjs.log` on a Mac).
+
+## Speeding it up!
+
+If you have a large application, traversing the file system to find modules can
+be slow. That's why ImportJS has built-in integration with
+[Watchman](https://facebook.github.io/watchman/), a fast and robust file
+watching service developed by Facebook. All you have to do to get a performance
+boost is to [install watchman
+locally](https://facebook.github.io/watchman/docs/install.html), and make sure
+to use an up-to-date editor plugin (Watchman is only used when ImportJS is run
+as a daemon).
 
 ## Contributing
 
