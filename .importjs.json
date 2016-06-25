@@ -11,5 +11,9 @@
   {
     "appliesTo": "lib/__tests__/**",
     "importDevDependencies": true
+  },
+  {
+    "appliesTo": "lib/benchmark.js",
+    "importDevDependencies": true
   }
 ]

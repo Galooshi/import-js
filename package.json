@@ -8,6 +8,7 @@
   },
   "main": "build/Importer.js",
   "scripts": {
+    "benchmark": "node build/benchmark.js 1000",
     "build": "babel lib --out-dir build",
     "clean": "rimraf build",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
