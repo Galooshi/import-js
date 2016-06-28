@@ -496,11 +496,13 @@ files before adding the `-exec` part.
 
 ## Running as a daemon
 
-Instead of invoking the `importjs` command-line tool every time you import
-something, you can run ImportJS in a background process and communicate with
-it using `stdin` and `stdout`. This will make importing faster because we don't
-have to spin up a node environment on every invocation. Chances are your editor
-plugin is already using the daemon for importing.
+*Note*: This section is intended mostly for developers of editor plugins. If
+you are using one of the standard editor plugins, you are most likely using the
+daemon under the hood already.
+
+You can run ImportJS in a background process and communicate with it using
+`stdin` and `stdout`. This will make importing faster because we're not
+spinning up a node environment on every invocation.
 
 The daemon is started by running running `importjsd`. It accepts commands sent
 via `stdin`. Each command is a (oneline) JSON string ending with a newline. The
@@ -537,8 +539,9 @@ Goto:
 }
 ```
 
-The daemon will print results to `stdout` in JSON format. The response will
-look the same as what the command-line tool produces.
+Results are printed to `stdout` in JSON format. The response will look the same
+as what the command-line tool produces. If an error occurs, it will also end up
+in `stdout` as JSON (an object with an `error` key).
 
 On startup, the daemon will print a path to a logfile. If you want to find out
 what's going on behind the scenes, you can inspect this file. If you don't have
