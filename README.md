@@ -176,14 +176,18 @@ import styles from './bar.scss';
 ### `environments`
 
 This list of environments controls what core modules are available when
-importing. The only supported value right now is `["node"]`, and if you use it
-you automatically make [all the core modules for Node][node core modules]
-available for ImportJS.
+importing. The supported values right now are
 
+- `["meteor"]` - automatically make the core modules for [Meteor][Meteor]
+available for ImportJs
+- `["node"]` - automatically make [all the core modules for Node][node core modules]
+available for ImportJS
+
+[Meteor]: https://meteor.com
 [Node core modules]: https://nodejs.org/api/modules.html#modules_core_modules
 
 ```json
-"environments": ["node"]
+"environments": ["meteor", "node"]
 ```
 
 ### `namedExports`
