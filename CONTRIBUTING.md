@@ -39,6 +39,22 @@ Using Jest CLI v11.0.2, jasmine2, babel-jest
 285 tests passed (285 total in 7 test suites, run time 29.123s)
 ```
 
+## Testing the daemon
+
+This is how you can test the `importjsd` daemon from the command line.
+
+```sh
+mkfifo IMPORTJS
+importjsd < IMPORTJS
+```
+
+The `importjs` process will now listen to `stdin` from the named pipe
+(`"IMPORTJS"`). You can print to it using echo:
+
+```sh
+echo '{"fileContent": "...", "pathToFile": "foo.js", "command": "fix"}' > IMPORTJS
+```
+
 ## Publishing
 
 First ensure that your master is up to date:

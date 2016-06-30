@@ -95,6 +95,9 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 - As part of resolving imports, all imports will be sorted and placed into
   groups. *Grouping can be disabled, see the `groupImports` configuration
   option.*
+- You can speed up importing by installing
+  (Watchman)[https://facebook.github.io/watchman/]. See [Speeding it
+  up!](#speeding-it-up) for more information.
 
 ## Configuration
 
@@ -117,6 +120,7 @@ configure ImportJS. The following configuration options can be used.
 - [`minimumVersion`](#minimumversion)
 - [`maxLineLength`](#maxlinelength)
 - [`tab`](#tab)
+- [`logLevel`](#loglevel)
 
 ### `lookupPaths`
 
@@ -380,6 +384,19 @@ constructed when import statements are broken into multiple lines.
 "tab": "\t"
 ```
 
+### `logLevel`
+
+One of `["debug", "info", "warn", "error"]`. This controls what ends up in the
+logfile (mostly used when [ImportJS is run as a daemon
+process](#running-as-a-daemon). The default is `info`.
+
+```json
+"logLevel": "debug"
+```
+
+*Tip:* Don't put `node_modules` here. ImportJS will find your Node dependencies
+through your `package.json` file.
+
 ## Local configuration
 
 You can dynamically apply configuration to different directory trees within your
@@ -476,6 +493,72 @@ find ./app -name "**.js*" -exec importjs rewrite --overwrite {} \;
 Since the `--overwrite` flag makes ImportJS destructive (files are overwritten),
 it's a good thing to double-check that the `find` command returns the right
 files before adding the `-exec` part.
+
+## Running as a daemon
+
+*Note*: This section is intended mostly for developers of editor plugins. If
+you are using one of the standard editor plugins, you are most likely using the
+daemon under the hood already.
+
+You can run ImportJS in a background process and communicate with it using
+`stdin` and `stdout`. This will make importing faster because we're not
+spinning up a node environment on every invocation.
+
+The daemon is started by running running `importjsd`. It accepts commands sent
+via `stdin`. Each command is a (oneline) JSON string ending with a newline. The
+command structure is basically the same as for the command-line tool, but
+wrapped in JSON instead of expressed on the command line. Here are a few
+examples:
+
+Run `fix imports`:
+```json
+{
+  "command": "fix",
+  "fileContent": "const foo = bar();\n",
+  "pathToFile": "foo.js",
+}
+```
+
+Import a single word:
+```json
+{
+  "command": "word",
+  "commandArg": "bar",
+  "fileContent": "const foo = bar();\n",
+  "pathToFile": "foo.js",
+}
+```
+
+Goto:
+```json
+{
+  "command": "goto",
+  "commandArg": "bar",
+  "fileContent": "const foo = bar();\n",
+  "pathToFile": "foo.js",
+}
+```
+
+Results are printed to `stdout` in JSON format. The response will look the same
+as what the command-line tool produces. If an error occurs, it will also end up
+in `stdout` as JSON (an object with an `error` key).
+
+On startup, the daemon will print a path to a logfile. If you want to find out
+what's going on behind the scenes, you can inspect this file. If you don't have
+access to the console log of the daemon, you'll find the logfile in
+`os.tmpdir() + '/importjs.log` (which will resolve to something like
+`var/folders/1l/_t6tm7195nd53936tsvh2pcr0000gn/T/importjs.log` on a Mac).
+
+## Speeding it up!
+
+If you have a large application, traversing the file system to find modules can
+be slow. That's why ImportJS has built-in integration with
+[Watchman](https://facebook.github.io/watchman/), a fast and robust file
+watching service developed by Facebook. All you have to do to get a performance
+boost is to [install watchman
+locally](https://facebook.github.io/watchman/docs/install.html), and make sure
+to use an up-to-date editor plugin (Watchman is only used when ImportJS is run
+as a daemon).
 
 ## Contributing
 
