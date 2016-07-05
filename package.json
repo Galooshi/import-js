@@ -14,7 +14,7 @@
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "jest": "jest",
     "lint": "eslint .",
-    "prepublish": "in-publish && (npm run clean && npm run build) || not-in-publish",
+    "prepublish": "npm run clean && npm run build",
     "preversion": "npm run clean && npm run build && npm test",
     "test": "npm run --silent lint && npm run --silent flow && npm run --silent jest"
   },
@@ -56,7 +56,6 @@
     "eslint-plugin-import": "^1.6.1",
     "eslint-plugin-react": "^5.1.1",
     "flow-bin": "^0.25.0",
-    "in-publish": "^2.0.0",
     "jest-cli": "^13.0.0",
     "mkdirp": "^0.5.1",
     "rimraf": "^2.5.2"
