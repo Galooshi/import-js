@@ -101,8 +101,11 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 ## Configuration
 
-Create a file called `.importjs.json` in the root folder of your project to
-configure ImportJS. The following configuration options can be used.
+ImportJS can be configured through a JSON file (`.importjs.json`) or a
+JavaScript file (`.importjs.js`). Save the configuration file in the root
+folder of your project.
+
+The following configuration options can be used.
 
 - [`lookupPaths`](#lookuppaths)
 - [`excludes`](#excludes)
@@ -401,8 +404,12 @@ process](#running-as-a-daemon). The default is `info`.
 *Tip:* Don't put `node_modules` here. ImportJS will find your Node dependencies
 through your `package.json` file.
 
-## Local configuration
+## Local configuration (*deprecated*)
 
+_This way of configuring ImportJS is deprecated and will be removed in a future
+release. See [Dynamic Configuration](#dynamic-configuration) for a better way
+of accomplishing the same thing_.
+_
 You can dynamically apply configuration to different directory trees within your
 project by turning the `.importjs.json` file into an array of configuration
 objects. Each configuration specifies what part of the tree it applies to
@@ -449,6 +456,58 @@ When using `appliesFrom` only a subset of configurations are supported:
 - `stripFileExtensions`
 - `stripFromPath`
 - `useRelativePaths`
+
+## Dynamic configuration
+
+Different sections of your application may have special importing needs. For
+instance, your tests might need the `'const'` declaration keyword, but the rest
+of your application can use `'import'`. To be able to target these special
+cases, you can turn your configuration option into a function. When ImportJS
+resolves a configuration option, it will check to see if a function is used. In
+such case, the function is invoked with the following arguments:
+
+- `pathToCurrentFile`: (always available) A path to the file you are editing.
+- `pathToImportedModule` (not available for some options) A path to the
+  file/module you are importing.
+
+Here's an example of how to dynamically control the `declarationKeyword`
+configuration option based on the file you are importing:
+
+```.js
+// .importjs.js
+function isTestFile(path) {
+  return /-test\.js$/.test(path);
+}
+
+module.exports {
+  declarationKeyword: ({ pathToImportedModule }) => {
+    if (isTestFile(pathToImportedModule)) {
+      return 'const';
+    }
+    return 'import';
+  }
+}
+```
+
+Here's a more elaborate example taking both `pathToImportedModule` and
+`pathToCurrentFile`into account:
+
+```js
+module.exports {
+  useRelativePaths: ({ pathToImportedModule, pathToCurrentFile }) => {
+    if (/-mock\.js$/.test(pathToCurrentFile)) {
+      return false;
+    }
+    if (/-test\.js$/.test(pathToImportedModule)) {
+      return false;
+    }
+    return true;
+  }
+}
+```
+
+In order to use functions, you need to use the JavaScript configuration file
+(`.importjs.js`).
 
 ## Command-line tool
 
