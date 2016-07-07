@@ -473,7 +473,7 @@ such case, the function is invoked with the following arguments:
 Here's an example of how to dynamically control the `declarationKeyword`
 configuration option based on the file you are importing:
 
-```.js
+```js
 // .importjs.js
 function isTestFile(path) {
   return /-test\.js$/.test(path);
@@ -490,7 +490,7 @@ module.exports {
 ```
 
 Here's a more elaborate example taking both `pathToImportedModule` and
-`pathToCurrentFile`into account:
+`pathToCurrentFile` into account:
 
 ```js
 module.exports {
