@@ -11,7 +11,7 @@
     "benchmark": "node build/benchmark.js 1000",
     "build": "babel lib --out-dir build",
     "clean": "rimraf build",
-    "flow": "flow; test $? -eq 0 -o $? -eq 2",
+    "flow": "flow",
     "jest": "jest",
     "lint": "eslint .",
     "prepublish": "npm run clean && npm run build",
