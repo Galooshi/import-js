@@ -18,6 +18,7 @@ module.exports = {
   ],
 
   rules: {
+    'no-shadow': 0, // This is currently erroring because of flow type defs
     'no-underscore-dangle': ['error', { allowAfterThis: true }],
 
     'flowtype/require-parameter-type': 2,
