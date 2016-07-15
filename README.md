@@ -122,6 +122,7 @@ The following configuration options can be used.
 - [`ignorePackagePrefixes`](#ignorepackageprefixes)
 - [`minimumVersion`](#minimumversion)
 - [`maxLineLength`](#maxlinelength)
+- [`moduleNameFormatter`](#moduleNameFormatter)
 - [`tab`](#tab)
 - [`logLevel`](#loglevel)
 
@@ -379,7 +380,33 @@ Defaults to `80`. This setting controls when import statements are broken into
 multiple lines.
 
 ```json
-"max-line-length": 70
+"maxLineLength": 70
+```
+
+### `moduleNameFormatter`
+
+Use a function here to control how the resulting module name string will look
+like. It's useful if you for instance want to add a custom prefix to certain
+imports. Apart from the standard `pathToCurrentFile` and `pathToImportedModule`
+values passed in to all configuration functions, this method is also passed a
+`moduleName` value, which in general is what you want to manipulate.
+
+```js
+moduleNameFormatter: ({ moduleName, pathToCurrentFile } => {
+ if (/-test/.test(pathToCurrentFile)) {
+   // Import a mocked version in test files
+   return `mocks/${moduleName}`;
+ }
+
+ if (/^foo/.test(moduleName)) {
+   // Add a leading slash to foo imports
+   return `/${moduleName}`;
+ }
+
+ // Fall back to the original specifier. It's important that this function
+ // always returns a string.
+ return moduleName;
+},
 ```
 
 ### `tab`
