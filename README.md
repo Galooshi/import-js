@@ -392,7 +392,7 @@ values passed in to all configuration functions, this method is also passed a
 `moduleName` value, which in general is what you want to manipulate.
 
 ```js
-moduleNameFormatter: ({ moduleName, pathToCurrentFile } => {
+moduleNameFormatter: ({ moduleName, pathToCurrentFile }) => {
  if (/-test/.test(pathToCurrentFile)) {
    // Import a mocked version in test files
    return `mocks/${moduleName}`;
