@@ -13,10 +13,12 @@
     "clean": "rimraf build",
     "flow": "flow",
     "jest": "jest",
+    "jest:cover": "jest --coverage",
     "lint": "eslint .",
     "prepublish": "npm run clean && npm run build",
     "preversion": "npm run clean && npm run build && npm test",
-    "test": "npm run --silent lint && npm run --silent flow && npm run --silent jest"
+    "test": "npm run --silent lint && npm run --silent flow && npm run --silent jest",
+    "test:cover": "npm run --silent lint && npm run --silent flow && npm run --silent jest:cover"
   },
   "repository": {
     "type": "git",
