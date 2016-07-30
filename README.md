@@ -428,9 +428,6 @@ process](#running-as-a-daemon). The default is `info`.
 "logLevel": "debug"
 ```
 
-*Tip:* Don't put `node_modules` here. ImportJS will find your Node dependencies
-through your `package.json` file.
-
 ## Local configuration (*deprecated*)
 
 _This way of configuring ImportJS is deprecated and will be removed in a future
