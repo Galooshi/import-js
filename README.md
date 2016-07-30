@@ -398,7 +398,7 @@ moduleNameFormatter({ moduleName, pathToCurrentFile }) {
    return `mocks/${moduleName}`;
  }
 
- if (/^foo/.test(moduleName)) {
+ if (moduleName.startsWith('foo')) {
    // Add a leading slash to foo imports
    return `/${moduleName}`;
  }
@@ -503,7 +503,7 @@ configuration option based on the file you are importing:
 ```js
 // .importjs.js
 function isTestFile(path) {
-  return /-test\.js$/.test(path);
+  return path.endsWith('-test.js');
 }
 
 module.exports {
@@ -522,10 +522,10 @@ Here's a more elaborate example taking both `pathToImportedModule` and
 ```js
 module.exports {
   useRelativePaths({ pathToImportedModule, pathToCurrentFile }) {
-    if (/-mock\.js$/.test(pathToCurrentFile)) {
+    if (pathToCurrentFile.endsWith('-mock.js')) {
       return false;
     }
-    if (/-test\.js$/.test(pathToImportedModule)) {
+    if (pathToImportedModule.endsWith('-test.js')) {
       return false;
     }
     return true;
