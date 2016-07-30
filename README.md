@@ -46,7 +46,7 @@ Let's say that you have a JavaScript project with the following structure:
 
 Now, imagine that you're editing `pages/index.js` which contains:
 
-```js
+```javascript
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
 ```
 
@@ -57,7 +57,7 @@ the word "Button", then hit `<leader>j` (Vim), `(M-x) import-js-import` (Emacs),
 or choose "ImportJS: import word under cursor" (Sublime). The file buffer will
 now change to the following:
 
-```js
+```javascript
 import Button from '../components/button';
 
 document.createElement(new Button({ text: 'Save' }).toDOMElement());
@@ -131,10 +131,10 @@ The following configuration options can be used.
 Configure where ImportJS should look to resolve imports. If you are using
 Webpack, these should match the `modulesDirectories` configuration. Example:
 
-```json
-"lookupPaths": [
-  "app/assets/javascripts",
-  "react-components"
+```javascript
+lookupPaths: [
+  'app/assets/javascripts',
+  'react-components',
 ]
 ```
 
@@ -146,9 +146,9 @@ through your `package.json` file.
 Define a list of glob patterns that match files and directories that you don't
 want to include for importing.
 
-```json
-"excludes": [
-  "react-components/**/test/**"
+```javascript
+excludes: [
+  'react-components/**/test/**',
 ]
 ```
 
@@ -157,10 +157,10 @@ want to include for importing.
 Some variable names might not easily map to a file in the filesystem. For those,
 you can add them to the `aliases` configuration.
 
-```json
-"aliases": {
-  "$": "third-party-libs/jquery",
-  "_": "third-party-libs/underscore"
+```javascript
+aliases: {
+  $: 'third-party-libs/jquery',
+  _: 'third-party-libs/underscore',
 }
 ```
 
@@ -169,9 +169,9 @@ alias will be replaced by the name of the file you are currently editing.
 
 e.g.
 
-```json
-"aliases": {
-  "styles": "./{filename}.scss"
+```javascript
+aliases: {
+  styles: './{filename}.scss',
 }
 ```
 
@@ -194,8 +194,8 @@ available for ImportJS
 [Meteor]: https://meteor.com
 [Node core modules]: https://nodejs.org/api/modules.html#modules_core_modules
 
-```json
-"environments": ["meteor", "node"]
+```javascript
+environments: ['meteor', 'node']
 ```
 
 ### `namedExports`
@@ -205,16 +205,16 @@ or a CommonJS module that exports an object with properties on it that you want
 to destructure when importing, you can add those to a `namedExports`
 configuration option.
 
-```json
-"namedExports": {
-  "underscore": [
-    "omit",
-    "debounce"
+```javascript
+namedExports: {
+  underscore: [
+    'omit',
+    'debounce',
   ],
-  "lib/utils": [
-    "escape",
-    "hasKey"
-  ]
+  'lib/utils': [
+    'escape',
+    'hasKey',
+  ],
 }
 ```
 
@@ -251,20 +251,20 @@ use the [ES2015 modules syntax][]:
 
 [ES2015 modules syntax]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
 
-```js
+```javascript
 import Foo from 'foo';
 ```
 
 If you aren't ready for ES2015 yet, you have the option to use `var` or `const`
 instead.
 
-```json
-"declarationKeyword": "const"
+```javascript
+declarationKeyword: 'const'
 ```
 
 In such case, your import statements will look something like this:
 
-```js
+```javascript
 var Foo = require('foo'); // "declarationKeyword": "var"
 const Foo = require('foo'); // "declarationKeyword": "const"
 ```
@@ -280,8 +280,8 @@ By default, ImportJS will put imports into groups:
 You can turn off this behavior by setting `groupImports` to `false`. When
 disabled, imports are listed alphabetically in one list.
 
-```json
-"groupImports": false
+```javascript
+groupImports: false
 ```
 
 ### `importDevDependencies`
@@ -291,8 +291,8 @@ importing. By default, only modules listed under `dependencies` and
 `peerDependencies` will be used. By setting `importDevDependencies` to
 `true`, `devDependencies` will also be taken into account.
 
-```json
-"importDevDependencies": true
+```javascript
+importDevDependencies: true
 ```
 
 ### `importFunction`
@@ -304,8 +304,8 @@ The default value for this configuration option is `"require"`, which is [the
 standard CommonJS function name used for
 importing](http://wiki.commonjs.org/wiki/Modules/1.1).
 
-```json
-"importFunction": "myCustomRequireFunction"
+```javascript
+importFunction: 'myCustomRequireFunction'
 ```
 
 ### `stripFromPath`
@@ -314,9 +314,9 @@ This option is used to trim imports by removing a slice of the path. The main
 rationale for using this option is if you have a custom `importFunction` that
 has different logic than the default `require` and `import from` behavior.
 
-```json
-"stripFromPath": "app/assets/",
-"importFunction": "requireFromAppAssets"
+```javascript
+stripFromPath: 'app/assets/',
+importFunction: 'requireFromAppAssets',
 ```
 
 ### `stripFileExtensions`
@@ -325,8 +325,8 @@ An array that controls what file extensions are stripped out from the resulting
 import statement. The default configuration strips out `[".js", ".jsx"]`. Set to
 an empty array `[]` to avoid stripping out extensions.
 
-```json
-"stripFileExtensions": [".web.js", ".js"]
+```javascript
+stripFileExtensions: ['.web.js', '.js']
 ```
 
 ### `useRelativePaths`
@@ -334,7 +334,7 @@ an empty array `[]` to avoid stripping out extensions.
 This option is enabled by default. When enabled, imports will be resolved
 relative to the current file being edited.
 
-```js
+```javascript
 import Foo from './foo';
 import Bar from '../baz/bar';
 ```
@@ -345,8 +345,8 @@ relatively.
 
 You can disable this by setting it to false:
 
-```json
-"useRelativePaths": false
+```javascript
+useRelativePaths: false
 ```
 
 ### `ignorePackagePrefixes`
@@ -355,8 +355,8 @@ If you have package dependencies specified in `package.json` that are prefixed
 with e.g. an organization name but want to be able to import these without the
 package prefix, you can set the `ignorePackagePrefixes` configuration option.
 
-```json
-"ignorePackagePrefixes": ["my-company-"]
+```javascript
+ignorePackagePrefixes: ['my-company-']
 ```
 
 When package dependencies are matched, these prefixes will be ignored. As an
@@ -370,8 +370,8 @@ ImportJS that is older than what your `.importjs.json` configuration file
 requires. If your plugin version is older than this value, you will be shown a
 warning that encourages you to upgrade your plugin.
 
-```json
-"minimumVersion": "0.4.0"
+```javascript
+minimumVersion: '1.0.0'
 ```
 
 ### `maxLineLength`
@@ -379,8 +379,8 @@ warning that encourages you to upgrade your plugin.
 Defaults to `80`. This setting controls when import statements are broken into
 multiple lines.
 
-```json
-"maxLineLength": 70
+```javascript
+maxLineLength: 70
 ```
 
 ### `moduleNameFormatter`
@@ -391,7 +391,7 @@ imports. Apart from the standard `pathToCurrentFile` and `pathToImportedModule`
 values passed in to all configuration functions, this method is also passed a
 `moduleName` value, which in general is what you want to manipulate.
 
-```js
+```javascript
 moduleNameFormatter({ moduleName, pathToCurrentFile }) {
  if (/-test/.test(pathToCurrentFile)) {
    // Import a mocked version in test files
@@ -414,8 +414,8 @@ moduleNameFormatter({ moduleName, pathToCurrentFile }) {
 Defaults to two spaces (`"  "`). This setting controls how indentation is
 constructed when import statements are broken into multiple lines.
 
-```json
-"tab": "\t"
+```javascript
+tab: '\t'
 ```
 
 ### `logLevel`
@@ -424,8 +424,8 @@ One of `["debug", "info", "warn", "error"]`. This controls what ends up in the
 logfile (mostly used when [ImportJS is run as a daemon
 process](#running-as-a-daemon). The default is `info`.
 
-```json
-"logLevel": "debug"
+```javascript
+logLevel: 'debug'
 ```
 
 The logfile is written to "importjs.log" in your operating system's default
@@ -443,23 +443,23 @@ project by turning the `.importjs.json` file into an array of configuration
 objects. Each configuration specifies what part of the tree it applies to
 through the `appliesTo` and `appliesFrom` options.
 
-```json
+```javascript
 [
   {
-    "appliesTo": "app/**",
-    "declarationKeyword": "import",
-    "useRelativePaths": true
+    appliesTo: 'app/**',
+    declarationKeyword: 'import',
+    useRelativePaths: true,
   },
   {
-    "appliesTo": "app/**",
-    "declarationKeyword": "const"
+    appliesTo: 'app/**',
+    declarationKeyword: 'const',
   },
   {
-    "appliesFrom": "tests/**",
-    "appliesTo": "app/**",
-    "declarationKeyword": "var",
-    "importFunction": "mockRequire",
-    "useRelativePaths": false
+    appliesFrom: 'tests/**',
+    appliesTo: 'app/**',
+    declarationKeyword: 'var',
+    importFunction: 'mockRequire',
+    useRelativePaths: false,
   },
 ]
 ```
@@ -501,7 +501,7 @@ such case, the function is invoked with the following arguments:
 Here's an example of how to dynamically control the `declarationKeyword`
 configuration option based on the file you are importing:
 
-```js
+```javascript
 // .importjs.js
 function isTestFile(path) {
   return path.endsWith('-test.js');
@@ -520,7 +520,7 @@ module.exports {
 Here's a more elaborate example taking both `pathToImportedModule` and
 `pathToCurrentFile` into account:
 
-```js
+```javascript
 module.exports {
   useRelativePaths({ pathToImportedModule, pathToCurrentFile }) {
     if (pathToCurrentFile.endsWith('-mock.js')) {
