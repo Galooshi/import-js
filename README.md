@@ -428,6 +428,10 @@ process](#running-as-a-daemon). The default is `info`.
 "logLevel": "debug"
 ```
 
+The logfile is written to "importjs.log" in your operating system's default
+directory for temporary files. `importjsd` reports the log location when it
+starts.
+
 ## Local configuration (*deprecated*)
 
 _This way of configuring ImportJS is deprecated and will be removed in a future
