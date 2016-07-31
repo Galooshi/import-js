@@ -106,7 +106,6 @@ configuration file in the root folder of your project.
 
 The following configuration options can be used.
 
-- [`lookupPaths`](#lookuppaths)
 - [`excludes`](#excludes)
 - [`aliases`](#aliases)
 - [`environments`](#environments)
@@ -123,21 +122,6 @@ The following configuration options can be used.
 - [`moduleNameFormatter`](#modulenameformatter)
 - [`tab`](#tab)
 - [`logLevel`](#loglevel)
-
-### `lookupPaths`
-
-Configure where ImportJS should look to resolve imports. If you are using
-Webpack, these should match the `modulesDirectories` configuration. Example:
-
-```javascript
-lookupPaths: [
-  'app/assets/javascripts',
-  'react-components',
-]
-```
-
-*Tip:* Don't put `node_modules` here. ImportJS will find your Node dependencies
-through your `package.json` file.
 
 ### `excludes`
 
@@ -239,8 +223,7 @@ memoize(() => { foo() });
 
 The key used to describe the named exports should be a valid import path. This
 can be e.g. the name of a package found under `node_modules`, a path to a
-module you created yourself without one of the `lookupPaths` prefixes, or a
-relative import path.
+module you created yourself, or a relative import path.
 
 ### `declarationKeyword`
 
@@ -326,8 +309,7 @@ import Foo from './foo';
 import Bar from '../baz/bar';
 ```
 
-Only imports located in the same `lookupPaths` will be made relative to each
-other. Package dependencies (located in `node_modules`) will not be imported
+Package dependencies (located in `node_modules`) will not be imported
 relatively.
 
 You can disable this by setting it to false:
