@@ -115,7 +115,6 @@ The following configuration options can be used.
 - [`groupImports`](#groupimports)
 - [`importDevDependencies`](#importdevdependencies)
 - [`importFunction`](#importfunction)
-- [`stripFromPath`](#stripfrompath)
 - [`stripFileExtensions`](#stripfileextensions)
 - [`useRelativePaths`](#userelativepaths)
 - [`ignorePackagePrefixes`](#ignorepackageprefixes)
@@ -307,17 +306,6 @@ importing](http://wiki.commonjs.org/wiki/Modules/1.1).
 importFunction: 'myCustomRequireFunction'
 ```
 
-### `stripFromPath`
-
-This option is used to trim imports by removing a slice of the path. The main
-rationale for using this option is if you have a custom `importFunction` that
-has different logic than the default `require` and `import from` behavior.
-
-```javascript
-stripFromPath: 'app/assets/',
-importFunction: 'requireFromAppAssets',
-```
-
 ### `stripFileExtensions`
 
 An array that controls what file extensions are stripped out from the resulting
@@ -481,7 +469,6 @@ When using `appliesFrom` only a subset of configurations are supported:
 - `declarationKeyword`
 - `importFunction`
 - `stripFileExtensions`
-- `stripFromPath`
 - `useRelativePaths`
 
 ## Dynamic configuration
