@@ -122,7 +122,7 @@ The following configuration options can be used.
 - [`ignorePackagePrefixes`](#ignorepackageprefixes)
 - [`minimumVersion`](#minimumversion)
 - [`maxLineLength`](#maxlinelength)
-- [`moduleNameFormatter`](#moduleNameFormatter)
+- [`moduleNameFormatter`](#modulenameformatter)
 - [`tab`](#tab)
 - [`logLevel`](#loglevel)
 
