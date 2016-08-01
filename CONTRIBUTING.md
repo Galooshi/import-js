@@ -39,6 +39,20 @@ Using Jest CLI v11.0.2, jasmine2, babel-jest
 285 tests passed (285 total in 7 test suites, run time 29.123s)
 ```
 
+## Trying local changes
+
+You can try your changes out by running `npm link` in the importjs repo
+directory. This will symlink the globally installed version of the package to
+your local version.
+
+To keep the linked version up to date with your changes as you make them, you
+can run `npm run build`. If you'd like to have this automatically happen as you
+make changes, you can run the build process in watch mode: `npm run build --
+--watch`.
+
+When you are done trying your local changes, you can go back to the version you
+had installed by running `npm unlink` in the importjs repo directory.
+
 ## Testing the daemon
 
 This is how you can test the `importjsd` daemon from the command line.
