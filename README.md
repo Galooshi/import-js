@@ -429,8 +429,8 @@ logLevel: 'debug'
 ```
 
 The logfile is written to "importjs.log" in your operating system's default
-directory for temporary files. `importjsd` reports the log location when it
-starts.
+directory for temporary files. You can get the path to the log file by running
+`importjsd logpath`.
 
 ## Local configuration (*deprecated*)
 
