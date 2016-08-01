@@ -101,9 +101,8 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 ## Configuration
 
-ImportJS can be configured through a JSON file (`.importjs.json`) or a
-JavaScript file (`.importjs.js`). Save the configuration file in the root
-folder of your project.
+ImportJS is configured through a JavaScript file (`.importjs.js`). Save the
+configuration file in the root folder of your project.
 
 The following configuration options can be used.
 
@@ -366,7 +365,7 @@ example, a variable named `validator` would match a package named
 ### `minimumVersion`
 
 Setting `minimumVersion` will warn people who are running a version of
-ImportJS that is older than what your `.importjs.json` configuration file
+ImportJS that is older than what your `.importjs.js` configuration file
 requires. If your plugin version is older than this value, you will be shown a
 warning that encourages you to upgrade your plugin.
 
@@ -439,7 +438,7 @@ release. See [Dynamic Configuration](#dynamic-configuration) for a better way
 of accomplishing the same thing_.
 _
 You can dynamically apply configuration to different directory trees within your
-project by turning the `.importjs.json` file into an array of configuration
+project by turning the `.importjs.js` file into an array of configuration
 objects. Each configuration specifies what part of the tree it applies to
 through the `appliesTo` and `appliesFrom` options.
 
