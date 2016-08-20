@@ -3,7 +3,6 @@ module.exports = {
 
   plugins: [
     'flowtype',
-    'flow-vars',
 
     // Although we don't have any React or JSX in this project, we need to have
     // this plugin and some of the rules from this plugin enabled here so that
@@ -21,6 +20,7 @@ module.exports = {
     'no-shadow': 0, // This is currently erroring because of flow type defs
     'no-underscore-dangle': ['error', { allowAfterThis: true }],
 
+    'flowtype/define-flow-type': 2,
     'flowtype/require-parameter-type': 2,
     'flowtype/require-return-type': [2, 'always', {
       annotateUndefined: 'never'
@@ -28,9 +28,7 @@ module.exports = {
     'flowtype/space-after-type-colon': [2, 'always'],
     'flowtype/space-before-type-colon': [2, 'never'],
     'flowtype/type-id-match': [2, "^([A-Z][a-z0-9]+)+Type$"],
-
-    'flow-vars/define-flow-type': 2,
-    'flow-vars/use-flow-type': 2,
+    'flowtype/use-flow-type': 2,
   },
 
   settings: {
