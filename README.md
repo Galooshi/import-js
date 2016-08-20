@@ -106,7 +106,6 @@ configuration file in the root folder of your project.
 
 The following configuration options can be used.
 
-- [`lookupPaths`](#lookuppaths)
 - [`excludes`](#excludes)
 - [`aliases`](#aliases)
 - [`environments`](#environments)
@@ -115,30 +114,13 @@ The following configuration options can be used.
 - [`groupImports`](#groupimports)
 - [`importDevDependencies`](#importdevdependencies)
 - [`importFunction`](#importfunction)
-- [`stripFromPath`](#stripfrompath)
 - [`stripFileExtensions`](#stripfileextensions)
-- [`useRelativePaths`](#userelativepaths)
 - [`ignorePackagePrefixes`](#ignorepackageprefixes)
 - [`minimumVersion`](#minimumversion)
 - [`maxLineLength`](#maxlinelength)
 - [`moduleNameFormatter`](#modulenameformatter)
 - [`tab`](#tab)
 - [`logLevel`](#loglevel)
-
-### `lookupPaths`
-
-Configure where ImportJS should look to resolve imports. If you are using
-Webpack, these should match the `modulesDirectories` configuration. Example:
-
-```javascript
-lookupPaths: [
-  'app/assets/javascripts',
-  'react-components',
-]
-```
-
-*Tip:* Don't put `node_modules` here. ImportJS will find your Node dependencies
-through your `package.json` file.
 
 ### `excludes`
 
@@ -240,8 +222,7 @@ memoize(() => { foo() });
 
 The key used to describe the named exports should be a valid import path. This
 can be e.g. the name of a package found under `node_modules`, a path to a
-module you created yourself without one of the `lookupPaths` prefixes, or a
-relative import path.
+module you created yourself, or a relative import path.
 
 ### `declarationKeyword`
 
@@ -307,17 +288,6 @@ importing](http://wiki.commonjs.org/wiki/Modules/1.1).
 importFunction: 'myCustomRequireFunction'
 ```
 
-### `stripFromPath`
-
-This option is used to trim imports by removing a slice of the path. The main
-rationale for using this option is if you have a custom `importFunction` that
-has different logic than the default `require` and `import from` behavior.
-
-```javascript
-stripFromPath: 'app/assets/',
-importFunction: 'requireFromAppAssets',
-```
-
 ### `stripFileExtensions`
 
 An array that controls what file extensions are stripped out from the resulting
@@ -326,26 +296,6 @@ an empty array `[]` to avoid stripping out extensions.
 
 ```javascript
 stripFileExtensions: ['.web.js', '.js']
-```
-
-### `useRelativePaths`
-
-This option is enabled by default. When enabled, imports will be resolved
-relative to the current file being edited.
-
-```javascript
-import Foo from './foo';
-import Bar from '../baz/bar';
-```
-
-Only imports located in the same `lookupPaths` will be made relative to each
-other. Package dependencies (located in `node_modules`) will not be imported
-relatively.
-
-You can disable this by setting it to false:
-
-```javascript
-useRelativePaths: false
 ```
 
 ### `ignorePackagePrefixes`
@@ -447,7 +397,6 @@ through the `appliesTo` and `appliesFrom` options.
   {
     appliesTo: 'app/**',
     declarationKeyword: 'import',
-    useRelativePaths: true,
   },
   {
     appliesTo: 'app/**',
@@ -458,7 +407,6 @@ through the `appliesTo` and `appliesFrom` options.
     appliesTo: 'app/**',
     declarationKeyword: 'var',
     importFunction: 'mockRequire',
-    useRelativePaths: false,
   },
 ]
 ```
@@ -481,8 +429,6 @@ When using `appliesFrom` only a subset of configurations are supported:
 - `declarationKeyword`
 - `importFunction`
 - `stripFileExtensions`
-- `stripFromPath`
-- `useRelativePaths`
 
 ## Dynamic configuration
 
@@ -512,23 +458,6 @@ module.exports {
       return 'const';
     }
     return 'import';
-  },
-}
-```
-
-Here's a more elaborate example taking both `pathToImportedModule` and
-`pathToCurrentFile` into account:
-
-```javascript
-module.exports {
-  useRelativePaths({ pathToImportedModule, pathToCurrentFile }) {
-    if (pathToCurrentFile.endsWith('-mock.js')) {
-      return false;
-    }
-    if (pathToImportedModule.endsWith('-test.js')) {
-      return false;
-    }
-    return true;
   },
 }
 ```
