@@ -381,55 +381,6 @@ The logfile is written to "importjs.log" in your operating system's default
 directory for temporary files. You can get the path to the log file by running
 `importjsd logpath`.
 
-## Local configuration (*deprecated*)
-
-_This way of configuring ImportJS is deprecated and will be removed in a future
-release. See [Dynamic Configuration](#dynamic-configuration) for a better way
-of accomplishing the same thing_.
-_
-You can dynamically apply configuration to different directory trees within your
-project by turning the `.importjs.js` file into an array of configuration
-objects. Each configuration specifies what part of the tree it applies to
-through the `appliesTo` and `appliesFrom` options.
-
-```javascript
-[
-  {
-    appliesTo: 'app/**',
-    declarationKeyword: 'import',
-  },
-  {
-    appliesTo: 'app/**',
-    declarationKeyword: 'const',
-  },
-  {
-    appliesFrom: 'tests/**',
-    appliesTo: 'app/**',
-    declarationKeyword: 'var',
-    importFunction: 'mockRequire',
-  },
-]
-```
-
-Use glob patterns supported by [minimatch][] for the `appliesTo` and
-`appliesFrom` values. If any of the patterns are omitted, the default catch-all
-"globstar" pattern (`**`) is used. The difference between the two patterns is
-that `appliesTo` is matched with the file you are currently editing (relative
-to the project root). The `appliesFrom` pattern is matched with the file you
-are currently importing (also relative to the project root) will be used when
-matching.
-
-[minimatch]: https://github.com/isaacs/minimatch
-
-Put more specific configuration at the bottom of the configuration file and the
-default, catch-all configuration at the top.
-
-When using `appliesFrom` only a subset of configurations are supported:
-
-- `declarationKeyword`
-- `importFunction`
-- `stripFileExtensions`
-
 ## Dynamic configuration
 
 Different sections of your application may have special importing needs. For
