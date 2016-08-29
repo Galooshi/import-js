@@ -63,6 +63,7 @@
   },
   "dependencies": {
     "StringScanner": "0.0.3",
+    "babylon": "^6.9.1",
     "commander": "^2.9.0",
     "eslint": "^3.0.0",
     "fb-watchman": "^1.9.0",
