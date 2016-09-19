@@ -96,7 +96,7 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
   groups. *Grouping can be disabled, see the `groupImports` configuration
   option.*
 - You can speed up importing by installing
-  (Watchman)[https://facebook.github.io/watchman/]. See [Speeding it
+  [Watchman](https://facebook.github.io/watchman/). See [Speeding it
   up!](#speeding-it-up) for more information.
 
 ## Configuration
