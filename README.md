@@ -106,22 +106,22 @@ configuration file in the root folder of your project.
 
 The following configuration options can be used.
 
-- [`excludes`](#excludes)
 - [`aliases`](#aliases)
-- [`environments`](#environments)
-- [`namedExports`](#namedexports)
 - [`declarationKeyword`](#declarationkeyword)
+- [`environments`](#environments)
+- [`excludes`](#excludes)
 - [`groupImports`](#groupimports)
+- [`ignorePackagePrefixes`](#ignorepackageprefixes)
 - [`importDevDependencies`](#importdevdependencies)
 - [`importFunction`](#importfunction)
-- [`stripFileExtensions`](#stripfileextensions)
-- [`useRelativePaths`](#userelativepaths)
-- [`ignorePackagePrefixes`](#ignorepackageprefixes)
-- [`minimumVersion`](#minimumversion)
-- [`maxLineLength`](#maxlinelength)
-- [`moduleNameFormatter`](#modulenameformatter)
-- [`tab`](#tab)
 - [`logLevel`](#loglevel)
+- [`maxLineLength`](#maxlinelength)
+- [`minimumVersion`](#minimumversion)
+- [`moduleNameFormatter`](#modulenameformatter)
+- [`namedExports`](#namedexports)
+- [`stripFileExtensions`](#stripfileextensions)
+- [`tab`](#tab)
+- [`useRelativePaths`](#userelativepaths)
 
 ### `excludes`
 
