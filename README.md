@@ -115,6 +115,7 @@ The following configuration options can be used.
 - [`importDevDependencies`](#importdevdependencies)
 - [`importFunction`](#importfunction)
 - [`stripFileExtensions`](#stripfileextensions)
+- [`useRelativePaths`](#userelativepaths)
 - [`ignorePackagePrefixes`](#ignorepackageprefixes)
 - [`minimumVersion`](#minimumversion)
 - [`maxLineLength`](#maxlinelength)
@@ -298,6 +299,25 @@ an empty array `[]` to avoid stripping out extensions.
 stripFileExtensions: ['.web.js', '.js']
 ```
 
+### `useRelativePaths`
+
+This option is enabled by default. When enabled, imports will be resolved
+relative to the current file being edited.
+
+```javascript
+import Foo from './foo';
+import Bar from '../baz/bar';
+```
+
+Package dependencies (located in `node_modules`) will not be imported
+relatively.
+
+You can disable this by setting it to false:
+
+```javascript
+useRelativePaths: false
+```
+
 ### `ignorePackagePrefixes`
 
 If you have package dependencies specified in `package.json` that are prefixed
@@ -409,6 +429,23 @@ module.exports {
       return 'const';
     }
     return 'import';
+  },
+}
+```
+
+Here's a more elaborate example taking both `pathToImportedModule` and
+`pathToCurrentFile` into account:
+
+```javascript
+module.exports {
+  useRelativePaths({ pathToImportedModule, pathToCurrentFile }) {
+    if (pathToCurrentFile.endsWith('-mock.js')) {
+      return false;
+    }
+    if (pathToImportedModule.endsWith('-test.js')) {
+      return false;
+    }
+    return true;
   },
 }
 ```
