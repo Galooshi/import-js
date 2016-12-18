@@ -110,6 +110,7 @@ The following configuration options can be used.
 - [`declarationKeyword`](#declarationkeyword)
 - [`environments`](#environments)
 - [`excludes`](#excludes)
+- [`globals`](#globals)
 - [`groupImports`](#groupimports)
 - [`ignorePackagePrefixes`](#ignorepackageprefixes)
 - [`importDevDependencies`](#importdevdependencies)
@@ -249,6 +250,11 @@ In such case, your import statements will look something like this:
 var Foo = require('foo'); // "declarationKeyword": "var"
 const Foo = require('foo'); // "declarationKeyword": "const"
 ```
+
+### `globals`
+
+Provide a list of global identifiers used in the code. Import-js will ignore
+these when trying to import all undefined variables.
 
 ### `groupImports`
 
