@@ -77,8 +77,7 @@
     "loglevel": "^1.4.1",
     "loglevel-message-prefix": "^1.1.1",
     "minimatch": "^3.0.0",
-    "semver": "^5.1.0",
-    "xregexp": "^3.1.1"
+    "semver": "^5.1.0"
   },
   "jest": {
     "automock": false,
