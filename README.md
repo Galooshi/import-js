@@ -73,11 +73,7 @@ hitting `<leader>i` (Vim), `(M-x) import-js-fix` (Emacs), or choose `ImportJS:
 fix all imports` (Sublime), all your undefined variables will be resolved, and
 all your unused imports will be removed.
 
-If you're using React, ImportJS will automatically import `React` for you, but
-only if you have [eslint-plugin-react][] installed.
-
-[eslint-plugin-react]: https://github.com/yannickcr/eslint-plugin-react
-[react-in-jsx-scope]: https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/react-in-jsx-scope.md
+If you're using React, ImportJS will automatically import `React` for you.
 
 ## Go to module
 
