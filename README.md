@@ -115,6 +115,7 @@ The following configuration options can be used.
 - [`ignorePackagePrefixes`](#ignorepackageprefixes)
 - [`importDevDependencies`](#importdevdependencies)
 - [`importFunction`](#importfunction)
+- [`importStatementFormatter`](#importstatementformatter)
 - [`logLevel`](#loglevel)
 - [`maxLineLength`](#maxlinelength)
 - [`minimumVersion`](#minimumversion)
@@ -253,7 +254,7 @@ const Foo = require('foo'); // "declarationKeyword": "const"
 
 ### `globals`
 
-Provide a list of global identifiers used in the code. Import-js will ignore
+Provide a list of global identifiers used in the code. ImportJS will ignore
 these when trying to import all undefined variables.
 
 ### `groupImports`
@@ -381,6 +382,22 @@ moduleNameFormatter({ moduleName, pathToCurrentFile }) {
  // Fall back to the original specifier. It's important that this function
  // always returns a string.
  return moduleName;
+},
+```
+
+### `importStatementFormatter`
+
+Use a function here to control how the resulting import statement will look
+like. This is useful if you for instance want to strip out trailing semicolons
+(that ImportJS adds by default).
+
+Note: this method should only be used in rare cases. There's a chance that
+ImportJS won't be able to recognize the resulting import statement next time it
+is about to import something.
+
+```javascript
+importStatementFormatter({ importStatement }) {
+  return importStatement.replace(/;$/, '');
 },
 ```
 
