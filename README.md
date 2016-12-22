@@ -106,21 +106,24 @@ configuration file in the root folder of your project.
 
 The following configuration options can be used.
 
-- [`excludes`](#excludes)
 - [`aliases`](#aliases)
-- [`environments`](#environments)
-- [`namedExports`](#namedexports)
 - [`declarationKeyword`](#declarationkeyword)
+- [`environments`](#environments)
+- [`excludes`](#excludes)
+- [`globals`](#globals)
 - [`groupImports`](#groupimports)
+- [`ignorePackagePrefixes`](#ignorepackageprefixes)
 - [`importDevDependencies`](#importdevdependencies)
 - [`importFunction`](#importfunction)
-- [`stripFileExtensions`](#stripfileextensions)
-- [`ignorePackagePrefixes`](#ignorepackageprefixes)
-- [`minimumVersion`](#minimumversion)
-- [`maxLineLength`](#maxlinelength)
-- [`moduleNameFormatter`](#modulenameformatter)
-- [`tab`](#tab)
+- [`importStatementFormatter`](#importstatementformatter)
 - [`logLevel`](#loglevel)
+- [`maxLineLength`](#maxlinelength)
+- [`minimumVersion`](#minimumversion)
+- [`moduleNameFormatter`](#modulenameformatter)
+- [`namedExports`](#namedexports)
+- [`stripFileExtensions`](#stripfileextensions)
+- [`tab`](#tab)
+- [`useRelativePaths`](#userelativepaths)
 
 ### `excludes`
 
@@ -249,6 +252,11 @@ var Foo = require('foo'); // "declarationKeyword": "var"
 const Foo = require('foo'); // "declarationKeyword": "const"
 ```
 
+### `globals`
+
+Provide a list of global identifiers used in the code. ImportJS will ignore
+these when trying to import all undefined variables.
+
 ### `groupImports`
 
 By default, ImportJS will put imports into groups:
@@ -296,6 +304,25 @@ an empty array `[]` to avoid stripping out extensions.
 
 ```javascript
 stripFileExtensions: ['.web.js', '.js']
+```
+
+### `useRelativePaths`
+
+This option is enabled by default. When enabled, imports will be resolved
+relative to the current file being edited.
+
+```javascript
+import Foo from './foo';
+import Bar from '../baz/bar';
+```
+
+Package dependencies (located in `node_modules`) will not be imported
+relatively.
+
+You can disable this by setting it to false:
+
+```javascript
+useRelativePaths: false
 ```
 
 ### `ignorePackagePrefixes`
@@ -358,6 +385,22 @@ moduleNameFormatter({ moduleName, pathToCurrentFile }) {
 },
 ```
 
+### `importStatementFormatter`
+
+Use a function here to control how the resulting import statement will look
+like. This is useful if you for instance want to strip out trailing semicolons
+(that ImportJS adds by default).
+
+Note: this method should only be used in rare cases. There's a chance that
+ImportJS won't be able to recognize the resulting import statement next time it
+is about to import something.
+
+```javascript
+importStatementFormatter({ importStatement }) {
+  return importStatement.replace(/;$/, '');
+},
+```
+
 ### `tab`
 
 Defaults to two spaces (`"  "`). This setting controls how indentation is
@@ -409,6 +452,23 @@ module.exports {
       return 'const';
     }
     return 'import';
+  },
+}
+```
+
+Here's a more elaborate example taking both `pathToImportedModule` and
+`pathToCurrentFile` into account:
+
+```javascript
+module.exports {
+  useRelativePaths({ pathToImportedModule, pathToCurrentFile }) {
+    if (pathToCurrentFile.endsWith('-mock.js')) {
+      return false;
+    }
+    if (pathToImportedModule.endsWith('-test.js')) {
+      return false;
+    }
+    return true;
   },
 }
 ```
