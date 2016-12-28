@@ -77,7 +77,8 @@
     "loglevel": "^1.4.1",
     "loglevel-message-prefix": "^1.1.1",
     "minimatch": "^3.0.0",
-    "semver": "^5.1.0"
+    "semver": "^5.1.0",
+    "sqlite3": "^3.1.8"
   },
   "jest": {
     "automock": false,
