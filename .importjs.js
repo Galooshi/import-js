@@ -8,6 +8,5 @@ module.exports = {
     './lib/__mocks__/**'
   ],
   importDevDependencies: ({ pathToCurrentFile }) =>
-    /lib\/__tests__/.test(pathToCurrentFile) ||
-      /lib\/benchmark\.js/.test(pathToCurrentFile)
+    /lib\/__tests__/.test(pathToCurrentFile),
 }
