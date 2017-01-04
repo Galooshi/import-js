@@ -1,5 +1,12 @@
+const testFilePattern = /lib\/__tests__/;
+
 module.exports = {
-  environments: ['node'],
+  environments: ({ pathToCurrentFile }) => {
+    if (testFilePattern.test(pathToCurrentFile)) {
+      return ['jest', 'node'];
+    }
+    return ['node'];
+  },
   ignorePackagePrefixes: ['lodash.'],
   declarationKeyword: 'import',
   logLevel: 'debug',
@@ -8,5 +15,5 @@ module.exports = {
     './lib/__mocks__/**'
   ],
   importDevDependencies: ({ pathToCurrentFile }) =>
-    /lib\/__tests__/.test(pathToCurrentFile),
+    testFilePattern.test(pathToCurrentFile),
 }

@@ -164,12 +164,22 @@ import styles from './bar.scss';
 ### `environments`
 
 This list of environments controls what core modules are available when
-importing. The supported values right now are
+importing, and what variables are considered global by default. The supported
+values right now are
 
-- `["meteor"]` - automatically make the core modules for [Meteor][Meteor]
-available for ImportJs
-- `["node"]` - automatically make [all the core modules for Node][node core modules]
-available for ImportJS
+- `['meteor']` - make the core modules for [Meteor][Meteor]
+  available, and add a bunch of [meteor
+  globals](https://github.com/sindresorhus/globals/blob/38d9a0c/globals.json#L1116)
+- `['node']` - make [all the core modules for Node][node core modules]
+  available, and add a bunch of [node
+  globals](https://github.com/sindresorhus/globals/blob/38d9a0c/globals.json#L848)
+- `['browser']` - add a bunch of [browser
+  globals](https://github.com/sindresorhus/globals/blob/38d9a0c/globals.json#L162)
+- `['jasmine']` - add a bunch of [jasmine
+  globals](https://github.com/sindresorhus/globals/blob/38d9a0c/globals.json#L901)
+- `['jest']` - add a bunch of [jest
+  globals](https://github.com/sindresorhus/globals/blob/38d9a0c/globals.json#L921)
+- + a few more, as defined by https://github.com/sindresorhus/globals
 
 [Meteor]: https://meteor.com
 [Node core modules]: https://nodejs.org/api/modules.html#modules_core_modules
