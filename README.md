@@ -73,7 +73,7 @@ hitting `<leader>i` (Vim), `(M-x) import-js-fix` (Emacs), or choose `ImportJS:
 fix all imports` (Sublime), all your undefined variables will be resolved, and
 all your unused imports will be removed.
 
-If you're using React, ImportJS will automatically import `React` for you.
+If you're using JSX, ImportJS will automatically import `React` for you.
 
 ## Go to module
 
@@ -91,7 +91,7 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 - As part of resolving imports, all imports will be sorted and placed into
   groups. *Grouping can be disabled, see the `groupImports` configuration
   option.*
-- You can speed up importing by installing
+- You can speed up ImportJS by installing
   [Watchman](https://facebook.github.io/watchman/). See [Speeding it
   up!](#speeding-it-up) for more information.
 
@@ -100,7 +100,7 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 ImportJS is configured through a JavaScript file (`.importjs.js`). Save the
 configuration file in the root folder of your project.
 
-The following configuration options can be used.
+The following configuration options are supported.
 
 - [`aliases`](#aliases)
 - [`declarationKeyword`](#declarationkeyword)
@@ -190,6 +190,12 @@ environments: ['meteor', 'node']
 
 ### `namedExports`
 
+*Note: this configuration is deprecated since 2.1.0 and will go away in a
+future version*. ImportJS now finds your named exports automatically. If you
+end up having to use this configuration anyway, there might be a bug in the
+exports-finding parts of ImportJS. [File an
+issue](https://github.com/Galooshi/import-js/issues) and tell us about it!
+
 If you have an ES6/ES2015 module that exports multiple things (named exports),
 or a CommonJS module that exports an object with properties on it that you want
 to destructure when importing, you can add those to a `namedExports`
@@ -263,6 +269,9 @@ const Foo = require('foo'); // "declarationKeyword": "const"
 Provide a list of global identifiers used in the code. ImportJS will ignore
 these when trying to import all undefined variables.
 
+*Note: If you use the [`environments`](#environments) configuration option
+correctly, you might not need to specify globals*.
+
 ### `groupImports`
 
 By default, ImportJS will put imports into groups:
@@ -322,14 +331,14 @@ import Foo from './foo';
 import Bar from '../baz/bar';
 ```
 
-Package dependencies (located in `node_modules`) will not be imported
-relatively.
-
 You can disable this by setting it to false:
 
 ```javascript
 useRelativePaths: false
 ```
+
+Package dependencies (located in `node_modules`) will not be imported
+relatively.
 
 ### `ignorePackagePrefixes`
 
@@ -419,8 +428,7 @@ tab: '\t'
 ### `logLevel`
 
 One of `["debug", "info", "warn", "error"]`. This controls what ends up in the
-logfile (mostly used when [ImportJS is run as a daemon
-process](#running-as-a-daemon). The default is `info`.
+logfile. The default is `info`.
 
 ```javascript
 logLevel: 'debug'
@@ -501,6 +509,9 @@ integrations use.
     rewrite [options] <pathToFile>
     add [options] <imports> <pathToFile>
     goto <word> <pathToFile>
+    start [options]                       start a daemon
+    cachepath                             show path to cache file
+    logpath                               show path to log file
 
   Options:
 
@@ -514,6 +525,9 @@ integrations use.
     $ importjs rewrite --overwrite path/to/file.js
     $ importjs add '{ "foo": "path/to/foo", "bar": "path/to/bar" }' path/to/file.js
     $ importjs goto someModule path/to/file.js
+    $ importjs cachepath
+    $ importjs logpath
+    $ importjs start --parent-pid=12345
 ```
 
 ### Batch-rewriting
