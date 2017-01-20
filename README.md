@@ -12,8 +12,8 @@ or [Vim][vim-import-js].
 There are ImportJS plugins for the following editors:
 
 - [Atom][atom-import-js]
-- [Emacs][emacs-import-js] (Thanks to [@kevinkehl](https://github.com/kevinkehl)!)
-- [Sublime][sublime-import-js] (Thanks to [@janpaul123](https://github.com/janpaul123))
+- [Emacs][emacs-import-js]
+- [Sublime][sublime-import-js]
 - [Vim][vim-import-js]
 - [(your editor here?)](CONTRIBUTING.md)
 
@@ -600,5 +600,11 @@ as a daemon).
 
 See the [CONTRIBUTING.md](CONTRIBUTING.md) document for tips on how to run, test
 and develop ImportJS locally.
+
+## Thank you:
+- @janpaul123 for writing the Sublime plugin.
+- @kevinkehl for getting the parentheses right for the Emacs plugin
+- @rhettlivingston for making import-js work for Meteor, and for driving the
+  development forward by bringing in lots of experience and great ideas.
 
 Happy hacking!
