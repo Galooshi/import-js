@@ -6,7 +6,7 @@
     "importjs": "./bin/importjs.js",
     "importjsd": "./bin/importjsd.js"
   },
-  "main": "build/Importer.js",
+  "main": "build/main.js",
   "scripts": {
     "build": "babel lib --ignore __tests__,__mocks__ --out-dir build",
     "clean": "rimraf build",
