@@ -1,6 +1,6 @@
 {
   "name": "import-js",
-  "version": "2.1.0-beta.6",
+  "version": "2.1.0-beta.7",
   "description": "Simplifies importing JavaScript modules",
   "bin": {
     "importjs": "./bin/importjs.js",
