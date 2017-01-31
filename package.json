@@ -1,14 +1,13 @@
 {
   "name": "import-js",
-  "version": "2.0.2",
+  "version": "2.1.0-beta.7",
   "description": "Simplifies importing JavaScript modules",
   "bin": {
     "importjs": "./bin/importjs.js",
     "importjsd": "./bin/importjsd.js"
   },
-  "main": "build/Importer.js",
+  "main": "build/main.js",
   "scripts": {
-    "benchmark": "node build/benchmark.js 1000",
     "build": "babel lib --ignore __tests__,__mocks__ --out-dir build",
     "clean": "rimraf build",
     "flow": "flow",
@@ -55,7 +54,7 @@
     "eslint": "^3.0.0",
     "eslint-config-airbnb-base": "^5.0.2",
     "eslint-plugin-flowtype": "^2.11.0",
-    "eslint-plugin-import": "^1.6.1",
+    "eslint-plugin-import": "^1.16.0",
     "eslint-plugin-react": "^6.1.2",
     "flow-bin": "^0.30.0",
     "jest-cli": "^17.0.3",
@@ -69,15 +68,16 @@
     "commander": "^2.9.0",
     "fb-watchman": "^1.9.0",
     "glob": "^7.0.3",
+    "globals": "^9.14.0",
     "lodash.escaperegexp": "^4.1.1",
     "lodash.flattendeep": "^4.1.0",
     "lodash.partition": "^4.2.0",
     "lodash.sortby": "^4.2.2",
     "lodash.uniqby": "^4.2.1",
-    "loglevel": "^1.4.1",
-    "loglevel-message-prefix": "^1.1.1",
     "minimatch": "^3.0.0",
-    "semver": "^5.1.0"
+    "semver": "^5.1.0",
+    "sqlite3": "^3.1.8",
+    "winston": "^2.3.1"
   },
   "jest": {
     "automock": false,
