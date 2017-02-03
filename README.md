@@ -206,6 +206,7 @@ namedExports: {
   underscore: [
     'omit',
     'debounce',
+    'memoize'
   ],
   'lib/utils': [
     'escape',
