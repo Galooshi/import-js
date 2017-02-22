@@ -12,7 +12,7 @@ module.exports = {
   logLevel: 'debug',
   excludes: [
     './build/**',
-    './lib/__mocks__/**'
+    './lib/__mocks__/**',
   ],
   importDevDependencies: ({ pathToCurrentFile }) =>
     testFilePattern.test(pathToCurrentFile),
