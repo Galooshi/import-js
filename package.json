@@ -59,7 +59,7 @@
     "flow-bin": "^0.30.0",
     "jest-cli": "^19.0.2",
     "mkdirp": "^0.5.1",
-    "rimraf": "^2.5.2"
+    "rimraf": "^2.6.1"
   },
   "dependencies": {
     "babel-plugin-jsx": "^1.2.0",
