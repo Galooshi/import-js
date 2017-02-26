@@ -45,7 +45,7 @@
   "devDependencies": {
     "babel-cli": "^6.23.0",
     "babel-eslint": "^7.1.1",
-    "babel-jest": "^14.0.0",
+    "babel-jest": "^19.0.0",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-transform-class-properties": "^6.8.0",
     "babel-plugin-transform-flow-strip-types": "^6.8.0",
@@ -57,7 +57,7 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-react": "^6.10.0",
     "flow-bin": "^0.30.0",
-    "jest-cli": "^17.0.3",
+    "jest-cli": "^19.0.2",
     "mkdirp": "^0.5.1",
     "rimraf": "^2.5.2"
   },
