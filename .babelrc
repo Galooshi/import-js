@@ -1,5 +1,5 @@
 {
-  "presets": ["es2015"],
+  "presets": ["airbnb"],
   "plugins": [
     "add-module-exports",
     "transform-flow-strip-types",
