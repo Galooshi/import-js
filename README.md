@@ -506,6 +506,7 @@ integrations use.
   Commands:
 
     word [options] <word> <pathToFile>
+    search [options] <word> <pathToFile>
     fix [options] <pathToFile>
     rewrite [options] <pathToFile>
     add [options] <imports> <pathToFile>
@@ -522,6 +523,7 @@ integrations use.
   Examples:
 
     $ importjs word someModule path/to/file.js
+    $ importjs search someModule* path/to/file.js
     $ importjs fix path/to/file.js
     $ importjs rewrite --overwrite path/to/file.js
     $ importjs add '{ "foo": "path/to/foo", "bar": "path/to/bar" }' path/to/file.js
