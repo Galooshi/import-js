@@ -3,7 +3,7 @@
 ImportJS is a tool to automatically import dependencies in your JavaScript
 project. Use it along with one of our editor integrations for
 [Atom][atom-import-js], [Emacs][emacs-import-js], [Sublime][sublime-import-js],
-or [Vim][vim-import-js].
+[Vim][vim-import-js], or [VS Code][vs-code-import-js].
 
 ![Demo of ImportJS in action](https://raw.github.com/galooshi/import-js/master/import-js-demo.gif)
 
@@ -15,12 +15,14 @@ There are ImportJS plugins for the following editors:
 - [Emacs][emacs-import-js]
 - [Sublime][sublime-import-js]
 - [Vim][vim-import-js]
+- [VS Code][vs-code-import-js]
 - [(your editor here?)](CONTRIBUTING.md)
 
 [atom-import-js]: https://github.com/galooshi/atom-import-js
 [emacs-import-js]: https://github.com/galooshi/emacs-import-js
 [sublime-import-js]: https://github.com/galooshi/sublime-import-js
 [vim-import-js]: https://github.com/galooshi/vim-import-js
+[vs-code-import-js]: https://github.com/dabbott/vscode-import-js
 
 Detailed instructions on how to install ImportJS can be found in the editor
 links above.
@@ -623,5 +625,6 @@ and develop ImportJS locally.
 - @kevinkehl for getting the parentheses right for the Emacs plugin
 - @rhettlivingston for making import-js work for Meteor, and for driving the
   development forward by bringing in lots of experience and great ideas.
+- @dabbott for writing the VS Code plugin.
 
 Happy hacking!
