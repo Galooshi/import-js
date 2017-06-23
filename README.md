@@ -91,8 +91,8 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 - Only files ending in `.js\*` are considered when importing
 - As part of resolving imports, all imports will be sorted and placed into
-  groups. *Grouping can be disabled, see the `groupImports` configuration
-  option.*
+  groups. *Grouping and sorting can be disabled, see the `groupImports` and `sortImports` configuration
+  options. Comments and whitespace will be preserved if these are both disabled.*
 - You can speed up ImportJS by installing
   [Watchman](https://facebook.github.io/watchman/). See [Speeding it
   up!](#speeding-it-up) for more information.
@@ -119,6 +119,7 @@ The following configuration options are supported.
 - [`minimumVersion`](#minimumversion)
 - [`moduleNameFormatter`](#modulenameformatter)
 - [`namedExports`](#namedexports)
+- [`sortImports`](#sortImports)
 - [`stripFileExtensions`](#stripfileextensions)
 - [`tab`](#tab)
 - [`useRelativePaths`](#userelativepaths)
@@ -288,6 +289,17 @@ disabled, imports are listed alphabetically in one list.
 
 ```javascript
 groupImports: false
+```
+
+### `sortImports`
+
+By default, ImportJS will sort imports by the name or path of the imported module.
+
+You can turn off this behavior by setting `sortImports` to `false`. When
+disabled, existing imports are not rearranged, and new imports are always added above existing imports.
+
+```javascript
+sortImports: false
 ```
 
 ### `importDevDependencies`
