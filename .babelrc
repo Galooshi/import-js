@@ -1,5 +1,9 @@
 {
-  "presets": ["airbnb"],
+  "presets": [["airbnb", {
+    "targets": {
+      "node": 4
+    }
+  }]],
   "plugins": [
     "add-module-exports",
     "transform-flow-strip-types",
