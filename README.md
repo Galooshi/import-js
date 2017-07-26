@@ -119,7 +119,7 @@ The following configuration options are supported.
 - [`minimumVersion`](#minimumversion)
 - [`moduleNameFormatter`](#modulenameformatter)
 - [`namedExports`](#namedexports)
-- [`sortImports`](#sortImports)
+- [`sortImports`](#sortimports)
 - [`stripFileExtensions`](#stripfileextensions)
 - [`tab`](#tab)
 - [`useRelativePaths`](#userelativepaths)
