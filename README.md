@@ -99,8 +99,21 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 ## Configuration
 
-ImportJS is configured through a JavaScript file (`.importjs.js`). Save the
-configuration file in the root folder of your project.
+ImportJS is configured through a JavaScript file (`.importjs.js`). 
+
+The file needs to export a single object containing you configuration settings, like the
+example below. 
+
+```javascript
+module.exports = {
+    excludes: [
+        'react-components/**/test/**'
+    ]
+    // continue with the rest of your settings...
+}
+```
+
+Save the configuration file in the root folder of your project.
 
 The following configuration options are supported.
 
