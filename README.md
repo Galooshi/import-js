@@ -101,7 +101,8 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 ImportJS is configured through a JavaScript file (`.importjs.js`). 
 
-each setting should be a module export from the file like the example below:
+The file needs to export a single object containing you configuration settings, like the
+example below. 
 
 ```javascript
 module.exports = {
