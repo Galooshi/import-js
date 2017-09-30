@@ -574,6 +574,36 @@ Since the `--overwrite` flag makes ImportJS destructive (files are overwritten),
 it's a good thing to double-check that the `find` command returns the right
 files before adding the `-exec` part.
 
+## Specifying alternate package directory
+
+ImportJS looks for the `package.json` file in the closest ancestor directory for the file you're editing to find node modules to import. However, sometimes it might pull dependencies from a directory further up the chain. For example, your directory structure might look like this:
+
+```
+.
+|-- package.json
+|-- components
+|     |-- button.js
+|     |-- icon.js
+|-- node_modules
+|     |-- react
+|-- subpackage
+|     |-- package.json
+|     |-- components
+|           |-- bulletin.js
+```
+
+If you were to use ImportJS on `subpackage/components/bulletin.js` which imports React, ImportJS would not know that `react` is a valid dependency.
+
+To tell ImportJS to skip a directory and keep searching upwards to find the root package directory, specify `"isRoot": false` in the `package.json` of the directory to ignore. In this case, you would want something like this:
+
+```json
+{
+  "name": "subpackage",
+  ...
+  "isRoot": false
+}
+```
+
 ## Running as a daemon
 
 *Note*: This section is intended mostly for developers of editor plugins. If
