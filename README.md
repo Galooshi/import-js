@@ -99,10 +99,10 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 ## Configuration
 
-ImportJS is configured through a JavaScript file (`.importjs.js`). 
+ImportJS is configured through a JavaScript file (`.importjs.js`).
 
 The file needs to export a single object containing you configuration settings, like the
-example below. 
+example below.
 
 ```javascript
 module.exports = {
@@ -113,7 +113,9 @@ module.exports = {
 }
 ```
 
-Save the configuration file in the root folder of your project.
+Save this file in the root folder of your project (e.g. where the package.json
+file is found). You can also save it to the user home directory if you want to
+share a global config between different projects.
 
 The following configuration options are supported.
 
