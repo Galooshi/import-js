@@ -138,7 +138,7 @@ The following configuration options are supported.
 - [`stripFileExtensions`](#stripfileextensions)
 - [`tab`](#tab)
 - [`useRelativePaths`](#userelativepaths)
-- [`mergableOptions`](#mergableOptions)
+- [`mergableOptions`](#mergableoptions)
 
 ### `excludes`
 
