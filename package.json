@@ -1,6 +1,6 @@
 {
   "name": "import-js",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "Simplifies importing JavaScript modules",
   "bin": {
     "importjs": "./bin/importjs.js",
