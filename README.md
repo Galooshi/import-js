@@ -138,6 +138,7 @@ The following configuration options are supported.
 - [`stripFileExtensions`](#stripfileextensions)
 - [`tab`](#tab)
 - [`useRelativePaths`](#userelativepaths)
+- [`mergableOptions`](#mergableOptions)
 
 ### `excludes`
 
@@ -467,6 +468,51 @@ logLevel: 'debug'
 The logfile is written to "importjs.log" in your operating system's default
 directory for temporary files. You can get the path to the log file by running
 `importjsd logpath`.
+
+### `mergableOptions`
+
+A dictionary of Options that be merged with defaults and values provided by an [`environment`](#environments). This can be used to overwrite options provided by environments. Defaults to:
+
+```javascript
+mergableOptions: {
+  aliases: true,
+  coreModules: true,
+  namedExports: true,
+  globals: true,
+}
+```
+
+Note: the `mergableOptions` option will always be merged and will be ignored if
+included in a user config.
+
+To disable merging a particular option or set of options, set the key to
+`false`:
+
+```javascript
+mergableOptions: {
+  globals: false
+}
+```
+
+For example, if you are using the `meteor` environment but want to explicitly
+import modules which are provided as globals, you can use this setting to
+overwrite the environment globals.
+
+```javascript
+const globals = require('globals');
+module.exports = {
+  environments: ['meteor', 'node'],
+  mergableOptions: {
+    globals: false // Overwrite globals
+  },
+  globals: [
+    // Add the globals you want back in
+    ...Object.keys(globals.builtin), // include javascript builtins
+    ...Object.keys(globals.node), // include node globals
+    'Package', 'Npm' // Include meteor globals for `package.js` files
+  ]
+}
+```
 
 ## Dynamic configuration
 
