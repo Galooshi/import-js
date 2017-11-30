@@ -136,7 +136,7 @@ The following configuration options are supported.
 - [`namedExports`](#namedexports)
 - [`sortImports`](#sortimports)
 - [`stripFileExtensions`](#stripfileextensions)
-- [`dangleComma`](#danglecomma)
+- [`danglingCommas`](#danglingcommas)
 - [`tab`](#tab)
 - [`useRelativePaths`](#userelativepaths)
 - [`mergableOptions`](#mergableoptions)
@@ -330,14 +330,14 @@ importing. By default, only modules listed under `dependencies` and
 importDevDependencies: true
 ```
 
-### `dangleComma`
+### `danglingCommas`
 
-By default, ImportJS will add trailing commas in named exports.
+By default, ImportJS will add trailing commas when constructing import statements with multiple named imports.
 
-You can turn off this behavior by setting `dangleComma` to `false`.
+You can turn off this behavior by setting `danglingCommas` to `false`.
 
 ```javascript
-dangleComma: false
+danglingCommas: false
 ```
 
 ### `importFunction`
