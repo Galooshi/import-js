@@ -135,6 +135,7 @@ The following configuration options are supported.
 - [`moduleNameFormatter`](#modulenameformatter)
 - [`namedExports`](#namedexports)
 - [`sortImports`](#sortimports)
+- [`appendImports`](#appendimports)
 - [`stripFileExtensions`](#stripfileextensions)
 - [`tab`](#tab)
 - [`useRelativePaths`](#userelativepaths)
@@ -316,6 +317,17 @@ disabled, existing imports are not rearranged, and new imports are always added 
 
 ```javascript
 sortImports: false
+```
+
+### `appendImports`
+
+By default, ImportJS will add new imports below the existing imports.
+
+You can turn off this behavior by setting `appendImports` to `false`. When
+disabled, new imports will be added above existing imports.
+
+```javascript
+appendImports: false
 ```
 
 ### `importDevDependencies`
