@@ -319,6 +319,16 @@ disabled, existing imports are not rearranged, and new imports are always added 
 sortImports: false
 ```
 
+### `emptyLineBetweenGroups`
+
+By default, ImportJS will insert empty line between import groups.
+
+You can turn off this behavior by setting `emptyLineBetweenGroups` to `false`.
+
+```javascript
+emptyLineBetweenGroups: false
+```
+
 ### `importDevDependencies`
 
 ImportJS will look for package dependencies listed in `package.json` when
