@@ -210,11 +210,11 @@ environments: ['meteor', 'node']
 
 ### `namedExports`
 
-*Note: this configuration is deprecated since 2.1.0 and will go away in a
-future version*. ImportJS now finds your named exports automatically. If you
-end up having to use this configuration anyway, there might be a bug in the
-exports-finding parts of ImportJS. [File an
-issue](https://github.com/Galooshi/import-js/issues) and tell us about it!
+*Note: Since 2.1.0 ImportJS finds your named exports automatically. Most
+likely you don't need this option. If you end up having to use this
+configuration anyway, there might be a bug in the exports-finding parts of
+ImportJS. [File an issue](https://github.com/Galooshi/import-js/issues) and
+tell us about it!
 
 If you have an ES6/ES2015 module that exports multiple things (named exports),
 or a CommonJS module that exports an object with properties on it that you want
