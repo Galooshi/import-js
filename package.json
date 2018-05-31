@@ -1,6 +1,6 @@
 {
   "name": "import-js",
-  "version": "2.10.1",
+  "version": "3.0.0",
   "description": "Simplifies importing JavaScript modules",
   "bin": {
     "importjs": "./bin/importjs.js",
@@ -43,8 +43,8 @@
   },
   "homepage": "https://github.com/galooshi/import-js#readme",
   "devDependencies": {
-    "babel-core": "^6.26.0",
     "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
     "babel-eslint": "^8.0.0",
     "babel-jest": "^21.0.2",
     "babel-plugin-add-module-exports": "^0.2.1",
@@ -74,7 +74,7 @@
     "minimatch": "^3.0.4",
     "require-relative": "^0.8.7",
     "semver": "^5.4.1",
-    "sqlite3": "^3.1.12",
+    "sqlite3": "^4.0.0",
     "winston": "^2.3.1"
   },
   "jest": {

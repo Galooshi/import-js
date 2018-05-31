@@ -1,7 +1,7 @@
 {
   "presets": [["airbnb", {
     "targets": {
-      "node": 4
+      "node": 6
     }
   }]],
   "plugins": [
