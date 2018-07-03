@@ -117,6 +117,18 @@ Save this file in the root folder of your project (e.g. where the package.json
 file is found). You can also save it to the user home directory if you want to
 share a global config between different projects.
 
+If you have a project inside a project with both containing a `package.json` file,
+you can specify that the subproject is not root like this:
+```json
+{
+  "name": "some-name",
+  "import-js": {
+    "isRoot": false
+  }
+}
+```
+Note: the default is `isRoot: true`
+
 The following configuration options are supported.
 
 - [`aliases`](#aliases)
