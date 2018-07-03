@@ -107,7 +107,7 @@ example below.
 ```javascript
 module.exports = {
     excludes: [
-        'react-components/**/test/**'
+        './react-components/**/test/**'
     ]
     // continue with the rest of your settings...
 }
@@ -148,7 +148,7 @@ want to include for importing.
 
 ```javascript
 excludes: [
-  'react-components/**/test/**',
+  './react-components/**/test/**',
 ]
 ```
 
