@@ -27,6 +27,8 @@
     "es6",
     "commonjs",
     "es2015",
+    "ts",
+    "typescript",
     "importing"
   ],
   "author": "Henric Trotzig",
@@ -63,9 +65,9 @@
     "rimraf": "^2.6.2"
   },
   "dependencies": {
+    "@babel/parser": "^7.0.0-beta.53",
     "babel-plugin-jsx": "^1.2.0",
     "babel-plugin-syntax-flow": "^6.18.0",
-    "babylon": "^6.18.0",
     "commander": "^2.11.0",
     "fb-watchman": "^2.0.0",
     "glob": "^7.1.2",
