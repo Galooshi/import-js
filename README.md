@@ -118,7 +118,7 @@ file is found). You can also save it to the user home directory if you want to
 share a global config between different projects.
 
 If you have a project inside a project with both containing a `package.json` file,
-you can specify that the subproject is not root like this:
+you can specify that the subproject is not root inside `package.json` like this:
 ```json
 {
   "name": "some-name",
