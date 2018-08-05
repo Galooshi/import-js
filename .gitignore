@@ -3,3 +3,7 @@
 node_modules
 /coverage/
 .importjs.db
+
+npm-error.log*
+yarn-error.log*
+yarn-debug.log*
