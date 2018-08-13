@@ -89,7 +89,7 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 ## Things to note
 
-- Only files ending in `.js\*` are considered when importing
+- Only files ending in `.js\*` and `.ts*` are considered when importing
 - As part of resolving imports, all imports will be sorted and placed into
   groups. *Grouping and sorting can be disabled, see the `groupImports` and `sortImports` configuration
   options. Comments and whitespace will be preserved if these are both disabled.*
@@ -366,8 +366,8 @@ importFunction: 'myCustomRequireFunction'
 ### `stripFileExtensions`
 
 An array that controls what file extensions are stripped out from the resulting
-import statement. The default configuration strips out `[".js", ".jsx"]`. Set to
-an empty array `[]` to avoid stripping out extensions.
+import statement. The default configuration strips out `[".js", ".jsx", ".ts",
+".tsx"]`. Set to an empty array `[]` to avoid stripping out extensions.
 
 ```javascript
 stripFileExtensions: ['.web.js', '.js']
