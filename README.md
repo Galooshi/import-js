@@ -367,7 +367,7 @@ importFunction: 'myCustomRequireFunction'
 
 An array that controls what file extensions are stripped out from the resulting
 import statement. The default configuration strips out `[".js", ".jsx", ".ts",
-".tsx"]`. Set to an empty array `[]` to avoid stripping out extensions.
+".tsx", ".coffee"]`. Set to an empty array `[]` to avoid stripping out extensions.
 
 ```javascript
 stripFileExtensions: ['.web.js', '.js']
