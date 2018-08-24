@@ -30,6 +30,12 @@ links above.
 *Want to add another editor to the list?* [See how to
 contribute](CONTRIBUTING.md).
 
+
+## Dependency on Babel 7
+
+ImportJS uses [Babel 7](https://babeljs.io/docs/en/next/v7-migration.html) from version [3.1.0](https://github.com/Galooshi/import-js/releases/tag/v3.1.0). In most cases, Babel 7 is backwards-compatible with Babel 6, but if you run into issues (such as [this one about decorators](https://github.com/Galooshi/import-js/issues/515)), consider installing a previous version of ImportJS (e.g. [3.0.0](https://github.com/Galooshi/import-js/releases/tag/v3.0.0)) or updating your project to be Babel 7 compatible. 
+
+
 ## Importing: Example
 
 Let's say that you have a JavaScript project with the following structure:
