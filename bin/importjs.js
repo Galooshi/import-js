@@ -1,4 +1,6 @@
 #!/usr/bin/env node
 
 // eslint-disable-next-line import/no-unresolved
-require('../build/importjs.js')(process.argv);
+const importjs = require('../build/importjs.js').default;
+
+importjs(process.argv);
