@@ -33,7 +33,7 @@ contribute](CONTRIBUTING.md).
 
 ## Dependency on Babel 7
 
-ImportJS uses [Babel 7](https://babeljs.io/docs/en/next/v7-migration.html) from version [3.1.0](https://github.com/Galooshi/import-js/releases/tag/v3.1.0). In most cases, Babel 7 is backwards-compatible with Babel 6, but if you run into issues (such as [this one about decorators](https://github.com/Galooshi/import-js/issues/515)), consider installing a previous version of ImportJS (e.g. [3.0.0](https://github.com/Galooshi/import-js/releases/tag/v3.0.0)) or updating your project to be Babel 7 compatible. 
+ImportJS uses [Babel 7](https://babeljs.io/docs/en/next/v7-migration.html) from version [3.1.0](https://github.com/Galooshi/import-js/releases/tag/v3.1.0). In most cases, Babel 7 is backwards-compatible with Babel 6, but if you run into issues (such as [this one about decorators](https://github.com/Galooshi/import-js/issues/515)), consider installing a previous version of ImportJS (e.g. [3.0.0](https://github.com/Galooshi/import-js/releases/tag/v3.0.0)) or updating your project to be Babel 7 compatible.
 
 
 ## Importing: Example
@@ -648,6 +648,38 @@ find ./app -name "**.js*" -exec importjs rewrite --overwrite {} \;
 Since the `--overwrite` flag makes ImportJS destructive (files are overwritten),
 it's a good thing to double-check that the `find` command returns the right
 files before adding the `-exec` part.
+
+## Specifying alternate package directory
+
+ImportJS looks for the `package.json` file in the closest ancestor directory for the file you're editing to find node modules to import. However, sometimes it might pull dependencies from a directory further up the chain. For example, your directory structure might look like this:
+
+```
+.
+|-- package.json
+|-- components
+|     |-- button.js
+|     |-- icon.js
+|-- node_modules
+|     |-- react
+|-- subpackage
+|     |-- package.json
+|     |-- components
+|           |-- bulletin.js
+```
+
+If you were to use ImportJS on `subpackage/components/bulletin.js` which imports React, ImportJS would not know that `react` is a valid dependency.
+
+To tell ImportJS to skip a directory and keep searching upwards to find the root package directory, specify `"importjs": { "isRoot": false }` in the `package.json` of the directory to ignore. In this case, you would want something like this:
+
+```json
+{
+  "name": "subpackage",
+  ...
+  "importjs": {
+    "isRoot": false
+  }
+}
+```
 
 ## Running as a daemon
 
