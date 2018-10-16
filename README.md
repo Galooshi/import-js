@@ -563,7 +563,7 @@ function isTestFile(path) {
   return path.endsWith('-test.js');
 }
 
-module.exports {
+module.exports = {
   declarationKeyword({ pathToImportedModule }) {
     if (isTestFile(pathToImportedModule)) {
       return 'const';
@@ -577,7 +577,7 @@ Here's a more elaborate example taking both `pathToImportedModule` and
 `pathToCurrentFile` into account:
 
 ```javascript
-module.exports {
+module.exports = {
   useRelativePaths({ pathToImportedModule, pathToCurrentFile }) {
     if (pathToCurrentFile.endsWith('-mock.js')) {
       return false;
