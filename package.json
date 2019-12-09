@@ -8,7 +8,7 @@
   },
   "main": "build/main.js",
   "scripts": {
-    "build": "babel lib --ignore __tests__,__mocks__ --out-dir build",
+    "build": "babel lib --ignore ./lib/__tests__,./lib/__mocks__ --out-dir build",
     "clean": "rimraf build",
     "flow": "flow",
     "jest": "jest",
