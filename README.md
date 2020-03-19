@@ -266,6 +266,40 @@ The key used to describe the named exports should be a valid import path. This
 can be e.g. the name of a package found under `node_modules`, a path to a
 module you created yourself, or a relative import path.
 
+Consider the example as a valid use case for the `namedExports` property. Let's say we have a file:
+```jsx
+import { Provider } from 'react-redux';
+import React from 'react';
+import store from './redux/redux-store';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(
+  <BrowserRouter>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </BrowserRouter>,
+  document.getElementById('root')
+);
+
+```
+And we're going to import `BrowserRouter` but instead of the desired result we get
+the *No JS module to import for `BroswerRouter`* message.
+In order to fix the problem populate `namedExports` of your config file as follows:
+```js
+module.exports = {
+  excludes: ['./public/**'],
+  namedExports: {
+    'react-router-dom': ['BrowserRouter', 'Route', 'Redirect']
+  }
+};
+
+```
+After that we get the line attached to our file on importing as expected:
+
+`import { BrowserRouter } from 'react-router-dom'`
+
 ### `declarationKeyword`
 
 The default value for this property is `import`, making your import statements
