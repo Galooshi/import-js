@@ -285,18 +285,14 @@ ReactDOM.render(
 
 ```
 And we're going to import `BrowserRouter` but instead of the desired result we get
-the *No JS module to import for `BroswerRouter`* message.
-In order to fix the problem populate `namedExports` of your config file as follows:
+the *No JS module to import for `BrowserRouter`* message.
+In order to fix the problem, populate `namedExports` in your config file as follows:
 ```js
-module.exports = {
-  excludes: ['./public/**'],
-  namedExports: {
-    'react-router-dom': ['BrowserRouter', 'Route', 'Redirect']
-  }
-};
-
+namedExports: {
+  'react-router-dom': ['BrowserRouter', 'Route', 'Redirect']
+}
 ```
-After that we get the line attached to our file on importing as expected:
+After that we are able to import `BrowserRouter` correctly. The resulting import statement will look like this:
 
 `import { BrowserRouter } from 'react-router-dom'`
 
