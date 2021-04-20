@@ -90,6 +90,7 @@
     ],
     "testPathIgnorePatterns": [
       ".eslintrc.js",
+      ".requireMockFile.js",
       "<rootDir>/build/",
       "<rootDir>/node_modules/"
     ]
