@@ -55,11 +55,11 @@ had installed by running `npm unlink` in the importjs repo directory.
 
 ## Testing the daemon
 
-This is how you can test the `importjsd` daemon from the command line.
+This is how you can test the `importjs` daemon from the command line.
 
 ```sh
 mkfifo IMPORTJS
-importjsd < IMPORTJS
+importjs < IMPORTJS
 ```
 
 The `importjs` process will now listen to `stdin` from the named pipe

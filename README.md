@@ -524,7 +524,7 @@ logLevel: 'debug'
 
 The logfile is written to "importjs.log" in your operating system's default
 directory for temporary files. You can get the path to the log file by running
-`importjsd logpath`.
+`importjs logpath`.
 
 ### `mergableOptions`
 
@@ -721,7 +721,7 @@ You can run ImportJS in a background process and communicate with it using
 `stdin` and `stdout`. This will make importing faster because we're not
 spinning up a node environment on every invocation.
 
-The daemon is started by running running `importjsd`. It accepts commands sent
+The daemon is started by running running `importjs`. It accepts commands sent
 via `stdin`. Each command is a (oneline) JSON string ending with a newline. The
 command structure is basically the same as for the command-line tool, but
 wrapped in JSON instead of expressed on the command line. Here are a few
