@@ -17,4 +17,6 @@ jobs:
       - name: Run tests
         run: npm run test:cover
       - name: Report coverage
+        env:
+          CODECLIMATE_REPO_TOKEN: ${{ secrets.CODECLIMATE_REPO_TOKEN }}
         run: npx codeclimate-test-reporter < coverage/lcov.info
