@@ -74,12 +74,9 @@
     "automock": false,
     "testEnvironment": "node",
     "setupFiles": ["./setupJest.js"],
-    "testPathIgnorePatterns": [
-      "<rootDir>/build/",
-      "<rootDir>/node_modules/"
-    ]
+    "testPathIgnorePatterns": ["<rootDir>/build/", "<rootDir>/node_modules/"]
   },
   "prettier": {
-    "semi": false
+    "singleQuote": true
   }
 }
