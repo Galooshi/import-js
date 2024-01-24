@@ -10,10 +10,7 @@ module.exports = {
   ignorePackagePrefixes: ['lodash.'],
   declarationKeyword: 'import',
   logLevel: 'debug',
-  excludes: [
-    './build/**',
-    './lib/__mocks__/**'
-  ],
+  excludes: ['./build/**', './lib/__mocks__/**'],
   importDevDependencies: ({ pathToCurrentFile }) =>
     testFilePattern.test(pathToCurrentFile),
-}
+};

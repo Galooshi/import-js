@@ -11,12 +11,12 @@
     "clean": "rimraf build",
     "flow": "flow",
     "jest": "jest",
+    "prettier": "prettier --write .",
     "jest:cover": "jest --coverage",
-    "lint": "eslint .",
     "prepublish": "npm run clean && npm run build",
     "preversion": "npm run clean && npm run build && npm test",
-    "test": "npm run --silent lint && npm run --silent flow && npm run --silent jest",
-    "test:cover": "npm run --silent lint && npm run --silent flow && npm run --silent jest:cover"
+    "test": "npm run --silent prettier && npm run --silent flow && npm run --silent jest",
+    "test:cover": "npm run --silent flow && npm run --silent jest:cover"
   },
   "repository": {
     "type": "git",
@@ -53,11 +53,6 @@
     "@babel/preset-flow": "^7.7.4",
     "@babel/preset-react": "^7.7.4",
     "babel-jest": "^24.9.0",
-    "eslint": "^8.56.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-flowtype": "^8.0.3",
-    "eslint-plugin-import": "^2.19.0",
-    "eslint-plugin-react": "^7.17.0",
     "flow-bin": "^0.113.0",
     "jest": "^29.7.0",
     "mkdirp": "^0.5.1",
@@ -76,6 +71,7 @@
     "globals": "^12.3.0",
     "lodash": "^4.17.15",
     "minimatch": "^3.0.4",
+    "prettier": "^3.2.4",
     "require-relative": "^0.8.7",
     "semver": "^6.3.0",
     "sqlite3": "^5.0.2",
@@ -88,9 +84,11 @@
       "./setupJest.js"
     ],
     "testPathIgnorePatterns": [
-      ".eslintrc.js",
       "<rootDir>/build/",
       "<rootDir>/node_modules/"
     ]
+  },
+  "prettier": {
+    "singleQuote": true
   }
 }

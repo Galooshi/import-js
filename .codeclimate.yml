@@ -2,5 +2,5 @@ engines:
   eslint:
     enabled: false
 exclude_patterns:
-- "lib/__tests__/"
-- "lib/__mocks__/"
+  - 'lib/__tests__/'
+  - 'lib/__mocks__/'

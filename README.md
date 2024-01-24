@@ -27,14 +27,12 @@ There are ImportJS plugins for the following editors:
 Detailed instructions on how to install ImportJS can be found in the editor
 links above.
 
-*Want to add another editor to the list?* [See how to
+_Want to add another editor to the list?_ [See how to
 contribute](CONTRIBUTING.md).
-
 
 ## Dependency on Babel 7
 
 ImportJS uses [Babel 7](https://babeljs.io/docs/en/next/v7-migration.html) from version [3.1.0](https://github.com/Galooshi/import-js/releases/tag/v3.1.0). In most cases, Babel 7 is backwards-compatible with Babel 6, but if you run into issues (such as [this one about decorators](https://github.com/Galooshi/import-js/issues/515)), consider installing a previous version of ImportJS (e.g. [3.0.0](https://github.com/Galooshi/import-js/releases/tag/v3.0.0)) or updating your project to be Babel 7 compatible.
-
 
 ## Importing: Example
 
@@ -97,8 +95,8 @@ the cursor on a variable and hit `<leader>g` (Vim), `(M-x) import-js-goto`
 
 - Only files ending in `.js\*` and `.ts*` are considered when importing
 - As part of resolving imports, all imports will be sorted and placed into
-  groups. *Grouping and sorting can be disabled, see the `groupImports` and `sortImports` configuration
-  options. Comments and whitespace will be preserved if these are both disabled.*
+  groups. _Grouping and sorting can be disabled, see the `groupImports` and `sortImports` configuration
+  options. Comments and whitespace will be preserved if these are both disabled._
 - You can speed up ImportJS by installing
   [Watchman](https://facebook.github.io/watchman/). See [Speeding it
   up!](#speeding-it-up) for more information.
@@ -112,11 +110,9 @@ example below.
 
 ```javascript
 module.exports = {
-    excludes: [
-        './react-components/**/test/**'
-    ]
-    // continue with the rest of your settings...
-}
+  excludes: ['./react-components/**/test/**'],
+  // continue with the rest of your settings...
+};
 ```
 
 Save this file in the root folder of your project (e.g. where the package.json
@@ -153,9 +149,7 @@ Define a list of glob patterns that match files and directories that you don't
 want to include for importing.
 
 ```javascript
-excludes: [
-  './react-components/**/test/**',
-]
+excludes: ['./react-components/**/test/**'];
 ```
 
 ### `aliases`
@@ -205,18 +199,18 @@ values right now are
   globals](https://github.com/sindresorhus/globals/blob/38d9a0c/globals.json#L901)
 - `['jest']` - add a bunch of [jest
   globals](https://github.com/sindresorhus/globals/blob/38d9a0c/globals.json#L921)
-- + a few more, as defined by https://github.com/sindresorhus/globals
+- - a few more, as defined by https://github.com/sindresorhus/globals
 
 [Meteor]: https://meteor.com
 [Node core modules]: https://nodejs.org/api/modules.html#modules_core_modules
 
 ```javascript
-environments: ['meteor', 'node']
+environments: ['meteor', 'node'];
 ```
 
 ### `namedExports`
 
-*Note: Since 2.1.0 ImportJS finds your named exports automatically. Most
+\*Note: Since 2.1.0 ImportJS finds your named exports automatically. Most
 likely you don't need this option. If you end up having to use this
 configuration anyway, there might be a bug in the exports-finding parts of
 ImportJS. [File an issue](https://github.com/Galooshi/import-js/issues) and
@@ -247,7 +241,9 @@ syntax][]. e.g.
 ```javascript
 import { memoize } from 'underscore';
 
-memoize(() => { foo() });
+memoize(() => {
+  foo();
+});
 ```
 
 and imports that use `const` or `var` use [ES2015 Destructuring
@@ -256,7 +252,9 @@ Assigment][destructing assignment], e.g.
 ```javascript
 const { memoize } = require('underscore');
 
-memoize(() => { foo() });
+memoize(() => {
+  foo();
+});
 ```
 
 [named imports syntax]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
@@ -267,6 +265,7 @@ can be e.g. the name of a package found under `node_modules`, a path to a
 module you created yourself, or a relative import path.
 
 Consider the example as a valid use case for the `namedExports` property. Let's say we have a file:
+
 ```jsx
 import { Provider } from 'react-redux';
 import React from 'react';
@@ -280,18 +279,20 @@ ReactDOM.render(
       <App />
     </Provider>
   </BrowserRouter>,
-  document.getElementById('root')
+  document.getElementById('root'),
 );
-
 ```
+
 And we're going to import `BrowserRouter` but instead of the desired result we get
-the *No JS module to import for `BrowserRouter`* message.
+the _No JS module to import for `BrowserRouter`_ message.
 In order to fix the problem, populate `namedExports` in your config file as follows:
+
 ```js
 namedExports: {
   'react-router-dom': ['BrowserRouter', 'Route', 'Redirect']
 }
 ```
+
 After that we are able to import `BrowserRouter` correctly. The resulting import statement will look like this:
 
 `import { BrowserRouter } from 'react-router-dom'`
@@ -311,7 +312,7 @@ If you aren't ready for ES2015 yet, you have the option to use `var` or `const`
 instead.
 
 ```javascript
-declarationKeyword: 'const'
+declarationKeyword: 'const';
 ```
 
 In such case, your import statements will look something like this:
@@ -326,8 +327,8 @@ const Foo = require('foo'); // "declarationKeyword": "const"
 Provide a list of global identifiers used in the code. ImportJS will ignore
 these when trying to import all undefined variables.
 
-*Note: If you use the [`environments`](#environments) configuration option
-correctly, you might not need to specify globals*.
+_Note: If you use the [`environments`](#environments) configuration option
+correctly, you might not need to specify globals_.
 
 ### `groupImports`
 
@@ -341,7 +342,7 @@ You can turn off this behavior by setting `groupImports` to `false`. When
 disabled, imports are listed alphabetically in one list.
 
 ```javascript
-groupImports: false
+groupImports: false;
 ```
 
 ### `sortImports`
@@ -352,7 +353,7 @@ You can turn off this behavior by setting `sortImports` to `false`. When
 disabled, existing imports are not rearranged, and new imports are always added above existing imports.
 
 ```javascript
-sortImports: false
+sortImports: false;
 ```
 
 ### `emptyLineBetweenGroups`
@@ -362,7 +363,7 @@ By default, ImportJS will insert empty line between import groups.
 You can turn off this behavior by setting `emptyLineBetweenGroups` to `false`.
 
 ```javascript
-emptyLineBetweenGroups: false
+emptyLineBetweenGroups: false;
 ```
 
 ### `importDevDependencies`
@@ -373,7 +374,7 @@ importing. By default, only modules listed under `dependencies` and
 `true`, `devDependencies` will also be taken into account.
 
 ```javascript
-importDevDependencies: true
+importDevDependencies: true;
 ```
 
 ### `danglingCommas`
@@ -383,20 +384,20 @@ By default, ImportJS will add trailing commas when constructing import statement
 You can turn off this behavior by setting `danglingCommas` to `false`.
 
 ```javascript
-danglingCommas: false
+danglingCommas: false;
 ```
 
 ### `importFunction`
 
-*Note: this only applies if you are using `var` or `const` as
-`declarationKeyword`.*
+_Note: this only applies if you are using `var` or `const` as
+`declarationKeyword`._
 
 The default value for this configuration option is `"require"`, which is [the
 standard CommonJS function name used for
 importing](http://wiki.commonjs.org/wiki/Modules/1.1).
 
 ```javascript
-importFunction: 'myCustomRequireFunction'
+importFunction: 'myCustomRequireFunction';
 ```
 
 ### `stripFileExtensions`
@@ -406,7 +407,7 @@ import statement. The default configuration strips out `[".js", ".jsx", ".ts",
 ".tsx"]`. Set to an empty array `[]` to avoid stripping out extensions.
 
 ```javascript
-stripFileExtensions: ['.web.js', '.js']
+stripFileExtensions: ['.web.js', '.js'];
 ```
 
 ### `useRelativePaths`
@@ -422,7 +423,7 @@ import Bar from '../baz/bar';
 You can disable this by setting it to false:
 
 ```javascript
-useRelativePaths: false
+useRelativePaths: false;
 ```
 
 Package dependencies (located in `node_modules`) will not be imported
@@ -435,7 +436,7 @@ with e.g. an organization name but want to be able to import these without the
 package prefix, you can set the `ignorePackagePrefixes` configuration option.
 
 ```javascript
-ignorePackagePrefixes: ['my-company-']
+ignorePackagePrefixes: ['my-company-'];
 ```
 
 When package dependencies are matched, these prefixes will be ignored. As an
@@ -450,7 +451,7 @@ requires. If your plugin version is older than this value, you will be shown a
 warning that encourages you to upgrade your plugin.
 
 ```javascript
-minimumVersion: '1.0.0'
+minimumVersion: '1.0.0';
 ```
 
 ### `maxLineLength`
@@ -459,7 +460,7 @@ Defaults to `80`. This setting controls when import statements are broken into
 multiple lines.
 
 ```javascript
-maxLineLength: 70
+maxLineLength: 70;
 ```
 
 ### `moduleNameFormatter`
@@ -510,7 +511,7 @@ Defaults to two spaces (`"  "`). This setting controls how indentation is
 constructed when import statements are broken into multiple lines.
 
 ```javascript
-tab: '\t'
+tab: '\t';
 ```
 
 ### `logLevel`
@@ -519,7 +520,7 @@ One of `["debug", "info", "warn", "error"]`. This controls what ends up in the
 logfile. The default is `info`.
 
 ```javascript
-logLevel: 'debug'
+logLevel: 'debug';
 ```
 
 The logfile is written to "importjs.log" in your operating system's default
@@ -547,7 +548,7 @@ To disable merging a particular option or set of options, set the key to
 
 ```javascript
 mergableOptions: {
-  globals: false
+  globals: false;
 }
 ```
 
@@ -560,15 +561,16 @@ const globals = require('globals');
 module.exports = {
   environments: ['meteor', 'node'],
   mergableOptions: {
-    globals: false // Overwrite globals
+    globals: false, // Overwrite globals
   },
   globals: [
     // Add the globals you want back in
     ...Object.keys(globals.builtin), // include javascript builtins
     ...Object.keys(globals.node), // include node globals
-    'Package', 'Npm' // Include meteor globals for `package.js` files
-  ]
-}
+    'Package',
+    'Npm', // Include meteor globals for `package.js` files
+  ],
+};
 ```
 
 ## Dynamic configuration
@@ -600,7 +602,7 @@ module.exports = {
     }
     return 'import';
   },
-}
+};
 ```
 
 Here's a more elaborate example taking both `pathToImportedModule` and
@@ -617,7 +619,7 @@ module.exports = {
     }
     return true;
   },
-}
+};
 ```
 
 In order to use functions, you need to use the JavaScript configuration file
@@ -713,7 +715,7 @@ To tell ImportJS to skip a directory and keep searching upwards to find the root
 
 ## Running as a daemon
 
-*Note*: This section is intended mostly for developers of editor plugins. If
+_Note_: This section is intended mostly for developers of editor plugins. If
 you are using one of the standard editor plugins, you are most likely using the
 daemon under the hood already.
 
@@ -728,31 +730,34 @@ wrapped in JSON instead of expressed on the command line. Here are a few
 examples:
 
 Run `fix imports`:
+
 ```json
 {
   "command": "fix",
   "fileContent": "const foo = bar();\n",
-  "pathToFile": "foo.js",
+  "pathToFile": "foo.js"
 }
 ```
 
 Import a single word:
+
 ```json
 {
   "command": "word",
   "commandArg": "bar",
   "fileContent": "const foo = bar();\n",
-  "pathToFile": "foo.js",
+  "pathToFile": "foo.js"
 }
 ```
 
 Goto:
+
 ```json
 {
   "command": "goto",
   "commandArg": "bar",
   "fileContent": "const foo = bar();\n",
-  "pathToFile": "foo.js",
+  "pathToFile": "foo.js"
 }
 ```
 
@@ -783,6 +788,7 @@ See the [CONTRIBUTING.md](CONTRIBUTING.md) document for tips on how to run, test
 and develop ImportJS locally.
 
 ## Thank you:
+
 - @janpaul123 for writing the Sublime plugin.
 - @kevinkehl for getting the parentheses right for the Emacs plugin
 - @rhettlivingston for making import-js work for Meteor, and for driving the
