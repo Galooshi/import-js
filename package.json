@@ -22,7 +22,14 @@
     "type": "git",
     "url": "git+https://github.com/galooshi/import-js.git"
   },
-  "keywords": ["es6", "commonjs", "es2015", "ts", "typescript", "importing"],
+  "keywords": [
+    "es6",
+    "commonjs",
+    "es2015",
+    "ts",
+    "typescript",
+    "importing"
+  ],
   "author": "Henric Trotzig",
   "contributors": [
     {
@@ -73,8 +80,13 @@
   "jest": {
     "automock": false,
     "testEnvironment": "node",
-    "setupFiles": ["./setupJest.js"],
-    "testPathIgnorePatterns": ["<rootDir>/build/", "<rootDir>/node_modules/"]
+    "setupFiles": [
+      "./setupJest.js"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/build/",
+      "<rootDir>/node_modules/"
+    ]
   },
   "prettier": {
     "singleQuote": true

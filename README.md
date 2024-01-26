@@ -573,6 +573,54 @@ module.exports = {
 };
 ```
 
+### `parserPlugins`
+
+ImportJS defaults to a reasonable compromise for what syntax to support but can be overridden (replaced) in configuration. The latest defaults can be found [here](lib/parse.js#L3)
+
+Available plugins are over at [Babel: Plugins List](https://babeljs.io/docs/plugins-list)
+
+#### Example: Remove all preconfigured defaults
+
+```javascript
+parserPlugins: [] 
+```
+
+#### Example: Add pipeline operator (`hack` proposal)
+
+When `parserPlugins` is specified you need to re-add the defaults.
+
+```javascript
+parserPlugins: [
+  'jsx',
+  'doExpressions',
+  'objectRestSpread',
+  'decorators-legacy',
+  'classProperties',
+  'classPrivateProperties',
+  'classPrivateMethods',
+  'exportExtensions',
+  'asyncGenerators',
+  'functionBind',
+  'functionSent',
+  'dynamicImport',
+  'numericSeparator',
+  'optionalChaining',
+  'importMeta',
+  'bigInt',
+  'optionalCatchBinding',
+  'throwExpressions',
+  'nullishCoalescingOperator',
+  'exportNamespaceFrom',
+  'exportDefaultFrom',
+  [
+    'pipelineOperator',
+    {
+      proposal: 'hack',
+    },
+  ],
+]
+```
+
 ## Dynamic configuration
 
 Different sections of your application may have special importing needs. For
