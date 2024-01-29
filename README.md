@@ -534,7 +534,6 @@ Available plugins are over at [Babel: Plugins List](https://babeljs.io/docs/plug
 
 #### Example: Remove all preconfigured defaults
 
-```javascript
 parserPlugins: []
 ```
 
@@ -571,7 +570,7 @@ parserPlugins: [
       proposal: 'hack',
     },
   ],
-]
+];
 ```
 
 ### `sortImports`
