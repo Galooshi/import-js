@@ -79,7 +79,7 @@ hitting `<leader>i` (Vim), `(M-x) import-js-fix` (Emacs), or choose `ImportJS:
 fix all imports` (Sublime), all your undefined variables will be resolved, and
 all your unused imports will be removed.
 
-If you're using JSX, ImportJS will automatically import `React` for you.
+If you're using JSX, ImportJS will no longer automatically import `React` for you. If this is something you need, please consider using ImportJS version 5.1.0 or earlier. The need for React imports to use JSX was removed in React 17. Read more [here](https://legacy.reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html)
 
 ## Go to module
 
@@ -582,7 +582,7 @@ Available plugins are over at [Babel: Plugins List](https://babeljs.io/docs/plug
 #### Example: Remove all preconfigured defaults
 
 ```javascript
-parserPlugins: [] 
+parserPlugins: []
 ```
 
 #### Example: Add pipeline operator (`hack` proposal)
