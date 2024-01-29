@@ -122,7 +122,9 @@ share a global config between different projects.
 The following configuration options are supported.
 
 - [`aliases`](#aliases)
+- [`danglingCommas`](#danglingcommas)
 - [`declarationKeyword`](#declarationkeyword)
+- [`emptyLineBetweenGroups`](#emptyLineBetweenGroups)
 - [`environments`](#environments)
 - [`excludes`](#excludes)
 - [`globals`](#globals)
@@ -133,24 +135,15 @@ The following configuration options are supported.
 - [`importStatementFormatter`](#importstatementformatter)
 - [`logLevel`](#loglevel)
 - [`maxLineLength`](#maxlinelength)
+- [`mergableOptions`](#mergableoptions)
 - [`minimumVersion`](#minimumversion)
 - [`moduleNameFormatter`](#modulenameformatter)
 - [`namedExports`](#namedexports)
+- [`parserPlugins`](#parserPlugins)
 - [`sortImports`](#sortimports)
 - [`stripFileExtensions`](#stripfileextensions)
-- [`danglingCommas`](#danglingcommas)
 - [`tab`](#tab)
 - [`useRelativePaths`](#userelativepaths)
-- [`mergableOptions`](#mergableoptions)
-
-### `excludes`
-
-Define a list of glob patterns that match files and directories that you don't
-want to include for importing.
-
-```javascript
-excludes: ['./react-components/**/test/**'];
-```
 
 ### `aliases`
 
@@ -162,6 +155,27 @@ aliases: {
   $: 'third-party-libs/jquery',
   _: 'third-party-libs/underscore',
 }
+```
+
+### `danglingCommas`
+
+By default, ImportJS will add trailing commas when constructing import statements with multiple named imports.
+
+You can turn off this behavior by setting `danglingCommas` to `false`.
+
+```javascript
+danglingCommas: false;
+```
+
+### `declarationKeyword`
+
+The default value for this property is `import`, making your import statements
+use the [ES2015 modules syntax][]:
+
+[ES2015 modules syntax]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
+
+```javascript
+import Foo from 'foo';
 ```
 
 Aliases can be made dynamic by using the `{filename}` string. This part of the
@@ -179,6 +193,16 @@ will for a file `foo/bar.js` result in
 
 ```javascript
 import styles from './bar.scss';
+```
+
+### `emptyLineBetweenGroups`
+
+By default, ImportJS will insert empty line between import groups.
+
+You can turn off this behavior by setting `emptyLineBetweenGroups` to `false`.
+
+```javascript
+emptyLineBetweenGroups: false;
 ```
 
 ### `environments`
@@ -206,6 +230,197 @@ values right now are
 
 ```javascript
 environments: ['meteor', 'node'];
+```
+
+### `excludes`
+
+Define a list of glob patterns that match files and directories that you don't
+want to include for importing.
+
+```javascript
+excludes: ['./react-components/**/test/**'];
+```
+
+### `globals`
+
+Provide a list of global identifiers used in the code. ImportJS will ignore
+these when trying to import all undefined variables.
+
+_Note: If you use the [`environments`](#environments) configuration option
+correctly, you might not need to specify globals_.
+
+### `groupImports`
+
+By default, ImportJS will put imports into groups:
+
+1. Core modules
+2. Package dependencies
+3. One or more groups with internal imports
+
+You can turn off this behavior by setting `groupImports` to `false`. When
+disabled, imports are listed alphabetically in one list.
+
+```javascript
+groupImports: false;
+```
+
+### `ignorePackagePrefixes`
+
+If you have package dependencies specified in `package.json` that are prefixed
+with e.g. an organization name but want to be able to import these without the
+package prefix, you can set the `ignorePackagePrefixes` configuration option.
+
+```javascript
+ignorePackagePrefixes: ['my-company-'];
+```
+
+When package dependencies are matched, these prefixes will be ignored. As an
+example, a variable named `validator` would match a package named
+`my-company-validator`.
+
+### `importDevDependencies`
+
+ImportJS will look for package dependencies listed in `package.json` when
+importing. By default, only modules listed under `dependencies` and
+`peerDependencies` will be used. By setting `importDevDependencies` to
+`true`, `devDependencies` will also be taken into account.
+
+```javascript
+importDevDependencies: true;
+```
+
+### `importFunction`
+
+_Note: this only applies if you are using `var` or `const` as
+`declarationKeyword`._
+
+The default value for this configuration option is `"require"`, which is [the
+standard CommonJS function name used for
+importing](http://wiki.commonjs.org/wiki/Modules/1.1).
+
+```javascript
+importFunction: 'myCustomRequireFunction';
+```
+
+### `importStatementFormatter`
+
+Use a function here to control how the resulting import statement will look
+like. This is useful if you for instance want to strip out trailing semicolons
+(that ImportJS adds by default).
+
+Note: this method should only be used in rare cases. There's a chance that
+ImportJS won't be able to recognize the resulting import statement next time it
+is about to import something.
+
+```javascript
+importStatementFormatter({ importStatement }) {
+  return importStatement.replace(/;$/, '');
+},
+```
+
+### `logLevel`
+
+One of `["debug", "info", "warn", "error"]`. This controls what ends up in the
+logfile. The default is `info`.
+
+```javascript
+logLevel: 'debug';
+```
+
+The logfile is written to "importjs.log" in your operating system's default
+directory for temporary files. You can get the path to the log file by running
+`importjs logpath`.
+
+### `maxLineLength`
+
+Defaults to `80`. This setting controls when import statements are broken into
+multiple lines.
+
+```javascript
+maxLineLength: 70;
+```
+
+### `mergableOptions`
+
+A dictionary of Options that be merged with defaults and values provided by an [`environment`](#environments). This can be used to overwrite options provided by environments. Defaults to:
+
+```javascript
+mergableOptions: {
+  aliases: true,
+  coreModules: true,
+  namedExports: true,
+  globals: true,
+}
+```
+
+Note: the `mergableOptions` option will always be merged and will be ignored if
+included in a user config.
+
+To disable merging a particular option or set of options, set the key to
+`false`:
+
+```javascript
+mergableOptions: {
+  globals: false;
+}
+```
+
+For example, if you are using the `meteor` environment but want to explicitly
+import modules which are provided as globals, you can use this setting to
+overwrite the environment globals.
+
+```javascript
+const globals = require('globals');
+module.exports = {
+  environments: ['meteor', 'node'],
+  mergableOptions: {
+    globals: false, // Overwrite globals
+  },
+  globals: [
+    // Add the globals you want back in
+    ...Object.keys(globals.builtin), // include javascript builtins
+    ...Object.keys(globals.node), // include node globals
+    'Package',
+    'Npm', // Include meteor globals for `package.js` files
+  ],
+};
+```
+
+### `minimumVersion`
+
+Setting `minimumVersion` will warn people who are running a version of
+ImportJS that is older than what your `.importjs.js` configuration file
+requires. If your plugin version is older than this value, you will be shown a
+warning that encourages you to upgrade your plugin.
+
+```javascript
+minimumVersion: '1.0.0';
+```
+
+### `moduleNameFormatter`
+
+Use a function here to control how the resulting module name string will look
+like. It's useful if you for instance want to add a custom prefix to certain
+imports. Apart from the standard `pathToCurrentFile` and `pathToImportedModule`
+values passed in to all configuration functions, this method is also passed a
+`moduleName` value, which in general is what you want to manipulate.
+
+```javascript
+moduleNameFormatter({ moduleName, pathToCurrentFile }) {
+ if (/-test/.test(pathToCurrentFile)) {
+   // Import a mocked version in test files
+   return `mocks/${moduleName}`;
+ }
+
+ if (moduleName.startsWith('foo')) {
+   // Add a leading slash to foo imports
+   return `/${moduleName}`;
+ }
+
+ // Fall back to the original specifier. It's important that this function
+ // always returns a string.
+ return moduleName;
+},
 ```
 
 ### `namedExports`
@@ -297,17 +512,6 @@ After that we are able to import `BrowserRouter` correctly. The resulting import
 
 `import { BrowserRouter } from 'react-router-dom'`
 
-### `declarationKeyword`
-
-The default value for this property is `import`, making your import statements
-use the [ES2015 modules syntax][]:
-
-[ES2015 modules syntax]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
-
-```javascript
-import Foo from 'foo';
-```
-
 If you aren't ready for ES2015 yet, you have the option to use `var` or `const`
 instead.
 
@@ -320,257 +524,6 @@ In such case, your import statements will look something like this:
 ```javascript
 var Foo = require('foo'); // "declarationKeyword": "var"
 const Foo = require('foo'); // "declarationKeyword": "const"
-```
-
-### `globals`
-
-Provide a list of global identifiers used in the code. ImportJS will ignore
-these when trying to import all undefined variables.
-
-_Note: If you use the [`environments`](#environments) configuration option
-correctly, you might not need to specify globals_.
-
-### `groupImports`
-
-By default, ImportJS will put imports into groups:
-
-1. Core modules
-2. Package dependencies
-3. One or more groups with internal imports
-
-You can turn off this behavior by setting `groupImports` to `false`. When
-disabled, imports are listed alphabetically in one list.
-
-```javascript
-groupImports: false;
-```
-
-### `sortImports`
-
-By default, ImportJS will sort imports by the name or path of the imported module.
-
-You can turn off this behavior by setting `sortImports` to `false`. When
-disabled, existing imports are not rearranged, and new imports are always added above existing imports.
-
-```javascript
-sortImports: false;
-```
-
-### `emptyLineBetweenGroups`
-
-By default, ImportJS will insert empty line between import groups.
-
-You can turn off this behavior by setting `emptyLineBetweenGroups` to `false`.
-
-```javascript
-emptyLineBetweenGroups: false;
-```
-
-### `importDevDependencies`
-
-ImportJS will look for package dependencies listed in `package.json` when
-importing. By default, only modules listed under `dependencies` and
-`peerDependencies` will be used. By setting `importDevDependencies` to
-`true`, `devDependencies` will also be taken into account.
-
-```javascript
-importDevDependencies: true;
-```
-
-### `danglingCommas`
-
-By default, ImportJS will add trailing commas when constructing import statements with multiple named imports.
-
-You can turn off this behavior by setting `danglingCommas` to `false`.
-
-```javascript
-danglingCommas: false;
-```
-
-### `importFunction`
-
-_Note: this only applies if you are using `var` or `const` as
-`declarationKeyword`._
-
-The default value for this configuration option is `"require"`, which is [the
-standard CommonJS function name used for
-importing](http://wiki.commonjs.org/wiki/Modules/1.1).
-
-```javascript
-importFunction: 'myCustomRequireFunction';
-```
-
-### `stripFileExtensions`
-
-An array that controls what file extensions are stripped out from the resulting
-import statement. The default configuration strips out `[".js", ".jsx", ".ts",
-".tsx"]`. Set to an empty array `[]` to avoid stripping out extensions.
-
-```javascript
-stripFileExtensions: ['.web.js', '.js'];
-```
-
-### `useRelativePaths`
-
-This option is enabled by default. When enabled, imports will be resolved
-relative to the current file being edited.
-
-```javascript
-import Foo from './foo';
-import Bar from '../baz/bar';
-```
-
-You can disable this by setting it to false:
-
-```javascript
-useRelativePaths: false;
-```
-
-Package dependencies (located in `node_modules`) will not be imported
-relatively.
-
-### `ignorePackagePrefixes`
-
-If you have package dependencies specified in `package.json` that are prefixed
-with e.g. an organization name but want to be able to import these without the
-package prefix, you can set the `ignorePackagePrefixes` configuration option.
-
-```javascript
-ignorePackagePrefixes: ['my-company-'];
-```
-
-When package dependencies are matched, these prefixes will be ignored. As an
-example, a variable named `validator` would match a package named
-`my-company-validator`.
-
-### `minimumVersion`
-
-Setting `minimumVersion` will warn people who are running a version of
-ImportJS that is older than what your `.importjs.js` configuration file
-requires. If your plugin version is older than this value, you will be shown a
-warning that encourages you to upgrade your plugin.
-
-```javascript
-minimumVersion: '1.0.0';
-```
-
-### `maxLineLength`
-
-Defaults to `80`. This setting controls when import statements are broken into
-multiple lines.
-
-```javascript
-maxLineLength: 70;
-```
-
-### `moduleNameFormatter`
-
-Use a function here to control how the resulting module name string will look
-like. It's useful if you for instance want to add a custom prefix to certain
-imports. Apart from the standard `pathToCurrentFile` and `pathToImportedModule`
-values passed in to all configuration functions, this method is also passed a
-`moduleName` value, which in general is what you want to manipulate.
-
-```javascript
-moduleNameFormatter({ moduleName, pathToCurrentFile }) {
- if (/-test/.test(pathToCurrentFile)) {
-   // Import a mocked version in test files
-   return `mocks/${moduleName}`;
- }
-
- if (moduleName.startsWith('foo')) {
-   // Add a leading slash to foo imports
-   return `/${moduleName}`;
- }
-
- // Fall back to the original specifier. It's important that this function
- // always returns a string.
- return moduleName;
-},
-```
-
-### `importStatementFormatter`
-
-Use a function here to control how the resulting import statement will look
-like. This is useful if you for instance want to strip out trailing semicolons
-(that ImportJS adds by default).
-
-Note: this method should only be used in rare cases. There's a chance that
-ImportJS won't be able to recognize the resulting import statement next time it
-is about to import something.
-
-```javascript
-importStatementFormatter({ importStatement }) {
-  return importStatement.replace(/;$/, '');
-},
-```
-
-### `tab`
-
-Defaults to two spaces (`"  "`). This setting controls how indentation is
-constructed when import statements are broken into multiple lines.
-
-```javascript
-tab: '\t';
-```
-
-### `logLevel`
-
-One of `["debug", "info", "warn", "error"]`. This controls what ends up in the
-logfile. The default is `info`.
-
-```javascript
-logLevel: 'debug';
-```
-
-The logfile is written to "importjs.log" in your operating system's default
-directory for temporary files. You can get the path to the log file by running
-`importjs logpath`.
-
-### `mergableOptions`
-
-A dictionary of Options that be merged with defaults and values provided by an [`environment`](#environments). This can be used to overwrite options provided by environments. Defaults to:
-
-```javascript
-mergableOptions: {
-  aliases: true,
-  coreModules: true,
-  namedExports: true,
-  globals: true,
-}
-```
-
-Note: the `mergableOptions` option will always be merged and will be ignored if
-included in a user config.
-
-To disable merging a particular option or set of options, set the key to
-`false`:
-
-```javascript
-mergableOptions: {
-  globals: false;
-}
-```
-
-For example, if you are using the `meteor` environment but want to explicitly
-import modules which are provided as globals, you can use this setting to
-overwrite the environment globals.
-
-```javascript
-const globals = require('globals');
-module.exports = {
-  environments: ['meteor', 'node'],
-  mergableOptions: {
-    globals: false, // Overwrite globals
-  },
-  globals: [
-    // Add the globals you want back in
-    ...Object.keys(globals.builtin), // include javascript builtins
-    ...Object.keys(globals.node), // include node globals
-    'Package',
-    'Npm', // Include meteor globals for `package.js` files
-  ],
-};
 ```
 
 ### `parserPlugins`
@@ -620,6 +573,55 @@ parserPlugins: [
   ],
 ]
 ```
+
+### `sortImports`
+
+By default, ImportJS will sort imports by the name or path of the imported module.
+
+You can turn off this behavior by setting `sortImports` to `false`. When
+disabled, existing imports are not rearranged, and new imports are always added above existing imports.
+
+```javascript
+sortImports: false;
+```
+
+### `stripFileExtensions`
+
+An array that controls what file extensions are stripped out from the resulting
+import statement. The default configuration strips out `[".js", ".jsx", ".ts",
+".tsx"]`. Set to an empty array `[]` to avoid stripping out extensions.
+
+```javascript
+stripFileExtensions: ['.web.js', '.js'];
+```
+
+### `tab`
+
+Defaults to two spaces (`"  "`). This setting controls how indentation is
+constructed when import statements are broken into multiple lines.
+
+```javascript
+tab: '\t';
+```
+
+### `useRelativePaths`
+
+This option is enabled by default. When enabled, imports will be resolved
+relative to the current file being edited.
+
+```javascript
+import Foo from './foo';
+import Bar from '../baz/bar';
+```
+
+You can disable this by setting it to false:
+
+```javascript
+useRelativePaths: false;
+```
+
+Package dependencies (located in `node_modules`) will not be imported
+relatively.
 
 ## Dynamic configuration
 
