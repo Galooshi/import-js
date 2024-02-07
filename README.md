@@ -571,7 +571,7 @@ parserPlugins: [
       proposal: 'hack',
     },
   ],
-]
+];
 ```
 
 ### `sortImports`
