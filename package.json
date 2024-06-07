@@ -9,6 +9,7 @@
   "scripts": {
     "build": "babel lib --ignore ./lib/__tests__,./lib/__mocks__ --out-dir build",
     "clean": "rimraf build",
+    "eslint": "eslint",
     "jest": "jest",
     "jest:cover": "jest --coverage",
     "jest:watch": "jest --watch",
