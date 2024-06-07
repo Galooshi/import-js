@@ -10,9 +10,10 @@
     "build": "babel lib --ignore ./lib/__tests__,./lib/__mocks__ --out-dir build",
     "clean": "rimraf build",
     "jest": "jest",
-    "prettier": "prettier --write .",
     "jest:cover": "jest --coverage",
+    "jest:watch": "jest --watch",
     "prepublish": "npm run clean && npm run build",
+    "prettier": "prettier --write .",
     "preversion": "npm run clean && npm run build && npm test",
     "test": "npm run --silent prettier && npm run --silent jest",
     "test:cover": "npm run --silent jest:cover"
