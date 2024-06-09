@@ -16,7 +16,7 @@
     "prepublish": "npm run clean && npm run build",
     "prettier": "prettier --write .",
     "preversion": "npm run clean && npm run build && npm test",
-    "test": "npm run --silent prettier && npm run --silent jest",
+    "test": "npm run --silent prettier && npm run --silent eslint && npm run --silent jest",
     "test:cover": "npm run --silent jest:cover"
   },
   "repository": {
