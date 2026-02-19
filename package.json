@@ -72,7 +72,7 @@
     "fb-watchman": "^2.0.1",
     "glob": "^7.1.6",
     "lodash": "^4.17.15",
-    "minimatch": "^3.0.4",
+    "minimatch": "^10.2.1",
     "require-relative": "^0.8.7",
     "semver": "^6.3.0",
     "sqlite3": "^5.0.2",
